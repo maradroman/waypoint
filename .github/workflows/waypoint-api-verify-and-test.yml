@@ -1,10 +1,14 @@
-name: Verify and test
+name: waypoint-api: verify & test
 
 on:
   pull_request:
     branches: [main]
+    paths:
+      - waypoint-api/**
   push:
     branches: [main]
+    paths:
+      - waypoint-api/**
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
