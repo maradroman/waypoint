@@ -48,10 +48,17 @@ public class AnalyticsService {
         int walletBalance = totalDeposited - totalTransferred;
 
         List<Milestone> milestones = milestoneRepository.findByGoalIdOrderBySortOrderAsc(goalId);
-        long completedCount = milestones.stream().filter(Milestone::getCompleted).count();
-        int totalMilestoneCost = milestones.stream().mapToInt(Milestone::getCost).sum();
+        List<Milestone> enabledMilestones = milestones.stream()
+                .filter(Milestone::getEnabled)
+                .toList();
+        List<UUID> enabledMilestoneIds = enabledMilestones.stream()
+                .map(Milestone::getId)
+                .toList();
+
+        long completedCount = enabledMilestones.stream().filter(Milestone::getCompleted).count();
+        int totalMilestoneCost = enabledMilestones.stream().mapToInt(Milestone::getCost).sum();
         int totalMilestoneBalance = transferRepository.findByGoalId(goalId).stream()
-                .filter(t -> t.getAmount() > 0)
+                .filter(t -> t.getAmount() > 0 && enabledMilestoneIds.contains(t.getMilestone().getId()))
                 .mapToInt(Transfer::getAmount)
                 .sum();
 
@@ -59,8 +66,8 @@ public class AnalyticsService {
                 ? (int) ((long) totalMilestoneBalance * 100 / totalMilestoneCost)
                 : 0;
 
-        Milestone activeMilestone = milestones.stream()
-                .filter(m -> !m.getCompleted() && m.getEnabled())
+        Milestone activeMilestone = enabledMilestones.stream()
+                .filter(m -> !m.getCompleted())
                 .findFirst()
                 .orElse(null);
 
@@ -72,7 +79,7 @@ public class AnalyticsService {
                 totalMilestoneCost,
                 totalMilestoneBalance,
                 (int) completedCount,
-                milestones.size(),
+                enabledMilestones.size(),
                 progressPercent,
                 activeMilestone != null ? activeMilestone.getId() : null,
                 activeMilestone != null ? activeMilestone.getTitle() : null

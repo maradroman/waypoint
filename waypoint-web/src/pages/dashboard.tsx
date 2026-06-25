@@ -46,29 +46,29 @@ export default function DashboardPage() {
             <Target className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <p className="text-2xl font-bold">{summary?.totalGoals ?? 0}</p>
+            <p className="text-2xl font-bold">{summary?.activeGoals ?? 0}</p>
           </CardContent>
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground">
-              Total Deposits
+              Saved
             </CardTitle>
             <Wallet className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <p className="text-2xl font-bold">{summary?.totalDeposits ?? 0}</p>
+            <p className="text-2xl font-bold">{summary?.totalSaved ?? 0}</p>
           </CardContent>
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground">
-              Allocated
+              Target
             </CardTitle>
             <ArrowRightLeft className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <p className="text-2xl font-bold">{summary?.totalAllocated ?? 0}</p>
+            <p className="text-2xl font-bold">{summary?.totalTargets ?? 0}</p>
           </CardContent>
         </Card>
         <Card>
@@ -79,7 +79,7 @@ export default function DashboardPage() {
             <CheckCircle2 className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <p className="text-2xl font-bold">{summary?.totalCompleted ?? 0}</p>
+            <p className="text-2xl font-bold">{summary?.completedMilestones ?? 0}</p>
           </CardContent>
         </Card>
       </div>

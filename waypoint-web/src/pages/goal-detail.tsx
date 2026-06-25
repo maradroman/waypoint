@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useRef, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import {
@@ -19,6 +19,7 @@ import {
 import { CSS } from '@dnd-kit/utilities'
 import { api } from '@/lib/api'
 import { Button } from '@/components/ui/button'
+import { Switch } from '@/components/ui/switch'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -40,11 +41,48 @@ import {
   Undo2,
   GripVertical,
   CheckCircle2,
-  Circle,
-  ToggleLeft,
-  ToggleRight,
 } from 'lucide-react'
 import type { Goal, Milestone, Deposit, Completion } from '@/types/api'
+
+function FlipValue({ value, className }: { value: number; className?: string }) {
+  const [display, setDisplay] = useState(value)
+  const [animating, setAnimating] = useState(false)
+  const [oldVal, setOldVal] = useState(value)
+  const prevRef = useRef(value)
+
+  useEffect(() => {
+    if (prevRef.current !== value) {
+      setOldVal(prevRef.current)
+      setAnimating(true)
+      const timer = setTimeout(() => {
+        setDisplay(value)
+        setAnimating(false)
+        prevRef.current = value
+      }, 500)
+      return () => clearTimeout(timer)
+    }
+  }, [value])
+
+  const wide = animating ? (oldVal > value ? oldVal : value) : display
+
+  return (
+    <span className={`${className} inline-grid`} style={{ perspective: '300px' }}>
+      <span
+        className={`col-start-1 row-start-1 ${animating ? 'animate-flip-out' : ''}`}
+        style={{ backfaceVisibility: 'hidden', transformOrigin: 'bottom' }}
+      >
+        {animating ? oldVal : display}
+      </span>
+      <span
+        className={`col-start-1 row-start-1 ${animating ? 'animate-flip-in' : 'invisible'}`}
+        style={{ backfaceVisibility: 'hidden', transformOrigin: 'top' }}
+      >
+        {value}
+      </span>
+      <span className="col-start-1 row-start-1 invisible">{wide}</span>
+    </span>
+  )
+}
 
 function SortableMilestoneItem({
   milestone,
@@ -107,6 +145,7 @@ function SortableMilestoneItem({
       }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['milestones', goalId] })
+      queryClient.invalidateQueries({ queryKey: ['analytics', goalId] })
     },
   })
 
@@ -126,9 +165,9 @@ function SortableMilestoneItem({
   return (
     <div ref={setNodeRef} style={style}>
       <Card className={!milestone.enabled ? 'opacity-50' : ''}>
-        <CardContent className="flex items-center gap-4 p-4">
+        <CardContent className="flex gap-4 p-4">
           <button
-            className="cursor-grab touch-none"
+            className="cursor-grab touch-none self-start mt-1"
             {...attributes}
             {...listeners}
             aria-label="Drag to reorder"
@@ -137,11 +176,6 @@ function SortableMilestoneItem({
           </button>
           <div className="flex-1 space-y-2">
             <div className="flex items-center gap-2">
-              {milestone.completed ? (
-                <CheckCircle2 className="h-5 w-5 text-green-500" />
-              ) : (
-                <Circle className="h-5 w-5 text-muted-foreground" />
-              )}
               <span className="font-medium">{milestone.title}</span>
               {milestone.completed && <Badge variant="secondary">Done</Badge>}
               {!milestone.enabled && <Badge variant="outline">Disabled</Badge>}
@@ -219,10 +253,6 @@ function SortableMilestoneItem({
                   </form>
                 </DialogContent>
               </Dialog>
-              <Button size="sm" variant="ghost" onClick={() => toggleMutation.mutate()}>
-                {milestone.enabled ? <ToggleRight className="mr-1 h-4 w-4" /> : <ToggleLeft className="mr-1 h-4 w-4" />}
-                {milestone.enabled ? 'Disable' : 'Enable'}
-              </Button>
               {!milestone.completed && milestone.enabled && (
                 <Button size="sm" variant="default" onClick={() => completeMutation.mutate()}>
                   <CheckCircle2 className="mr-1 h-4 w-4" />
@@ -231,6 +261,11 @@ function SortableMilestoneItem({
               )}
             </div>
           </div>
+          <Switch
+            checked={milestone.enabled}
+            onCheckedChange={() => toggleMutation.mutate()}
+            className="self-end shrink-0"
+          />
         </CardContent>
       </Card>
     </div>
@@ -278,7 +313,7 @@ export default function GoalDetailPage() {
     enabled: !!goalId,
   })
 
-  const { data: analytics } = useQuery({
+  const { data: analytics, isRefetching: analyticsRefetching } = useQuery({
     queryKey: ['analytics', goalId],
     queryFn: () => api.get<{ walletBalance: number; totalMilestoneCost: number; progressPercent: number }>(`/goals/${goalId}/analytics`),
     enabled: !!goalId,
@@ -332,6 +367,17 @@ export default function GoalDetailPage() {
       queryClient.invalidateQueries({ queryKey: ['milestones', goalId] })
     },
   })
+
+  const toggleAllMutation = useMutation({
+    mutationFn: (enabled: boolean) =>
+      api.patch(`/goals/${goalId}/milestones/toggle-all`, { enabled }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['milestones', goalId] })
+      queryClient.invalidateQueries({ queryKey: ['analytics', goalId] })
+    },
+  })
+
+  const hasDisabled = milestones?.some((m) => !m.enabled)
 
   const handleDragStart = useCallback((event: DragStartEvent) => {
     setActiveDragId(String(event.active.id))
@@ -394,7 +440,7 @@ export default function GoalDetailPage() {
             <CardTitle className="text-sm font-medium text-muted-foreground">Wallet Balance</CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-2xl font-bold">{analytics?.walletBalance ?? 0}</p>
+            <FlipValue value={analytics?.walletBalance ?? 0} className="text-2xl font-bold" />
           </CardContent>
         </Card>
         <Card>
@@ -402,7 +448,7 @@ export default function GoalDetailPage() {
             <CardTitle className="text-sm font-medium text-muted-foreground">Target</CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-2xl font-bold">{analytics?.totalMilestoneCost ?? 0}</p>
+            <FlipValue value={analytics?.totalMilestoneCost ?? 0} className="text-2xl font-bold" />
           </CardContent>
         </Card>
         <Card>
@@ -411,7 +457,7 @@ export default function GoalDetailPage() {
           </CardHeader>
           <CardContent>
             <p className="text-2xl font-bold">
-              {analytics?.progressPercent ?? 0}%
+              <FlipValue value={analytics?.progressPercent ?? 0} />%
             </p>
           </CardContent>
         </Card>
@@ -422,6 +468,15 @@ export default function GoalDetailPage() {
       <div className="flex items-center justify-between">
         <h2 className="text-xl font-semibold">Milestones</h2>
         <div className="flex gap-2">
+          {hasDisabled && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => toggleAllMutation.mutate(true)}
+            >
+              Enable All
+            </Button>
+          )}
           <Dialog open={depositOpen} onOpenChange={setDepositOpen}>
             <DialogTrigger asChild>
               <Button variant="outline">

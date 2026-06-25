@@ -144,12 +144,10 @@ export interface GoalAnalytics {
 }
 
 export interface SummaryResponse {
-  totalGoals: number
-  totalDeposits: number
-  totalAllocated: number
-  totalCompleted: number
-  totalBalance: number
-  totalTarget: number
+  totalSaved: number
+  totalTargets: number
+  activeGoals: number
+  completedMilestones: number
 }
 
 export interface ErrorResponse {
