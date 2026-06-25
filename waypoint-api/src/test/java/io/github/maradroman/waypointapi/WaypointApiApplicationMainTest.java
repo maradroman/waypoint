@@ -10,7 +10,8 @@ class WaypointApiApplicationMainTest {
     void main_startsApplication() {
         WaypointApiApplication.main(new String[]{
                 "--spring.main.web-application-type=none",
-                "--spring.autoconfigure.exclude=org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration,org.springframework.boot.autoconfigure.flyway.FlywayAutoConfiguration"
+                "--spring.profiles.active=test",
+                "--spring.autoconfigure.exclude=org.springframework.boot.autoconfigure.flyway.FlywayAutoConfiguration"
         });
     }
 }
