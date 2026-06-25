@@ -1,3 +1,25 @@
 spring:
   application:
     name: waypoint-api
+
+  datasource:
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/waypoint}
+    username: ${SPRING_DATASOURCE_USERNAME:waypoint}
+    password: ${SPRING_DATASOURCE_PASSWORD:waypoint}
+    driver-class-name: org.postgresql.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: none
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+
+jwt:
+  secret: ${JWT_SECRET:waypoint-dev-secret-that-should-be-changed-in-production}
+  access-token-expiration: 900000
+  refresh-token-expiration: 2592000000
+
+server:
+  servlet:
+    context-path: /api/v1
