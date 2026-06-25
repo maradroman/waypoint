@@ -16,20 +16,29 @@ services:
       timeout: 5s
       retries: 5
 
-#  api:
-#    build:
-#      context: ./waypoint-api
-#    restart: unless-stopped
-#    ports:
-#      - "8080:8080"
-#    environment:
-#      SPRING_PROFILES_ACTIVE: dev
-#      SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/waypoint
-#      SPRING_DATASOURCE_USERNAME: waypoint
-#      SPRING_DATASOURCE_PASSWORD: waypoint
-#    depends_on:
-#      db:
-#        condition: service_healthy
+  api:
+    build:
+      context: ./waypoint-api
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/waypoint
+      SPRING_DATASOURCE_USERNAME: waypoint
+      SPRING_DATASOURCE_PASSWORD: waypoint
+      JWT_SECRET: ${JWT_SECRET:-waypoint-dev-secret-that-should-be-changed-in-production}
+    depends_on:
+      db:
+        condition: service_healthy
+
+  web:
+    build:
+      context: ./waypoint-web
+    restart: unless-stopped
+    ports:
+      - "8880:8880"
+    depends_on:
+      - api
 
 volumes:
   pgdata:
