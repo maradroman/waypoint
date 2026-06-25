@@ -51,6 +51,59 @@ jobs:
           reporter: java-junit
           fail-on-error: true
 
+      - name: Extract failure summary
+        if: failure() && github.event_name == 'pull_request'
+        run: |
+          python3 -c "
+          import glob, xml.etree.ElementTree as ET, os
+          failures = []
+          report_dir = 'waypoint-api/target/surefire-reports'
+          if os.path.isdir(report_dir):
+              for f in glob.glob(report_dir + '/TEST-*.xml'):
+                  tree = ET.parse(f)
+                  root = tree.getroot()
+                  for tc in root.iter('testcase'):
+                      if tc.find('failure') is not None:
+                          cls = tc.get('classname', '')
+                          name = tc.get('name', '')
+                          failures.append(f'{cls}.{name}')
+          if failures:
+              with open('failure-summary.txt', 'w') as out:
+                  for f in failures:
+                      out.write(f + '\n')
+          "
+
+      - name: Comment PR on test failure
+        if: failure() && github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const { owner, repo } = context.repo;
+            const runId = context.runId;
+            const workflowUrl = `${context.serverUrl}/${owner}/${repo}/actions/runs/${runId}`;
+
+            let failures = [];
+            try {
+              const data = fs.readFileSync('failure-summary.txt', 'utf8');
+              failures = data.trim().split('\n').filter(Boolean);
+            } catch (e) {}
+
+            let body = `## ❌ Tests failed\n\n`;
+            if (failures.length > 0) {
+              body += `**${failures.length} test(s) failed:**\n`;
+              body += failures.map(f => `- \`${f}\``).join('\n');
+              body += '\n\n';
+            }
+            body += `[View full workflow run](${workflowUrl})`;
+
+            await github.rest.issues.createComment({
+              owner,
+              repo,
+              issue_number: context.issue.number,
+              body
+            });
+
       - name: Print overall coverage
         run: |
           python3 -c "
