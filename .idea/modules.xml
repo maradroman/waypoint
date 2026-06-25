@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ProjectModuleManager">
+    <modules>
+      <module fileurl="file://$PROJECT_DIR$/.idea/waypoint-future.iml" filepath="$PROJECT_DIR$/.idea/waypoint-future.iml" />
+      <module fileurl="file://$PROJECT_DIR$/waypoint-web/waypoint-web.iml" filepath="$PROJECT_DIR$/waypoint-web/waypoint-web.iml" />
+    </modules>
+  </component>
+</project>
