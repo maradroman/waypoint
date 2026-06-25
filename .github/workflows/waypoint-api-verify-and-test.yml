@@ -1,4 +1,4 @@
-name: waypoint-api: verify & test
+name: "waypoint-api: verify & test"
 
 on:
   pull_request:
