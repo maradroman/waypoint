@@ -313,7 +313,7 @@ export default function GoalDetailPage() {
     enabled: !!goalId,
   })
 
-  const { data: analytics, isRefetching: analyticsRefetching } = useQuery({
+  const { data: analytics } = useQuery({
     queryKey: ['analytics', goalId],
     queryFn: () => api.get<{ walletBalance: number; totalMilestoneCost: number; progressPercent: number }>(`/goals/${goalId}/analytics`),
     enabled: !!goalId,
