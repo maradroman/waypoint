@@ -1,6 +1,22 @@
-import { useState } from 'react'
+import { useState, useCallback } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import {
+  DndContext,
+  DragOverlay,
+  closestCenter,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  type DragEndEvent,
+  type DragStartEvent,
+} from '@dnd-kit/core'
+import {
+  SortableContext,
+  useSortable,
+  verticalListSortingStrategy,
+} from '@dnd-kit/sortable'
+import { CSS } from '@dnd-kit/utilities'
 import { api } from '@/lib/api'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -30,13 +46,28 @@ import {
 } from 'lucide-react'
 import type { Goal, Milestone, Deposit, Completion } from '@/types/api'
 
-function MilestoneItem({
+function SortableMilestoneItem({
   milestone,
   goalId,
 }: {
   milestone: Milestone
   goalId: string
 }) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: milestone.id })
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.4 : 1,
+  }
+
   const queryClient = useQueryClient()
   const [allocateOpen, setAllocateOpen] = useState(false)
   const [allocateAmount, setAllocateAmount] = useState('')
@@ -93,107 +124,116 @@ function MilestoneItem({
     : 0
 
   return (
-    <Card className={!milestone.enabled ? 'opacity-50' : ''}>
-      <CardContent className="flex items-center gap-4 p-4">
-        <GripVertical className="h-5 w-5 shrink-0 text-muted-foreground" />
-        <div className="flex-1 space-y-2">
-          <div className="flex items-center gap-2">
-            {milestone.completed ? (
-              <CheckCircle2 className="h-5 w-5 text-green-500" />
-            ) : (
-              <Circle className="h-5 w-5 text-muted-foreground" />
+    <div ref={setNodeRef} style={style}>
+      <Card className={!milestone.enabled ? 'opacity-50' : ''}>
+        <CardContent className="flex items-center gap-4 p-4">
+          <button
+            className="cursor-grab touch-none"
+            {...attributes}
+            {...listeners}
+            aria-label="Drag to reorder"
+          >
+            <GripVertical className="h-5 w-5 shrink-0 text-muted-foreground" />
+          </button>
+          <div className="flex-1 space-y-2">
+            <div className="flex items-center gap-2">
+              {milestone.completed ? (
+                <CheckCircle2 className="h-5 w-5 text-green-500" />
+              ) : (
+                <Circle className="h-5 w-5 text-muted-foreground" />
+              )}
+              <span className="font-medium">{milestone.title}</span>
+              {milestone.completed && <Badge variant="secondary">Done</Badge>}
+              {!milestone.enabled && <Badge variant="outline">Disabled</Badge>}
+            </div>
+            {milestone.details && (
+              <p className="text-sm text-muted-foreground">{milestone.details}</p>
             )}
-            <span className="font-medium">{milestone.title}</span>
-            {milestone.completed && <Badge variant="secondary">Done</Badge>}
-            {!milestone.enabled && <Badge variant="outline">Disabled</Badge>}
-          </div>
-          {milestone.details && (
-            <p className="text-sm text-muted-foreground">{milestone.details}</p>
-          )}
-          <div className="flex items-center gap-4 text-sm">
-            <span>
-              Cost: <strong>{milestone.cost}</strong>
-            </span>
-            <span>
-              Balance: <strong>{milestone.balance}</strong>
-            </span>
-            <Progress value={coveragePercent} className="h-2 w-24" />
-            <span className="text-xs text-muted-foreground">{coveragePercent}%</span>
-          </div>
-          <div className="flex flex-wrap gap-2">
-            <Dialog open={allocateOpen} onOpenChange={setAllocateOpen}>
-              <DialogTrigger asChild>
-                <Button size="sm" variant="outline" disabled={!milestone.enabled}>
-                  <ArrowDownToLine className="mr-1 h-4 w-4" />
-                  Allocate
-                </Button>
-              </DialogTrigger>
-              <DialogContent>
-                <DialogHeader><DialogTitle>Allocate to {milestone.title}</DialogTitle></DialogHeader>
-                <form onSubmit={(e) => {
-                  e.preventDefault()
-                  allocateMutation.mutate(Number(allocateAmount))
-                }} className="space-y-4">
-                  <div className="space-y-2">
-                    <Label>Amount</Label>
-                    <Input
-                      type="number"
-                      value={allocateAmount}
-                      onChange={(e) => setAllocateAmount(e.target.value)}
-                      required
-                      min={1}
-                    />
-                  </div>
-                  <Button type="submit" className="w-full">
+            <div className="flex items-center gap-4 text-sm">
+              <span>
+                Cost: <strong>{milestone.cost}</strong>
+              </span>
+              <span>
+                Balance: <strong>{milestone.balance}</strong>
+              </span>
+              <Progress value={coveragePercent} className="h-2 w-24" />
+              <span className="text-xs text-muted-foreground">{coveragePercent}%</span>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              <Dialog open={allocateOpen} onOpenChange={setAllocateOpen}>
+                <DialogTrigger asChild>
+                  <Button size="sm" variant="outline" disabled={!milestone.enabled}>
+                    <ArrowDownToLine className="mr-1 h-4 w-4" />
                     Allocate
                   </Button>
-                </form>
-              </DialogContent>
-            </Dialog>
-            <Dialog open={withdrawOpen} onOpenChange={setWithdrawOpen}>
-              <DialogTrigger asChild>
-                <Button size="sm" variant="outline" disabled={!milestone.enabled || milestone.balance === 0}>
-                  <ArrowUpFromLine className="mr-1 h-4 w-4" />
-                  Withdraw
-                </Button>
-              </DialogTrigger>
-              <DialogContent>
-                <DialogHeader><DialogTitle>Withdraw from {milestone.title}</DialogTitle></DialogHeader>
-                <form onSubmit={(e) => {
-                  e.preventDefault()
-                  withdrawMutation.mutate(Number(withdrawAmount))
-                }} className="space-y-4">
-                  <div className="space-y-2">
-                    <Label>Amount (max {milestone.balance})</Label>
-                    <Input
-                      type="number"
-                      value={withdrawAmount}
-                      onChange={(e) => setWithdrawAmount(e.target.value)}
-                      required
-                      min={1}
-                      max={milestone.balance}
-                    />
-                  </div>
-                  <Button type="submit" className="w-full">
+                </DialogTrigger>
+                <DialogContent>
+                  <DialogHeader><DialogTitle>Allocate to {milestone.title}</DialogTitle></DialogHeader>
+                  <form onSubmit={(e) => {
+                    e.preventDefault()
+                    allocateMutation.mutate(Number(allocateAmount))
+                  }} className="space-y-4">
+                    <div className="space-y-2">
+                      <Label>Amount</Label>
+                      <Input
+                        type="number"
+                        value={allocateAmount}
+                        onChange={(e) => setAllocateAmount(e.target.value)}
+                        required
+                        min={1}
+                      />
+                    </div>
+                    <Button type="submit" className="w-full">
+                      Allocate
+                    </Button>
+                  </form>
+                </DialogContent>
+              </Dialog>
+              <Dialog open={withdrawOpen} onOpenChange={setWithdrawOpen}>
+                <DialogTrigger asChild>
+                  <Button size="sm" variant="outline" disabled={!milestone.enabled || milestone.balance === 0}>
+                    <ArrowUpFromLine className="mr-1 h-4 w-4" />
                     Withdraw
                   </Button>
-                </form>
-              </DialogContent>
-            </Dialog>
-            <Button size="sm" variant="ghost" onClick={() => toggleMutation.mutate()}>
-              {milestone.enabled ? <ToggleRight className="mr-1 h-4 w-4" /> : <ToggleLeft className="mr-1 h-4 w-4" />}
-              {milestone.enabled ? 'Disable' : 'Enable'}
-            </Button>
-            {!milestone.completed && milestone.enabled && (
-              <Button size="sm" variant="default" onClick={() => completeMutation.mutate()}>
-                <CheckCircle2 className="mr-1 h-4 w-4" />
-                Complete
+                </DialogTrigger>
+                <DialogContent>
+                  <DialogHeader><DialogTitle>Withdraw from {milestone.title}</DialogTitle></DialogHeader>
+                  <form onSubmit={(e) => {
+                    e.preventDefault()
+                    withdrawMutation.mutate(Number(withdrawAmount))
+                  }} className="space-y-4">
+                    <div className="space-y-2">
+                      <Label>Amount (max {milestone.balance})</Label>
+                      <Input
+                        type="number"
+                        value={withdrawAmount}
+                        onChange={(e) => setWithdrawAmount(e.target.value)}
+                        required
+                        min={1}
+                        max={milestone.balance}
+                      />
+                    </div>
+                    <Button type="submit" className="w-full">
+                      Withdraw
+                    </Button>
+                  </form>
+                </DialogContent>
+              </Dialog>
+              <Button size="sm" variant="ghost" onClick={() => toggleMutation.mutate()}>
+                {milestone.enabled ? <ToggleRight className="mr-1 h-4 w-4" /> : <ToggleLeft className="mr-1 h-4 w-4" />}
+                {milestone.enabled ? 'Disable' : 'Enable'}
               </Button>
-            )}
+              {!milestone.completed && milestone.enabled && (
+                <Button size="sm" variant="default" onClick={() => completeMutation.mutate()}>
+                  <CheckCircle2 className="mr-1 h-4 w-4" />
+                  Complete
+                </Button>
+              )}
+            </div>
           </div>
-        </div>
-      </CardContent>
-    </Card>
+        </CardContent>
+      </Card>
+    </div>
   )
 }
 
@@ -208,6 +248,11 @@ export default function GoalDetailPage() {
   const [depositOpen, setDepositOpen] = useState(false)
   const [depositAmount, setDepositAmount] = useState('')
   const [depositNote, setDepositNote] = useState('')
+  const [activeDragId, setActiveDragId] = useState<string | null>(null)
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
+  )
 
   const { data: goal, isLoading: goalLoading } = useQuery({
     queryKey: ['goal', goalId],
@@ -279,6 +324,34 @@ export default function GoalDetailPage() {
       queryClient.invalidateQueries({ queryKey: ['milestones', goalId] })
     },
   })
+
+  const reorderMutation = useMutation({
+    mutationFn: (milestoneIds: string[]) =>
+      api.patch(`/goals/${goalId}/milestones/reorder`, { milestoneIds }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['milestones', goalId] })
+    },
+  })
+
+  const handleDragStart = useCallback((event: DragStartEvent) => {
+    setActiveDragId(String(event.active.id))
+  }, [])
+
+  const handleDragEnd = useCallback((event: DragEndEvent) => {
+    setActiveDragId(null)
+    const { active, over } = event
+    if (!over || active.id === over.id) return
+
+    const oldIndex = milestones?.findIndex((m) => m.id === active.id) ?? -1
+    const newIndex = milestones?.findIndex((m) => m.id === over.id) ?? -1
+    if (oldIndex === -1 || newIndex === -1) return
+
+    const reordered = [...milestones!]
+    const [moved] = reordered.splice(oldIndex, 1)
+    reordered.splice(newIndex, 0, moved)
+
+    reorderMutation.mutate(reordered.map((m) => m.id))
+  }, [milestones, reorderMutation])
 
   if (goalLoading) {
     return (
@@ -419,16 +492,39 @@ export default function GoalDetailPage() {
         </div>
       </div>
 
-      <div className="space-y-3">
-        {milestones?.map((ms) => (
-          <MilestoneItem key={ms.id} milestone={ms} goalId={goal.id} />
-        ))}
-        {milestones?.length === 0 && (
-          <p className="py-8 text-center text-muted-foreground">
-            No milestones yet. Add one to get started.
-          </p>
-        )}
-      </div>
+      <DndContext
+        sensors={sensors}
+        collisionDetection={closestCenter}
+        onDragStart={handleDragStart}
+        onDragEnd={handleDragEnd}
+      >
+        <SortableContext
+          items={milestones?.map((m) => m.id) ?? []}
+          strategy={verticalListSortingStrategy}
+        >
+          <div className="space-y-3">
+            {milestones?.map((ms) => (
+              <SortableMilestoneItem key={ms.id} milestone={ms} goalId={goal.id} />
+            ))}
+            {milestones?.length === 0 && (
+              <p className="py-8 text-center text-muted-foreground">
+                No milestones yet. Add one to get started.
+              </p>
+            )}
+          </div>
+        </SortableContext>
+        <DragOverlay>
+          {activeDragId && milestones ? (
+            <Card className="opacity-80 shadow-lg">
+              <CardContent className="p-4">
+                <p className="font-medium">
+                  {milestones.find((m) => m.id === activeDragId)?.title}
+                </p>
+              </CardContent>
+            </Card>
+          ) : null}
+        </DragOverlay>
+      </DndContext>
 
       <Separator />
 

@@ -155,6 +155,7 @@ class AuthServiceTest {
             var refreshToken = buildRefreshToken(user);
 
             when(refreshTokenRepository.findByToken(request.refreshToken())).thenReturn(Optional.of(refreshToken));
+            when(refreshTokenRepository.deleteByToken(request.refreshToken())).thenReturn(1);
             when(jwtService.generateAccessToken(user.getId())).thenReturn("new-access-token");
             when(jwtService.generateRefreshToken()).thenReturn("new-refresh-token");
             when(jwtService.getRefreshTokenExpiration()).thenReturn(2592000000L);
@@ -162,7 +163,7 @@ class AuthServiceTest {
 
             var actualResult = authService.refresh(request);
 
-            verify(refreshTokenRepository).delete(refreshToken);
+            verify(refreshTokenRepository).deleteByToken(request.refreshToken());
             assertThat(actualResult)
                 .extracting(AuthResponse::accessToken, AuthResponse::refreshToken)
                 .containsExactly("new-access-token", "new-refresh-token");
@@ -188,11 +189,12 @@ class AuthServiceTest {
             var expiredToken = buildExpiredRefreshToken(user);
 
             when(refreshTokenRepository.findByToken(request.refreshToken())).thenReturn(Optional.of(expiredToken));
+            when(refreshTokenRepository.deleteByToken(request.refreshToken())).thenReturn(1);
 
             assertThatThrownBy(() -> authService.refresh(request))
                 .isInstanceOf(BadRequestException.class)
                 .hasFieldOrPropertyWithValue("code", "REFRESH_TOKEN_EXPIRED");
-            verify(refreshTokenRepository).delete(expiredToken);
+            verify(refreshTokenRepository).deleteByToken(request.refreshToken());
         }
     }
 
