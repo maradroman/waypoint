@@ -7,6 +7,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 public class WaypointApiApplication {
 
     public static void main(String[] args) {
+
         SpringApplication.run(WaypointApiApplication.class, args);
     }
 
