@@ -60,12 +60,18 @@ public class AuthService {
                 .orElseThrow(() -> new BadRequestException("INVALID_REFRESH_TOKEN", "Invalid refresh token"));
 
         if (storedToken.isExpired()) {
-            refreshTokenRepository.delete(storedToken);
+            refreshTokenRepository.deleteByToken(request.refreshToken());
             throw new BadRequestException("REFRESH_TOKEN_EXPIRED", "Refresh token has expired");
         }
 
         User user = storedToken.getUser();
-        refreshTokenRepository.delete(storedToken);
+
+        // Use JPQL delete-by-token instead of entity delete to avoid
+        // ObjectOptimisticLockingFailureException on concurrent refresh attempts
+        int deleted = refreshTokenRepository.deleteByToken(request.refreshToken());
+        if (deleted == 0) {
+            throw new BadRequestException("INVALID_REFRESH_TOKEN", "Refresh token already used");
+        }
 
         return generateAuthResponse(user);
     }
