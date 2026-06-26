@@ -13,7 +13,7 @@ export VAULT_ADDR
 mkdir -p "$SECRETS_DIR"
 
 INIT_OUTPUT=$(vault status 2>&1 || true)
-if echo "$INIT_OUTPUT" | grep -q "Initialized"; then
+if echo "$INIT_OUTPUT" | grep -qE "Initialized[[:space:]]+false"; then
   echo "Vault is not initialized. Initializing..."
   INIT_JSON=$(vault operator init -key-shares=1 -key-threshold=1 -format=json)
 

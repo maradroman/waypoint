@@ -16,6 +16,18 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Ensure Vault CLI
+        run: |
+          if command -v vault >/dev/null 2>&1; then
+            echo "vault $(vault version) already installed"
+          else
+            echo "vault not found — installing via HashiCorp apt repo"
+            wget -qO- https://apt.releases.hashicorp.com/gpg | sudo gpg --dearmor -o /usr/share/keyrings/hashicorp-archive-keyring.gpg
+            echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/hashicorp-archive-keyring.gpg] https://apt.releases.hashicorp.com $(lsb_release -cs) main" | sudo tee /etc/apt/sources.list.d/hashicorp.list
+            sudo apt-get update
+            sudo apt-get install -y vault
+          fi
+
       - name: Deploy
         env:
           VAULT_CI_CD_TOKEN: ${{ secrets.VAULT_CI_CD_TOKEN }}
