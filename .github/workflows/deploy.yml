@@ -16,30 +16,23 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Ensure Vault CLI
-        run: |
-          if command -v vault >/dev/null 2>&1; then
-            echo "vault $(vault version) already installed"
-          else
-            echo "vault not found — installing static binary to \$HOME/.local/bin"
-            VAULT_VERSION=$(curl -fsSL https://checkpoint-api.hashicorp.com/v1/check/vault \
-              | python3 -c "import json,sys; print(json.load(sys.stdin)['current_version'])")
-            ARCH=$(uname -m | sed 's/x86_64/amd64/; s/aarch64/arm64/; s/i386/386/')
-            mkdir -p "$HOME/.local/bin"
-            cd "$HOME/.local/bin"
-            curl -fsSL "https://releases.hashicorp.com/vault/${VAULT_VERSION}/vault_${VAULT_VERSION}_linux_${ARCH}.zip" -o vault.zip
-            if command -v unzip >/dev/null 2>&1; then
-              unzip -o vault.zip vault
-            else
-              python3 -c "import zipfile; zipfile.ZipFile('vault.zip').extract('vault')"
-            fi
-            rm -f vault.zip
-            chmod +x vault
-            echo "$HOME/.local/bin" >> "$GITHUB_PATH"
-            echo "installed: $(./vault version)"
-          fi
-
       - name: Deploy
         env:
-          VAULT_CI_CD_TOKEN: ${{ secrets.VAULT_CI_CD_TOKEN }}
+          POSTGRES_DB: ${{ secrets.POSTGRES_DB }}
+          SPRING_DATASOURCE_USERNAME: ${{ secrets.SPRING_DATASOURCE_USERNAME }}
+          SPRING_DATASOURCE_PASSWORD: ${{ secrets.SPRING_DATASOURCE_PASSWORD }}
+          JWT_SECRET: ${{ secrets.JWT_SECRET }}
+          MINIO_ROOT_USER: ${{ secrets.MINIO_ROOT_USER }}
+          MINIO_ROOT_PASSWORD: ${{ secrets.MINIO_ROOT_PASSWORD }}
+          APP_STORAGE_ACCESS_KEY: ${{ secrets.APP_STORAGE_ACCESS_KEY }}
+          APP_STORAGE_SECRET_KEY: ${{ secrets.APP_STORAGE_SECRET_KEY }}
+          APP_STORAGE_BUCKET: ${{ secrets.APP_STORAGE_BUCKET }}
+          NEW_RELIC_LICENSE_KEY: ${{ secrets.NEW_RELIC_LICENSE_KEY }}
+          NEW_RELIC_APP_NAME: ${{ secrets.NEW_RELIC_APP_NAME }}
+          VITE_NEW_RELIC_ACCOUNT_ID: ${{ secrets.VITE_NEW_RELIC_ACCOUNT_ID }}
+          VITE_NEW_RELIC_APP_ID: ${{ secrets.VITE_NEW_RELIC_APP_ID }}
+          VITE_NEW_RELIC_LICENSE_KEY: ${{ secrets.VITE_NEW_RELIC_LICENSE_KEY }}
+          DOZZLE_USERNAME: ${{ secrets.DOZZLE_USERNAME }}
+          DOZZLE_PASSWORD: ${{ secrets.DOZZLE_PASSWORD }}
+          TUNNEL_TOKEN: ${{ secrets.TUNNEL_TOKEN }}
         run: ./scripts/deploy.sh
