@@ -84,6 +84,7 @@ class JwtAuthenticationFilterTest {
         UUID userId = UUID.randomUUID();
         when(request.getHeader("Authorization")).thenReturn("Bearer valid-token");
         when(jwtService.validateAndExtractUserId("valid-token")).thenReturn(userId);
+        when(jwtService.validateAndExtractRole("valid-token")).thenReturn("USER");
 
         filter.doFilterInternal(request, response, filterChain);
 
@@ -92,6 +93,23 @@ class JwtAuthenticationFilterTest {
         assertThat(auth).isNotNull();
         assertThat(auth.getPrincipal()).isEqualTo(userId.toString());
         assertThat(auth.getCredentials()).isNull();
-        assertThat(auth.getAuthorities()).isEmpty();
+        assertThat(auth.getAuthorities()).hasSize(1);
+        assertThat(auth.getAuthorities().iterator().next().getAuthority()).isEqualTo("ROLE_USER");
+    }
+
+    @Test
+    @DisplayName("doFilterInternal sets ADMIN authority when role is ADMIN")
+    void doFilterInternal_setsAdminAuthority_whenRoleIsAdminTest() throws Exception {
+        UUID userId = UUID.randomUUID();
+        when(request.getHeader("Authorization")).thenReturn("Bearer admin-token");
+        when(jwtService.validateAndExtractUserId("admin-token")).thenReturn(userId);
+        when(jwtService.validateAndExtractRole("admin-token")).thenReturn("ADMIN");
+
+        filter.doFilterInternal(request, response, filterChain);
+
+        var auth = SecurityContextHolder.getContext().getAuthentication();
+        assertThat(auth).isNotNull();
+        assertThat(auth.getAuthorities()).hasSize(1);
+        assertThat(auth.getAuthorities().iterator().next().getAuthority()).isEqualTo("ROLE_ADMIN");
     }
 }

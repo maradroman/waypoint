@@ -4,6 +4,7 @@ export interface User {
   name: string
   locale: string
   currency: string
+  role: string
 }
 
 export interface AuthResponse {
@@ -156,4 +157,71 @@ export interface ErrorResponse {
     message: string
     details?: Record<string, string>
   }
+}
+
+export interface BugReportMetadata {
+  url: string
+  pathname: string
+  route?: { goalId?: string }
+  userAgent: string
+  viewport: { width: number; height: number }
+  pixelRatio: number
+  language: string
+  timezone: string
+  appVersion: string
+  timestamp: string
+  user: { id: string; email: string; name: string } | null
+  [key: string]: unknown
+}
+
+export interface CreateBugReportRequest {
+  description: string
+  metadata?: Record<string, unknown>
+}
+
+export interface BugReport {
+  id: string
+  description: string
+  metadata: Record<string, unknown>
+  createdAt: string
+}
+
+export interface BugReportAttachment {
+  id: string
+  filename: string
+  contentType: string
+  sizeBytes: number
+  createdAt: string
+}
+
+export interface AdminBugReportListItem {
+  id: string
+  description: string
+  createdAt: string
+  user: {
+    id: string
+    email: string
+    displayName: string
+  }
+  attachmentCount: number
+}
+
+export interface AdminBugReportDetail {
+  id: string
+  description: string
+  metadata: Record<string, unknown>
+  createdAt: string
+  user: {
+    id: string
+    email: string
+    displayName: string
+  }
+  attachments: Array<{
+    id: string
+    filename: string
+    contentType: string
+    sizeBytes: number
+    createdAt: string
+    downloadUrl: string
+  }>
 }

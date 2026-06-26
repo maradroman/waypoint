@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useAuth } from '@/stores/auth'
 import { api } from '@/lib/api'
+import type { User } from '@/types/api'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
@@ -39,7 +40,7 @@ export default function SettingsPage() {
     mutationFn: () =>
       api.patch('/auth/profile', { locale, currency }),
     onSuccess: (data) => {
-      setUser(data as { id: string; email: string; name: string; locale: string; currency: string })
+      setUser(data as User)
       queryClient.invalidateQueries()
     },
   })

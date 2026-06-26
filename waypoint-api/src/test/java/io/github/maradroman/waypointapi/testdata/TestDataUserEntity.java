@@ -18,6 +18,7 @@ public class TestDataUserEntity {
                 .displayName(USER_DISPLAY_NAME)
                 .locale(USER_LOCALE)
                 .currency(USER_CURRENCY)
+                .role(USER_ROLE)
                 .build();
     }
 
@@ -29,6 +30,7 @@ public class TestDataUserEntity {
                 .displayName(USER_DISPLAY_NAME)
                 .locale(USER_LOCALE)
                 .currency(USER_CURRENCY)
+                .role(USER_ROLE)
                 .build();
     }
 
@@ -40,6 +42,19 @@ public class TestDataUserEntity {
                 .displayName(USER_DISPLAY_NAME)
                 .locale(USER_LOCALE)
                 .currency(USER_CURRENCY)
+                .role(USER_ROLE)
+                .build();
+    }
+
+    public static User buildAdmin() {
+        return User.builder()
+                .id(USER_ID)
+                .email(USER_EMAIL)
+                .passwordHash(USER_PASSWORD_HASH)
+                .displayName(USER_DISPLAY_NAME)
+                .locale(USER_LOCALE)
+                .currency(USER_CURRENCY)
+                .role(USER_ROLE_ADMIN)
                 .build();
     }
 }

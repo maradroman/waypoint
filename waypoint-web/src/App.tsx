@@ -9,6 +9,7 @@ import DashboardPage from '@/pages/dashboard'
 import GoalsPage from '@/pages/goals'
 import GoalDetailPage from '@/pages/goal-detail'
 import SettingsPage from '@/pages/settings'
+import AdminPage from '@/pages/admin'
 import { Skeleton } from '@/components/ui/skeleton'
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
@@ -117,6 +118,14 @@ export default function App() {
             element={
               <ProtectedRoute>
                 <SettingsPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin"
+            element={
+              <ProtectedRoute>
+                <AdminPage />
               </ProtectedRoute>
             }
           />

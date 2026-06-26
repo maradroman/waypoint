@@ -38,6 +38,10 @@ public class User {
     @Builder.Default
     private String currency = "USD";
 
+    @Column(nullable = false)
+    @Builder.Default
+    private String role = "USER";
+
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt;

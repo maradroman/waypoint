@@ -35,6 +35,8 @@ public abstract class TestDataJpa {
         jdbcTemplate.execute("DELETE FROM transfers");
         jdbcTemplate.execute("DELETE FROM milestones");
         jdbcTemplate.execute("DELETE FROM deposits");
+        jdbcTemplate.execute("DELETE FROM bug_report_attachments");
+        jdbcTemplate.execute("DELETE FROM bug_reports");
         jdbcTemplate.execute("DELETE FROM goals");
         jdbcTemplate.execute("DELETE FROM refresh_tokens");
         jdbcTemplate.execute("DELETE FROM users");
@@ -43,9 +45,9 @@ public abstract class TestDataJpa {
     protected User persistUser(UUID id, String email) {
         var now = Instant.now();
         jdbcTemplate.update("""
-                INSERT INTO users (id, email, password_hash, display_name, locale, currency, created_at, updated_at)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-                """, id, email, USER_PASSWORD_HASH, USER_DISPLAY_NAME, USER_LOCALE, USER_CURRENCY, now, now);
+                INSERT INTO users (id, email, password_hash, display_name, locale, currency, role, created_at, updated_at)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+                """, id, email, USER_PASSWORD_HASH, USER_DISPLAY_NAME, USER_LOCALE, USER_CURRENCY, USER_ROLE, now, now);
         return em.find(User.class, id);
     }
 

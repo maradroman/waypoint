@@ -22,6 +22,8 @@ public record AuthResponse(
             @Schema(description = "Locale code", example = "en")
             String locale,
             @Schema(description = "Currency code", example = "USD")
-            String currency
+            String currency,
+            @Schema(description = "User role", example = "USER", allowableValues = {"USER", "ADMIN"})
+            String role
     ) {}
 }

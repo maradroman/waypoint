@@ -100,7 +100,7 @@ public class AuthService {
     }
 
     private AuthResponse generateAuthResponse(User user) {
-        String accessToken = jwtService.generateAccessToken(user.getId());
+        String accessToken = jwtService.generateAccessToken(user.getId(), user.getRole());
         String rawRefreshToken = jwtService.generateRefreshToken();
 
         RefreshToken refreshToken = RefreshToken.builder()
@@ -119,7 +119,8 @@ public class AuthService {
                 user.getEmail(),
                 user.getDisplayName(),
                 user.getLocale(),
-                user.getCurrency()
+                user.getCurrency(),
+                user.getRole()
         );
     }
 }

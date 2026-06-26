@@ -31,9 +31,10 @@ public class JwtService {
         this.refreshTokenExpiration = refreshTokenExpiration;
     }
 
-    public String generateAccessToken(UUID userId) {
+    public String generateAccessToken(UUID userId, String role) {
         return Jwts.builder()
                 .subject(userId.toString())
+                .claim("role", role != null ? role : "USER")
                 .issuedAt(new Date())
                 .expiration(new Date(System.currentTimeMillis() + accessTokenExpiration))
                 .signWith(secretKey)
@@ -51,14 +52,28 @@ public class JwtService {
 
     public UUID validateAndExtractUserId(String token) {
         try {
-            Claims claims = Jwts.parser()
-                    .verifyWith(secretKey)
-                    .build()
-                    .parseSignedClaims(token)
-                    .getPayload();
+            Claims claims = parseClaims(token);
             return UUID.fromString(claims.getSubject());
         } catch (JwtException | IllegalArgumentException e) {
             return null;
         }
+    }
+
+    public String validateAndExtractRole(String token) {
+        try {
+            Claims claims = parseClaims(token);
+            Object role = claims.get("role");
+            return role != null ? role.toString() : "USER";
+        } catch (JwtException | IllegalArgumentException e) {
+            return null;
+        }
+    }
+
+    private Claims parseClaims(String token) {
+        return Jwts.parser()
+                .verifyWith(secretKey)
+                .build()
+                .parseSignedClaims(token)
+                .getPayload();
     }
 }
