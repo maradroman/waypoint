@@ -3,6 +3,7 @@ package io.github.maradroman.waypointapi.testdata;
 import lombok.experimental.UtilityClass;
 
 import java.time.Instant;
+import java.util.Map;
 import java.util.UUID;
 
 @UtilityClass
@@ -17,6 +18,8 @@ public class TestDataConstant {
     public static final String USER_PASSWORD_HASH = "$2a$10$hashedpassword";
     public static final String USER_LOCALE = "en";
     public static final String USER_CURRENCY = "USD";
+    public static final String USER_ROLE = "USER";
+    public static final String USER_ROLE_ADMIN = "ADMIN";
 
     // Goal
     public static final UUID GOAL_ID = UUID.fromString("00000000-0000-0000-0000-000000000010");
@@ -59,6 +62,24 @@ public class TestDataConstant {
     public static final String REFRESH_TOKEN_VALUE = "refresh-token-value-123";
     public static final String REFRESH_TOKEN_VALUE_2 = "refresh-token-value-456";
     public static final String JWT_TOKEN = "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIwMDAwMDAwMC0wMDAwLTAwMDAtMDAwMC0wMDAwMDAwMDAwMDEiLCJpYXQiOjE3MTkzNjAwMDAsImV4cCI6OTk5OTk5OTk5OX0.test";
+
+    // Bug Report
+    public static final UUID BUG_REPORT_ID = UUID.fromString("00000000-0000-0000-0000-000000000060");
+    public static final UUID BUG_REPORT_ID_2 = UUID.fromString("00000000-0000-0000-0000-000000000061");
+    public static final String BUG_REPORT_DESCRIPTION = "Clicked Allocate and the page went blank";
+    public static final String BUG_REPORT_DESCRIPTION_2 = "Progress bar shows 110% on completed goals";
+    public static final Map<String, Object> BUG_REPORT_METADATA = Map.of(
+            "url", "/goals/00000000-0000-0000-0000-000000000010",
+            "userAgent", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)",
+            "viewport", Map.of("width", 1280, "height", 720)
+    );
+
+    // Bug Report Attachment
+    public static final UUID ATTACHMENT_ID = UUID.fromString("00000000-0000-0000-0000-000000000070");
+    public static final String ATTACHMENT_FILENAME = "screenshot.png";
+    public static final String ATTACHMENT_CONTENT_TYPE = "image/png";
+    public static final long ATTACHMENT_SIZE_BYTES = 204800L;
+    public static final String ATTACHMENT_STORAGE_KEY = "bug-reports/00000000-0000-0000-0000-000000000060/uuid-screenshot.png";
 
     // Timestamps
     public static final Instant DEFAULT_TIMESTAMP = Instant.parse("2024-01-15T10:00:00Z");

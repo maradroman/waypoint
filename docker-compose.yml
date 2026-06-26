@@ -1,17 +1,48 @@
 services:
+  vault:
+    image: hashicorp/vault:latest
+    restart: unless-stopped
+    ports:
+      - "8200:8200"
+    cap_add:
+      - IPC_LOCK
+    volumes:
+      - vaultdata:/vault/file
+      - ./vault/config.hcl:/vault/config.hcl:ro
+      - ./vault/entrypoint.sh:/vault/entrypoint.sh:ro
+    entrypoint: ["/bin/sh", "/vault/entrypoint.sh"]
+
   db:
     image: postgres:16-alpine
     restart: unless-stopped
     environment:
-      POSTGRES_DB: waypoint
-      POSTGRES_USER: waypoint
-      POSTGRES_PASSWORD: waypoint
+      POSTGRES_DB: ${POSTGRES_DB:-waypoint}
+      POSTGRES_USER: ${SPRING_DATASOURCE_USERNAME:-waypoint}
+      POSTGRES_PASSWORD: ${SPRING_DATASOURCE_PASSWORD:-waypoint}
     ports:
       - "5432:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U waypoint"]
+      test: ["CMD-SHELL", "pg_isready -U ${SPRING_DATASOURCE_USERNAME:-waypoint}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  minio:
+    image: minio/minio
+    restart: unless-stopped
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-minioadmin}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-minioadmin}
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    volumes:
+      - miniodata:/data
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sf http://localhost:9000/minio/health/live || exit 1"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -21,24 +52,61 @@ services:
       context: ./waypoint-api
     restart: unless-stopped
     expose:
-      - 8080
+      - "8080"
     environment:
-      SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/waypoint
-      SPRING_DATASOURCE_USERNAME: waypoint
-      SPRING_DATASOURCE_PASSWORD: waypoint
+      SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/${POSTGRES_DB:-waypoint}
+      SPRING_DATASOURCE_USERNAME: ${SPRING_DATASOURCE_USERNAME:-waypoint}
+      SPRING_DATASOURCE_PASSWORD: ${SPRING_DATASOURCE_PASSWORD:-waypoint}
       JWT_SECRET: ${JWT_SECRET:-waypoint-dev-secret-that-should-be-changed-in-production}
+      APP_STORAGE_ENDPOINT: http://minio:9000
+      APP_STORAGE_ACCESS_KEY: ${MINIO_ROOT_USER:-minioadmin}
+      APP_STORAGE_SECRET_KEY: ${MINIO_ROOT_PASSWORD:-minioadmin}
+      APP_STORAGE_BUCKET: ${APP_STORAGE_BUCKET:-waypoint-bug-reports}
+      NEW_RELIC_LICENSE_KEY: ${NEW_RELIC_LICENSE_KEY:-}
+      NEW_RELIC_APP_NAME: ${NEW_RELIC_APP_NAME:-waypoint-api}
+      NEW_RELIC_LOG_FILE_NAME: STDOUT
     depends_on:
       db:
+        condition: service_healthy
+      minio:
         condition: service_healthy
 
   web:
     build:
       context: ./waypoint-web
+      args:
+        VITE_NEW_RELIC_ACCOUNT_ID: ${VITE_NEW_RELIC_ACCOUNT_ID:-}
+        VITE_NEW_RELIC_APP_ID: ${VITE_NEW_RELIC_APP_ID:-}
+        VITE_NEW_RELIC_LICENSE_KEY: ${VITE_NEW_RELIC_LICENSE_KEY:-}
     restart: unless-stopped
     ports:
       - "8880:8880"
     depends_on:
       - api
 
+  cloudflared:
+    image: cloudflare/cloudflared:latest
+    restart: unless-stopped
+    command: tunnel run
+    environment:
+      TUNNEL_TOKEN: ${TUNNEL_TOKEN:-}
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    depends_on:
+      - web
+
+  dozzle:
+    image: amir20/dozzle:latest
+    restart: unless-stopped
+    ports:
+      - "8889:8080"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    environment:
+      DOZZLE_USERNAME: ${DOZZLE_USERNAME:-admin}
+      DOZZLE_PASSWORD: ${DOZZLE_PASSWORD:-admin}
+
 volumes:
   pgdata:
+  miniodata:
+  vaultdata:

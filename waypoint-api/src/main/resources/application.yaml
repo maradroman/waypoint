@@ -15,6 +15,12 @@ spring:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
 
+  servlet:
+    multipart:
+      max-file-size: 100MB
+      max-request-size: 120MB
+      file-size-threshold: 0
+
 jwt:
   secret: ${JWT_SECRET:waypoint-dev-secret-that-should-be-changed-in-production}
   access-token-expiration: 900000
@@ -23,3 +29,11 @@ jwt:
 server:
   servlet:
     context-path: /api/v1
+
+app:
+  storage:
+    endpoint: ${APP_STORAGE_ENDPOINT:http://localhost:9000}
+    access-key: ${APP_STORAGE_ACCESS_KEY:minioadmin}
+    secret-key: ${APP_STORAGE_SECRET_KEY:minioadmin}
+    bucket: ${APP_STORAGE_BUCKET:waypoint-bug-reports}
+    presigned-url-expiry-seconds: 3600

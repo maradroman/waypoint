@@ -13,6 +13,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { Separator } from '@/components/ui/separator'
+import { ReportBugButton } from '@/components/report-bug-dialog'
 import {
   Target,
   LayoutDashboard,
@@ -20,6 +21,7 @@ import {
   User,
   LogOut,
   Settings,
+  Bug,
 } from 'lucide-react'
 
 const navItems = [
@@ -32,6 +34,7 @@ function SidebarContent() {
   const navigate = useNavigate()
   const logout = useAuth((s) => s.logout)
   const user = useAuth((s) => s.user)
+  const isAdmin = useAuth((s) => s.isAdmin)
 
   return (
     <div className="flex h-full flex-col">
@@ -62,8 +65,27 @@ function SidebarContent() {
           )
         })}
       </nav>
+      {isAdmin && (
+        <>
+          <Separator />
+          <nav className="space-y-1 p-2">
+            <Link
+              to="/admin"
+              className={`flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors ${
+                location.pathname === '/admin'
+                  ? 'bg-primary text-primary-foreground'
+                  : 'hover:bg-muted'
+              }`}
+            >
+              <Bug className="h-4 w-4" />
+              Bug Reports
+            </Link>
+          </nav>
+        </>
+      )}
       <Separator />
-      <div className="p-2">
+      <div className="space-y-1 p-2">
+        <ReportBugButton />
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" className="w-full justify-start gap-2">

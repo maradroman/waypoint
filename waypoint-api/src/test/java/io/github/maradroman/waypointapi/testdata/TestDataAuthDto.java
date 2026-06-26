@@ -34,6 +34,6 @@ public class TestDataAuthDto {
 
     public static AuthResponse authResponse() {
         return new AuthResponse("access-token", "refresh-token",
-                new AuthResponse.UserProfile(USER_ID.toString(), USER_EMAIL, USER_DISPLAY_NAME, USER_LOCALE, USER_CURRENCY));
+                new AuthResponse.UserProfile(USER_ID.toString(), USER_EMAIL, USER_DISPLAY_NAME, USER_LOCALE, USER_CURRENCY, USER_ROLE));
     }
 }

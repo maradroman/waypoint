@@ -66,7 +66,7 @@ class AuthServiceTest {
             when(userRepository.existsByEmail(request.email())).thenReturn(false);
             when(passwordEncoder.encode(request.password())).thenReturn("encoded");
             when(userRepository.save(userCaptor.capture())).thenReturn(user);
-            when(jwtService.generateAccessToken(user.getId())).thenReturn("access-token");
+            when(jwtService.generateAccessToken(user.getId(), user.getRole())).thenReturn("access-token");
             when(jwtService.generateRefreshToken()).thenReturn("refresh-token");
             when(jwtService.getRefreshTokenExpiration()).thenReturn(2592000000L);
             when(refreshTokenRepository.save(any(RefreshToken.class))).thenAnswer(invocation -> invocation.getArgument(0));
@@ -80,8 +80,8 @@ class AuthServiceTest {
                 .extracting(AuthResponse::accessToken, AuthResponse::refreshToken)
                 .containsExactly("access-token", "refresh-token");
             assertThat(actualResult.user())
-                .extracting(AuthResponse.UserProfile::id, AuthResponse.UserProfile::email, AuthResponse.UserProfile::displayName)
-                .containsExactly(USER_ID.toString(), USER_EMAIL, USER_DISPLAY_NAME);
+                .extracting(AuthResponse.UserProfile::id, AuthResponse.UserProfile::email, AuthResponse.UserProfile::displayName, AuthResponse.UserProfile::role)
+                .containsExactly(USER_ID.toString(), USER_EMAIL, USER_DISPLAY_NAME, USER_ROLE);
         }
 
         @Test
@@ -108,7 +108,7 @@ class AuthServiceTest {
 
             when(userRepository.findByEmail(request.email())).thenReturn(Optional.of(user));
             when(passwordEncoder.matches(request.password(), user.getPasswordHash())).thenReturn(true);
-            when(jwtService.generateAccessToken(user.getId())).thenReturn("access-token");
+            when(jwtService.generateAccessToken(user.getId(), user.getRole())).thenReturn("access-token");
             when(jwtService.generateRefreshToken()).thenReturn("refresh-token");
             when(jwtService.getRefreshTokenExpiration()).thenReturn(2592000000L);
             when(refreshTokenRepository.save(any(RefreshToken.class))).thenAnswer(invocation -> invocation.getArgument(0));
@@ -156,7 +156,7 @@ class AuthServiceTest {
 
             when(refreshTokenRepository.findByToken(request.refreshToken())).thenReturn(Optional.of(refreshToken));
             when(refreshTokenRepository.deleteByToken(request.refreshToken())).thenReturn(1);
-            when(jwtService.generateAccessToken(user.getId())).thenReturn("new-access-token");
+            when(jwtService.generateAccessToken(user.getId(), user.getRole())).thenReturn("new-access-token");
             when(jwtService.generateRefreshToken()).thenReturn("new-refresh-token");
             when(jwtService.getRefreshTokenExpiration()).thenReturn(2592000000L);
             when(refreshTokenRepository.save(refreshTokenCaptor.capture())).thenAnswer(invocation -> invocation.getArgument(0));

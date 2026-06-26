@@ -64,4 +64,41 @@ export const api = {
   delete: <T>(path: string) => request<T>('DELETE', path),
 }
 
+export function uploadWithProgress<T>(
+  path: string,
+  formData: FormData,
+  onProgress: (percent: number) => void,
+): Promise<T> {
+  return new Promise((resolve, reject) => {
+    const xhr = new XMLHttpRequest()
+    xhr.open('POST', `${BASE_URL}${path}`)
+
+    if (accessToken) {
+      xhr.setRequestHeader('Authorization', `Bearer ${accessToken}`)
+    }
+
+    xhr.upload.onprogress = (e) => {
+      if (e.lengthComputable) {
+        onProgress(Math.round((e.loaded / e.total) * 100))
+      }
+    }
+
+    xhr.onload = () => {
+      const parsed = JSON.parse(xhr.responseText || '{}')
+      if (xhr.status >= 200 && xhr.status < 300) {
+        if (parsed && typeof parsed === 'object' && 'data' in parsed) {
+          resolve(parsed.data as T)
+        } else {
+          resolve(parsed as T)
+        }
+      } else {
+        reject(new ApiError(xhr.status, parsed))
+      }
+    }
+
+    xhr.onerror = () => reject(new ApiError(0, null))
+    xhr.send(formData)
+  })
+}
+
 export { ApiError }

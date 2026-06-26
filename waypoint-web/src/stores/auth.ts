@@ -9,6 +9,7 @@ interface AuthState {
   user: User | null
   isLoading: boolean
   isAuthenticated: boolean
+  isAdmin: boolean
   login: (email: string, password: string) => Promise<void>
   register: (email: string, password: string, name: string) => Promise<void>
   logout: () => void
@@ -20,12 +21,13 @@ export const useAuth = create<AuthState>((set) => ({
   user: null,
   isLoading: true,
   isAuthenticated: false,
+  isAdmin: false,
 
   login: async (email, password) => {
     const res = await api.post<AuthResponse>('/auth/login', { email, password })
     setAccessToken(res.accessToken)
     localStorage.setItem('refreshToken', res.refreshToken)
-    set({ user: res.user, isAuthenticated: true, isLoading: false })
+    set({ user: res.user, isAuthenticated: true, isLoading: false, isAdmin: res.user.role === 'ADMIN' })
   },
 
   register: async (email, password, name) => {
@@ -36,13 +38,13 @@ export const useAuth = create<AuthState>((set) => ({
     })
     setAccessToken(res.accessToken)
     localStorage.setItem('refreshToken', res.refreshToken)
-    set({ user: res.user, isAuthenticated: true, isLoading: false })
+    set({ user: res.user, isAuthenticated: true, isLoading: false, isAdmin: res.user.role === 'ADMIN' })
   },
 
   logout: () => {
     setAccessToken(null)
     localStorage.removeItem('refreshToken')
-    set({ user: null, isAuthenticated: false, isLoading: false })
+    set({ user: null, isAuthenticated: false, isLoading: false, isAdmin: false })
   },
 
   refreshAuth: async () => {
@@ -62,10 +64,10 @@ export const useAuth = create<AuthState>((set) => ({
         })
         setAccessToken(res.accessToken)
         localStorage.setItem('refreshToken', res.refreshToken)
-        set({ user: res.user, isAuthenticated: true, isLoading: false })
+        set({ user: res.user, isAuthenticated: true, isLoading: false, isAdmin: res.user.role === 'ADMIN' })
       } catch {
         localStorage.removeItem('refreshToken')
-        set({ user: null, isAuthenticated: false, isLoading: false })
+        set({ user: null, isAuthenticated: false, isLoading: false, isAdmin: false })
       } finally {
         refreshPromise = null
       }
@@ -74,5 +76,5 @@ export const useAuth = create<AuthState>((set) => ({
     return refreshPromise
   },
 
-  setUser: (user) => set({ user }),
+  setUser: (user) => set({ user, isAdmin: user.role === 'ADMIN' }),
 }))

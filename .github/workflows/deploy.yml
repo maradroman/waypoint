@@ -1,33 +1,22 @@
-name: "Deploy"
+name: Deploy
 
 on:
   push:
     branches: [main]
-    paths:
-      - waypoint-api/**
-      - waypoint-web/**
-      - docker-compose.yml
   workflow_dispatch:
 
-env:
-  ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION: true
-
 concurrency:
-  group: deploy-${{ github.ref }}
-  cancel-in-progress: true
+  group: deploy
+  cancel-in-progress: false
 
 jobs:
   deploy:
-    name: Build & Deploy
     runs-on: self-hosted
-    timeout-minutes: 15
+    environment: production
     steps:
       - uses: actions/checkout@v4
 
-      - name: Build images
-        run: docker compose build
-
       - name: Deploy
-        run: |
-          docker compose down --remove-orphans
-          docker compose up -d
+        env:
+          VAULT_CI_CD_TOKEN: ${{ secrets.VAULT_CI_CD_TOKEN }}
+        run: ./scripts/deploy.sh

@@ -10,8 +10,12 @@ RUN mvn dependency:go-offline
 COPY src ./src
 RUN mvn package -DskipTests
 
+FROM alpine:latest AS newrelic
+RUN wget -q https://download.newrelic.com/newrelic/java-agent/newrelic-agent/current/newrelic.jar -O /newrelic.jar
+
 FROM base AS final
 COPY --chown=waypoint:waypoint --from=build /build/target/*.jar app.jar
+COPY --chown=waypoint:waypoint --from=newrelic /newrelic.jar newrelic.jar
 HEALTHCHECK --interval=30s --timeout=3s --retries=3 \
   CMD wget -qO- http://localhost:8080/api/v1/actuator/health || exit 1
-ENTRYPOINT ["java", "-jar", "app.jar"]
+ENTRYPOINT ["java", "-javaagent:/app/newrelic.jar", "-jar", "app.jar"]
