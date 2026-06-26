@@ -52,6 +52,7 @@ services:
       NEW_RELIC_LICENSE_KEY: ${NEW_RELIC_LICENSE_KEY:-}
       NEW_RELIC_APP_NAME: ${NEW_RELIC_APP_NAME:-waypoint-api}
       NEW_RELIC_LOG_FILE_NAME: STDOUT
+      CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:-*}
     depends_on:
       db:
         condition: service_healthy
