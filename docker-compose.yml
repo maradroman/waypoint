@@ -7,7 +7,7 @@ services:
       POSTGRES_USER: ${SPRING_DATASOURCE_USERNAME:-waypoint}
       POSTGRES_PASSWORD: ${SPRING_DATASOURCE_PASSWORD:-waypoint}
     ports:
-      - "5432:5432"
+      - "${DB_PORT:-5432}:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
     healthcheck:
@@ -24,8 +24,8 @@ services:
       MINIO_ROOT_USER: ${MINIO_ROOT_USER:-minioadmin}
       MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-minioadmin}
     ports:
-      - "9000:9000"
-      - "9001:9001"
+      - "${MINIO_PORT:-9000}:9000"
+      - "${MINIO_CONSOLE_PORT:-9001}:9001"
     volumes:
       - miniodata:/data
     healthcheck:
@@ -68,7 +68,7 @@ services:
         VITE_NEW_RELIC_LICENSE_KEY: ${VITE_NEW_RELIC_LICENSE_KEY:-}
     restart: unless-stopped
     ports:
-      - "8880:8880"
+      - "${WEB_PORT:-8880}:8880"
     depends_on:
       - api
 
@@ -87,7 +87,7 @@ services:
     image: amir20/dozzle:latest
     restart: unless-stopped
     ports:
-      - "8889:8080"
+      - "${DOZZLE_PORT:-8889}:8080"
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
     environment:
