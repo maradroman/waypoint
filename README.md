@@ -22,34 +22,69 @@ Clients → REST API (Spring Boot) → PostgreSQL
 ### Prerequisites
 
 - Java 21+
+- Node.js 22+
 - Docker & Docker Compose
-- Node.js 22+ (for frontend)
 
-### Run with Docker
+### Option A: Full stack via Docker
+
+Runs everything (API, web, DB, MinIO) in containers — production-like, no hot reload.
 
 ```bash
 docker compose up --build
 ```
 
-This starts:
-- **PostgreSQL 16** on `localhost:5432`
-- **API** on `localhost:8080`
+| Service | URL |
+| --- | --- |
+| Web | http://localhost:8880 |
+| API | http://localhost:8080/api/v1 |
+| Swagger UI | http://localhost:8080/api/v1/swagger-ui.html |
+| MinIO console | http://localhost:9001 |
+| Dozzle (logs) | http://localhost:8889 |
 
-### Run locally
+### Option B: Local development
+
+Run infrastructure (DB, MinIO) in Docker, but the API and frontend natively for hot reload.
+
+**1. Start infrastructure:**
 
 ```bash
-# Start database
-docker compose up db -d
+docker compose up db minio -d
+```
 
-# Start API
+This starts:
+- **PostgreSQL 16** on `localhost:5432` (db=`waypoint`, user=`waypoint`, pass=`waypoint`)
+- **MinIO** on `localhost:9000` (S3) and `localhost:9001` (console, user=`minioadmin`, pass=`minioadmin`)
+
+**2. Start the API:**
+
+```bash
 cd waypoint-api
 ./mvnw spring-boot:run -Dspring-boot.run.profiles=dev
+```
 
-# Start frontend
+The API runs on `http://localhost:8080/api/v1`. The `dev` profile enables SQL logging. All config (DB credentials, JWT secret, MinIO endpoint) has dev defaults baked into `application.yaml` — no `.env` file needed.
+
+**3. Start the frontend:**
+
+```bash
 cd waypoint-web
 npm install
 npm run dev
 ```
+
+Vite dev server runs on `http://localhost:5173` and proxies API calls to `http://localhost:8080/api/v1` automatically.
+
+### Ports reference
+
+| Port | Service | Notes |
+| --- | --- | --- |
+| 5432 | PostgreSQL | |
+| 8080 | API (Spring Boot) | context path `/api/v1` |
+| 8880 | Web (nginx, Docker) | only in Option A |
+| 5173 | Web (Vite dev server) | only in Option B |
+| 9000 | MinIO (S3 API) | |
+| 9001 | MinIO console | |
+| 8889 | Dozzle (log viewer) | only in Option A |
 
 ## API Documentation
 
