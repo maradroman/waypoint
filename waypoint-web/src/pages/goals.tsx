@@ -164,7 +164,7 @@ export default function GoalsPage() {
           setOpen(isOpen)
         }}>
           <DialogTrigger asChild>
-            <Button>
+            <Button variant="accent">
               <Plus className="mr-2 h-4 w-4" />
               {t('goals.newGoal')}
             </Button>

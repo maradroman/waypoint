@@ -93,7 +93,7 @@ export default function SettingsPage() {
         <CardContent className="space-y-4">
           <div className="space-y-2">
             <Label>{t('settings.name')}</Label>
-            <Input value={user?.name ?? ''} disabled />
+            <Input value={user?.displayName || (user?.email ?? '')} disabled />
           </div>
           <div className="space-y-2">
             <Label>{t('settings.email')}</Label>
