@@ -46,7 +46,7 @@ public class MilestoneService {
                 .title(request.title())
                 .cost(request.cost() != null ? request.cost() : 0)
                 .details(request.details() != null ? request.details() : "")
-                .enabled(request.enabled() != null ? request.enabled() : true)
+                .enabled(request.enabled() == null || request.enabled())
                 .build();
         milestone = milestoneRepository.save(milestone);
         return MilestoneResponse.from(milestone, 0);
@@ -67,7 +67,7 @@ public class MilestoneService {
             milestone.setEnabled(request.enabled());
         }
         milestone = milestoneRepository.save(milestone);
-        int balance = computeBalance(goalId, milestoneId);
+        int balance = computeBalance(milestoneId);
         return MilestoneResponse.from(milestone, balance);
     }
 
@@ -84,7 +84,7 @@ public class MilestoneService {
         milestone.setCompleted(false);
         milestone.setCompletedAt(null);
         milestone = milestoneRepository.save(milestone);
-        int balance = computeBalance(goalId, milestoneId);
+        int balance = computeBalance(milestoneId);
         return MilestoneResponse.from(milestone, balance);
     }
 
@@ -92,7 +92,7 @@ public class MilestoneService {
         Milestone milestone = findMilestoneForUser(user, goalId, milestoneId);
         milestone.setEnabled(!milestone.getEnabled());
         milestone = milestoneRepository.save(milestone);
-        int balance = computeBalance(goalId, milestoneId);
+        int balance = computeBalance(milestoneId);
         return MilestoneResponse.from(milestone, balance);
     }
 
@@ -126,7 +126,7 @@ public class MilestoneService {
 
     public MilestoneResponse getMilestoneWithBalance(User user, UUID goalId, UUID milestoneId) {
         Milestone milestone = findMilestoneForUser(user, goalId, milestoneId);
-        int balance = computeBalance(goalId, milestoneId);
+        int balance = computeBalance(milestoneId);
         return MilestoneResponse.from(milestone, balance);
     }
 
@@ -155,7 +155,7 @@ public class MilestoneService {
                         Collectors.summingInt(io.github.maradroman.waypointapi.transfer.model.Transfer::getAmount)));
     }
 
-    private int computeBalance(UUID goalId, UUID milestoneId) {
+    private int computeBalance(UUID milestoneId) {
         return transferRepository.findByMilestoneIdOrderByTimestampDesc(milestoneId).stream()
                 .mapToInt(io.github.maradroman.waypointapi.transfer.model.Transfer::getAmount)
                 .sum();

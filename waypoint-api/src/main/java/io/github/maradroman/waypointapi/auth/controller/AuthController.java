@@ -1,6 +1,10 @@
 package io.github.maradroman.waypointapi.auth.controller;
 
-import io.github.maradroman.waypointapi.auth.dto.*;
+import io.github.maradroman.waypointapi.auth.dto.AuthResponse;
+import io.github.maradroman.waypointapi.auth.dto.LoginRequest;
+import io.github.maradroman.waypointapi.auth.dto.RefreshTokenRequest;
+import io.github.maradroman.waypointapi.auth.dto.RegisterRequest;
+import io.github.maradroman.waypointapi.auth.dto.UpdateProfileRequest;
 import io.github.maradroman.waypointapi.auth.model.User;
 import io.github.maradroman.waypointapi.auth.service.AuthService;
 import io.github.maradroman.waypointapi.common.security.CurrentUser;
