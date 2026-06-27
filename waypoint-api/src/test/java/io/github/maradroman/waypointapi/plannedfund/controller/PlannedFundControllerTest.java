@@ -1,28 +1,5 @@
 package io.github.maradroman.waypointapi.plannedfund.controller;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
-import io.github.maradroman.waypointapi.auth.model.User;
-import io.github.maradroman.waypointapi.auth.service.JwtService;
-import io.github.maradroman.waypointapi.common.security.CurrentUserResolver;
-import io.github.maradroman.waypointapi.plannedfund.service.PlannedFundService;
-import io.github.maradroman.waypointapi.testdata.TestDataUserEntity;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
-import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
-import org.springframework.boot.test.context.TestConfiguration;
-import org.springframework.http.MediaType;
-import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.context.bean.override.mockito.MockitoBean;
-import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.web.method.support.HandlerMethodArgumentResolver;
-import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
-
-import java.util.List;
-
 import static io.github.maradroman.waypointapi.testdata.TestDataConstant.*;
 import static io.github.maradroman.waypointapi.testdata.TestDataPlannedFundDto.plannedFundResponse;
 import static io.github.maradroman.waypointapi.testdata.TestDataPlannedFundDto.upsertPlannedFundRequest;
@@ -33,6 +10,28 @@ import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import io.github.maradroman.waypointapi.auth.model.User;
+import io.github.maradroman.waypointapi.auth.service.JwtService;
+import io.github.maradroman.waypointapi.common.security.CurrentUserResolver;
+import io.github.maradroman.waypointapi.plannedfund.service.PlannedFundService;
+import io.github.maradroman.waypointapi.testdata.TestDataUserEntity;
+import java.util.List;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.TestConfiguration;
+import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
+import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
+import org.springframework.http.MediaType;
+import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.web.method.support.HandlerMethodArgumentResolver;
+import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 @WebMvcTest(PlannedFundController.class)
 @ActiveProfiles("test")
@@ -57,7 +56,8 @@ class PlannedFundControllerTest {
     void setUp() {
         User mockUser = TestDataUserEntity.buildUser();
         lenient().when(currentUserResolver.supportsParameter(any())).thenReturn(true);
-        lenient().when(currentUserResolver.resolveArgument(any(), any(), any(), any()))
+        lenient()
+                .when(currentUserResolver.resolveArgument(any(), any(), any(), any()))
                 .thenReturn(mockUser);
     }
 
@@ -68,7 +68,8 @@ class PlannedFundControllerTest {
 
         var actualResult = mockMvc.perform(get("/goals/{goalId}/planned-funds", GOAL_ID));
 
-        actualResult.andExpect(status().isOk())
+        actualResult
+                .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data").isArray())
                 .andExpect(jsonPath("$.data[0].id").value(PLANNED_FUND_ID.toString()))
                 .andExpect(jsonPath("$.data[0].amount").value(PLANNED_FUND_AMOUNT))
@@ -84,9 +85,11 @@ class PlannedFundControllerTest {
 
         var actualResult = mockMvc.perform(put("/goals/{goalId}/planned-funds/{date}", GOAL_ID, PLANNED_FUND_DATE)
                 .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(upsertPlannedFundRequest(PLANNED_FUND_DATE, PLANNED_FUND_AMOUNT_2))));
+                .content(objectMapper.writeValueAsString(
+                        upsertPlannedFundRequest(PLANNED_FUND_DATE, PLANNED_FUND_AMOUNT_2))));
 
-        actualResult.andExpect(status().isOk())
+        actualResult
+                .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data").exists())
                 .andExpect(jsonPath("$.data.id").value(PLANNED_FUND_ID.toString()))
                 .andExpect(jsonPath("$.data.amount").value(PLANNED_FUND_AMOUNT_2))

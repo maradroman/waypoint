@@ -1,41 +1,19 @@
 package io.github.maradroman.waypointapi.milestone.service;
 
-import io.github.maradroman.waypointapi.auth.model.User;
-import io.github.maradroman.waypointapi.common.exception.ResourceNotFoundException;
-import io.github.maradroman.waypointapi.goal.model.Goal;
-import io.github.maradroman.waypointapi.goal.service.GoalService;
-import io.github.maradroman.waypointapi.milestone.dto.MilestoneResponse;
-import io.github.maradroman.waypointapi.milestone.model.Milestone;
-import io.github.maradroman.waypointapi.milestone.repository.MilestoneRepository;
-import io.github.maradroman.waypointapi.transfer.dto.TransferResponse;
-import io.github.maradroman.waypointapi.transfer.repository.TransferRepository;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Nested;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
-
-import java.util.List;
-import java.util.Optional;
-
-import static io.github.maradroman.waypointapi.testdata.TestDataConstant.GOAL_ID;
 import static io.github.maradroman.waypointapi.testdata.TestDataConstant.GOAL_ID_2;
-import static io.github.maradroman.waypointapi.testdata.TestDataConstant.GOAL_TITLE;
 import static io.github.maradroman.waypointapi.testdata.TestDataConstant.GOAL_TITLE_2;
+import static io.github.maradroman.waypointapi.testdata.TestDataConstant.MILESTONE_COST;
 import static io.github.maradroman.waypointapi.testdata.TestDataConstant.MILESTONE_ID;
 import static io.github.maradroman.waypointapi.testdata.TestDataConstant.MILESTONE_ID_2;
 import static io.github.maradroman.waypointapi.testdata.TestDataConstant.MILESTONE_TITLE;
 import static io.github.maradroman.waypointapi.testdata.TestDataConstant.MILESTONE_TITLE_2;
-import static io.github.maradroman.waypointapi.testdata.TestDataConstant.MILESTONE_COST;
 import static io.github.maradroman.waypointapi.testdata.TestDataConstant.USER_ID_2;
 import static io.github.maradroman.waypointapi.testdata.TestDataGoalEntity.buildGoal;
-import static io.github.maradroman.waypointapi.testdata.TestDataMilestoneEntity.buildMilestone;
-import static io.github.maradroman.waypointapi.testdata.TestDataMilestoneEntity.buildCompletedMilestone;
 import static io.github.maradroman.waypointapi.testdata.TestDataMilestoneDto.createMilestoneRequest;
 import static io.github.maradroman.waypointapi.testdata.TestDataMilestoneDto.reorderMilestonesRequest;
 import static io.github.maradroman.waypointapi.testdata.TestDataMilestoneDto.updateMilestoneRequest;
+import static io.github.maradroman.waypointapi.testdata.TestDataMilestoneEntity.buildCompletedMilestone;
+import static io.github.maradroman.waypointapi.testdata.TestDataMilestoneEntity.buildMilestone;
 import static io.github.maradroman.waypointapi.testdata.TestDataTransferEntity.buildTransfer;
 import static io.github.maradroman.waypointapi.testdata.TestDataUserEntity.buildUser;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -44,6 +22,24 @@ import static org.assertj.core.api.Assertions.tuple;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+
+import io.github.maradroman.waypointapi.auth.model.User;
+import io.github.maradroman.waypointapi.common.exception.ResourceNotFoundException;
+import io.github.maradroman.waypointapi.goal.service.GoalService;
+import io.github.maradroman.waypointapi.milestone.dto.MilestoneResponse;
+import io.github.maradroman.waypointapi.milestone.model.Milestone;
+import io.github.maradroman.waypointapi.milestone.repository.MilestoneRepository;
+import io.github.maradroman.waypointapi.transfer.dto.TransferResponse;
+import io.github.maradroman.waypointapi.transfer.repository.TransferRepository;
+import java.util.List;
+import java.util.Optional;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Nested;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 @ExtendWith(MockitoExtension.class)
 class MilestoneServiceTest {
@@ -108,7 +104,8 @@ class MilestoneServiceTest {
         void createMilestone_usesDefaultValuesWhenFieldsNullTest() {
             var goal = buildGoal(user);
             when(goalService.findGoalForUser(user, goal.getId())).thenReturn(goal);
-            var request = new io.github.maradroman.waypointapi.milestone.dto.CreateMilestoneRequest("Title", null, null, null);
+            var request = new io.github.maradroman.waypointapi.milestone.dto.CreateMilestoneRequest(
+                    "Title", null, null, null);
             when(milestoneRepository.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
 
             var actualResult = milestoneService.createMilestone(user, goal.getId(), request);
@@ -130,7 +127,8 @@ class MilestoneServiceTest {
             when(goalService.findGoalForUser(user, goal.getId())).thenReturn(goal);
             when(milestoneRepository.findById(milestone.getId())).thenReturn(Optional.of(milestone));
             when(milestoneRepository.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
-            when(transferRepository.findByMilestoneIdOrderByTimestampDesc(milestone.getId())).thenReturn(List.of());
+            when(transferRepository.findByMilestoneIdOrderByTimestampDesc(milestone.getId()))
+                    .thenReturn(List.of());
 
             var request = updateMilestoneRequest("New Title", 50000);
             var actualResult = milestoneService.updateMilestone(user, goal.getId(), milestone.getId(), request);
@@ -169,7 +167,8 @@ class MilestoneServiceTest {
             when(goalService.findGoalForUser(user, goal.getId())).thenReturn(goal);
             when(milestoneRepository.findById(milestone.getId())).thenReturn(Optional.of(milestone));
             when(milestoneRepository.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
-            when(transferRepository.findByMilestoneIdOrderByTimestampDesc(milestone.getId())).thenReturn(List.of());
+            when(transferRepository.findByMilestoneIdOrderByTimestampDesc(milestone.getId()))
+                    .thenReturn(List.of());
 
             var actualResult = milestoneService.uncompleteMilestone(user, goal.getId(), milestone.getId());
 
@@ -201,7 +200,8 @@ class MilestoneServiceTest {
             when(goalService.findGoalForUser(user, goal.getId())).thenReturn(goal);
             when(milestoneRepository.findById(milestone.getId())).thenReturn(Optional.of(milestone));
             when(milestoneRepository.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
-            when(transferRepository.findByMilestoneIdOrderByTimestampDesc(milestone.getId())).thenReturn(List.of());
+            when(transferRepository.findByMilestoneIdOrderByTimestampDesc(milestone.getId()))
+                    .thenReturn(List.of());
 
             var actualResult = milestoneService.toggleMilestone(user, goal.getId(), milestone.getId());
 
@@ -279,7 +279,8 @@ class MilestoneServiceTest {
             var milestone = buildMilestone(goal);
             when(goalService.findGoalForUser(user, goal.getId())).thenReturn(goal);
             when(milestoneRepository.findById(milestone.getId())).thenReturn(Optional.of(milestone));
-            when(transferRepository.findByMilestoneIdOrderByTimestampDesc(milestone.getId())).thenReturn(List.of());
+            when(transferRepository.findByMilestoneIdOrderByTimestampDesc(milestone.getId()))
+                    .thenReturn(List.of());
 
             var actualResult = milestoneService.getMilestoneWithBalance(user, goal.getId(), milestone.getId());
 

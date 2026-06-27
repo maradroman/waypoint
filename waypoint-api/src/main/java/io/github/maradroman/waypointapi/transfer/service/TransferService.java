@@ -15,13 +15,12 @@ import io.github.maradroman.waypointapi.transfer.dto.UpdateTransferRequest;
 import io.github.maradroman.waypointapi.transfer.dto.WithdrawRequest;
 import io.github.maradroman.waypointapi.transfer.model.Transfer;
 import io.github.maradroman.waypointapi.transfer.repository.TransferRepository;
-import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
 import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @Transactional
@@ -36,8 +35,7 @@ public class TransferService {
     @Transactional(readOnly = true)
     public List<TransferResponse> listTransfers(User user, UUID goalId) {
         goalService.findGoalForUser(user, goalId);
-        return transferRepository.findByGoalIdOrderByTimestampDesc(goalId)
-                .stream()
+        return transferRepository.findByGoalIdOrderByTimestampDesc(goalId).stream()
                 .map(TransferResponse::from)
                 .toList();
     }
@@ -52,7 +50,8 @@ public class TransferService {
         int allowed = Math.min(walletBalance, Math.min(remainingNeed, request.amount()));
 
         if (allowed <= 0) {
-            throw new BadRequestException("ALLOCATION_FAILED",
+            throw new BadRequestException(
+                    "ALLOCATION_FAILED",
                     "Cannot allocate: insufficient wallet balance or milestone fully funded",
                     new AllocateResponse(0, request.amount()));
         }
@@ -78,7 +77,8 @@ public class TransferService {
         int allowed = Math.min(milestoneBalance, request.amount());
 
         if (allowed <= 0) {
-            throw new BadRequestException("WITHDRAWAL_FAILED",
+            throw new BadRequestException(
+                    "WITHDRAWAL_FAILED",
                     "Cannot withdraw: milestone has no allocated funds",
                     new AllocateResponse(0, request.amount()));
         }
@@ -126,7 +126,8 @@ public class TransferService {
 
     private Transfer findTransferForUser(User user, UUID goalId, UUID transferId) {
         Goal goal = goalService.findGoalForUser(user, goalId);
-        Transfer transfer = transferRepository.findById(transferId)
+        Transfer transfer = transferRepository
+                .findById(transferId)
                 .orElseThrow(() -> new ResourceNotFoundException("TRANSFER_NOT_FOUND", "Transfer not found"));
         if (!transfer.getGoal().getId().equals(goal.getId())) {
             throw new ResourceNotFoundException("TRANSFER_NOT_FOUND", "Transfer not found");

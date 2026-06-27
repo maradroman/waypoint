@@ -1,28 +1,5 @@
 package io.github.maradroman.waypointapi.transfer.controller;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
-import io.github.maradroman.waypointapi.auth.model.User;
-import io.github.maradroman.waypointapi.auth.service.JwtService;
-import io.github.maradroman.waypointapi.common.security.CurrentUserResolver;
-import io.github.maradroman.waypointapi.testdata.TestDataUserEntity;
-import io.github.maradroman.waypointapi.transfer.service.TransferService;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
-import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
-import org.springframework.boot.test.context.TestConfiguration;
-import org.springframework.http.MediaType;
-import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.context.bean.override.mockito.MockitoBean;
-import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.web.method.support.HandlerMethodArgumentResolver;
-import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
-
-import java.util.List;
-
 import static io.github.maradroman.waypointapi.testdata.TestDataConstant.DEFAULT_TIMESTAMP;
 import static io.github.maradroman.waypointapi.testdata.TestDataConstant.GOAL_ID;
 import static io.github.maradroman.waypointapi.testdata.TestDataConstant.MILESTONE_ID;
@@ -44,6 +21,28 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import io.github.maradroman.waypointapi.auth.model.User;
+import io.github.maradroman.waypointapi.auth.service.JwtService;
+import io.github.maradroman.waypointapi.common.security.CurrentUserResolver;
+import io.github.maradroman.waypointapi.testdata.TestDataUserEntity;
+import io.github.maradroman.waypointapi.transfer.service.TransferService;
+import java.util.List;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.TestConfiguration;
+import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
+import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
+import org.springframework.http.MediaType;
+import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.web.method.support.HandlerMethodArgumentResolver;
+import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 @WebMvcTest(TransferController.class)
 @ActiveProfiles("test")
@@ -68,7 +67,8 @@ class TransferControllerTest {
     void setUp() {
         User mockUser = TestDataUserEntity.buildUser();
         lenient().when(currentUserResolver.supportsParameter(any())).thenReturn(true);
-        lenient().when(currentUserResolver.resolveArgument(any(), any(), any(), any()))
+        lenient()
+                .when(currentUserResolver.resolveArgument(any(), any(), any(), any()))
                 .thenReturn(mockUser);
     }
 
@@ -79,7 +79,8 @@ class TransferControllerTest {
 
         var actualResult = mockMvc.perform(get("/goals/{goalId}/transfers", GOAL_ID));
 
-        actualResult.andExpect(status().isOk())
+        actualResult
+                .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data").isArray())
                 .andExpect(jsonPath("$.data[0].id").value(TRANSFER_ID.toString()))
                 .andExpect(jsonPath("$.data[0].amount").value(TRANSFER_AMOUNT))
@@ -96,7 +97,8 @@ class TransferControllerTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(allocateRequest(MILESTONE_ID, 10000))));
 
-        actualResult.andExpect(status().isOk())
+        actualResult
+                .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data").exists())
                 .andExpect(jsonPath("$.data.applied").value(10000))
                 .andExpect(jsonPath("$.data.requested").value(10000))
@@ -112,7 +114,8 @@ class TransferControllerTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(withdrawRequest(MILESTONE_ID, 5000))));
 
-        actualResult.andExpect(status().isOk())
+        actualResult
+                .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data").exists())
                 .andExpect(jsonPath("$.data.applied").value(5000))
                 .andExpect(jsonPath("$.data.requested").value(5000))
@@ -129,7 +132,8 @@ class TransferControllerTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(updateTransferRequest(75000))));
 
-        actualResult.andExpect(status().isOk())
+        actualResult
+                .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data").exists())
                 .andExpect(jsonPath("$.data.id").value(TRANSFER_ID.toString()))
                 .andExpect(jsonPath("$.data.amount").value(75000))

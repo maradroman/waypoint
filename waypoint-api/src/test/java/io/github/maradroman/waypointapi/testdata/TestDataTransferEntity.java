@@ -1,14 +1,13 @@
 package io.github.maradroman.waypointapi.testdata;
 
+import static io.github.maradroman.waypointapi.testdata.TestDataConstant.*;
+
 import io.github.maradroman.waypointapi.goal.model.Goal;
 import io.github.maradroman.waypointapi.milestone.model.Milestone;
 import io.github.maradroman.waypointapi.transfer.model.Transfer;
-import lombok.experimental.UtilityClass;
-
 import java.time.Instant;
 import java.util.UUID;
-
-import static io.github.maradroman.waypointapi.testdata.TestDataConstant.*;
+import lombok.experimental.UtilityClass;
 
 @UtilityClass
 public class TestDataTransferEntity {
@@ -25,7 +24,8 @@ public class TestDataTransferEntity {
                 .build();
     }
 
-    public static Transfer buildTransfer(UUID id, Goal goal, Milestone milestone, int amount, String type, Instant timestamp) {
+    public static Transfer buildTransfer(
+            UUID id, Goal goal, Milestone milestone, int amount, String type, Instant timestamp) {
         return Transfer.builder()
                 .id(id)
                 .goal(goal)

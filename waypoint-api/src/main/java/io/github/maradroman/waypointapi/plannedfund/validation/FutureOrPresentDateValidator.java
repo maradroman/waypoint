@@ -2,7 +2,6 @@ package io.github.maradroman.waypointapi.plannedfund.validation;
 
 import jakarta.validation.ConstraintValidator;
 import jakarta.validation.ConstraintValidatorContext;
-
 import java.time.LocalDate;
 
 public class FutureOrPresentDateValidator implements ConstraintValidator<FutureOrPresentDate, String> {

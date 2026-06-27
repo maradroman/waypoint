@@ -1,8 +1,16 @@
 package io.github.maradroman.waypointapi.common.security;
 
+import static io.github.maradroman.waypointapi.testdata.TestDataConstant.USER_ID;
+import static io.github.maradroman.waypointapi.testdata.TestDataUserEntity.buildUser;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.Mockito.*;
+
 import io.github.maradroman.waypointapi.auth.model.User;
 import io.github.maradroman.waypointapi.auth.repository.UserRepository;
 import io.github.maradroman.waypointapi.common.exception.ResourceNotFoundException;
+import java.util.Optional;
+import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -16,25 +24,26 @@ import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.context.request.NativeWebRequest;
 
-import java.util.Optional;
-import java.util.UUID;
-
-import static io.github.maradroman.waypointapi.testdata.TestDataConstant.USER_ID;
-import static io.github.maradroman.waypointapi.testdata.TestDataUserEntity.buildUser;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.Mockito.*;
-
 @ExtendWith(MockitoExtension.class)
 class CurrentUserResolverTest {
 
-    @Mock private UserRepository userRepository;
-    @Mock private MethodParameter methodParameter;
-    @Mock private NativeWebRequest webRequest;
-    @Mock private SecurityContext securityContext;
-    @Mock private Authentication authentication;
+    @Mock
+    private UserRepository userRepository;
 
-    @InjectMocks private CurrentUserResolver resolver;
+    @Mock
+    private MethodParameter methodParameter;
+
+    @Mock
+    private NativeWebRequest webRequest;
+
+    @Mock
+    private SecurityContext securityContext;
+
+    @Mock
+    private Authentication authentication;
+
+    @InjectMocks
+    private CurrentUserResolver resolver;
 
     @BeforeEach
     void setUp() {

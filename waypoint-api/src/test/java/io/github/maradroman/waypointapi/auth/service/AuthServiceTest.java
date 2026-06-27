@@ -1,5 +1,16 @@
 package io.github.maradroman.waypointapi.auth.service;
 
+import static io.github.maradroman.waypointapi.testdata.TestDataAuthDto.*;
+import static io.github.maradroman.waypointapi.testdata.TestDataConstant.*;
+import static io.github.maradroman.waypointapi.testdata.TestDataRefreshTokenEntity.buildExpiredRefreshToken;
+import static io.github.maradroman.waypointapi.testdata.TestDataRefreshTokenEntity.buildRefreshToken;
+import static io.github.maradroman.waypointapi.testdata.TestDataUserEntity.buildUser;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
 import io.github.maradroman.waypointapi.auth.dto.AuthResponse;
 import io.github.maradroman.waypointapi.auth.dto.UpdateProfileRequest;
 import io.github.maradroman.waypointapi.auth.model.RefreshToken;
@@ -8,6 +19,7 @@ import io.github.maradroman.waypointapi.auth.repository.RefreshTokenRepository;
 import io.github.maradroman.waypointapi.auth.repository.UserRepository;
 import io.github.maradroman.waypointapi.common.exception.BadRequestException;
 import io.github.maradroman.waypointapi.common.exception.DuplicateResourceException;
+import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -21,33 +33,31 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
-import java.util.Optional;
-
-import static io.github.maradroman.waypointapi.testdata.TestDataAuthDto.*;
-import static io.github.maradroman.waypointapi.testdata.TestDataConstant.*;
-import static io.github.maradroman.waypointapi.testdata.TestDataRefreshTokenEntity.buildExpiredRefreshToken;
-import static io.github.maradroman.waypointapi.testdata.TestDataRefreshTokenEntity.buildRefreshToken;
-import static io.github.maradroman.waypointapi.testdata.TestDataUserEntity.buildUser;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
-
 @ExtendWith(MockitoExtension.class)
 class AuthServiceTest {
 
-    @Mock private UserRepository userRepository;
-    @Mock private RefreshTokenRepository refreshTokenRepository;
-    @Mock private PasswordEncoder passwordEncoder;
-    @Mock private JwtService jwtService;
+    @Mock
+    private UserRepository userRepository;
 
-    @InjectMocks private AuthService authService;
+    @Mock
+    private RefreshTokenRepository refreshTokenRepository;
+
+    @Mock
+    private PasswordEncoder passwordEncoder;
+
+    @Mock
+    private JwtService jwtService;
+
+    @InjectMocks
+    private AuthService authService;
 
     private User user;
 
-    @Captor private ArgumentCaptor<User> userCaptor;
-    @Captor private ArgumentCaptor<RefreshToken> refreshTokenCaptor;
+    @Captor
+    private ArgumentCaptor<User> userCaptor;
+
+    @Captor
+    private ArgumentCaptor<RefreshToken> refreshTokenCaptor;
 
     @BeforeEach
     void setUp() {
@@ -69,19 +79,24 @@ class AuthServiceTest {
             when(jwtService.generateAccessToken(user.getId(), user.getRole())).thenReturn("access-token");
             when(jwtService.generateRefreshToken()).thenReturn("refresh-token");
             when(jwtService.getRefreshTokenExpiration()).thenReturn(2592000000L);
-            when(refreshTokenRepository.save(any(RefreshToken.class))).thenAnswer(invocation -> invocation.getArgument(0));
+            when(refreshTokenRepository.save(any(RefreshToken.class)))
+                    .thenAnswer(invocation -> invocation.getArgument(0));
 
             var actualResult = authService.register(request);
 
             assertThat(userCaptor.getValue())
-                .extracting(User::getEmail, User::getPasswordHash, User::getDisplayName)
-                .containsExactly(request.email(), "encoded", request.displayName());
+                    .extracting(User::getEmail, User::getPasswordHash, User::getDisplayName)
+                    .containsExactly(request.email(), "encoded", request.displayName());
             assertThat(actualResult)
-                .extracting(AuthResponse::accessToken, AuthResponse::refreshToken)
-                .containsExactly("access-token", "refresh-token");
+                    .extracting(AuthResponse::accessToken, AuthResponse::refreshToken)
+                    .containsExactly("access-token", "refresh-token");
             assertThat(actualResult.user())
-                .extracting(AuthResponse.UserProfile::id, AuthResponse.UserProfile::email, AuthResponse.UserProfile::displayName, AuthResponse.UserProfile::role)
-                .containsExactly(USER_ID.toString(), USER_EMAIL, USER_DISPLAY_NAME, USER_ROLE);
+                    .extracting(
+                            AuthResponse.UserProfile::id,
+                            AuthResponse.UserProfile::email,
+                            AuthResponse.UserProfile::displayName,
+                            AuthResponse.UserProfile::role)
+                    .containsExactly(USER_ID.toString(), USER_EMAIL, USER_DISPLAY_NAME, USER_ROLE);
         }
 
         @Test
@@ -92,8 +107,8 @@ class AuthServiceTest {
             when(userRepository.existsByEmail(request.email())).thenReturn(true);
 
             assertThatThrownBy(() -> authService.register(request))
-                .isInstanceOf(DuplicateResourceException.class)
-                .hasFieldOrPropertyWithValue("code", "EMAIL_EXISTS");
+                    .isInstanceOf(DuplicateResourceException.class)
+                    .hasFieldOrPropertyWithValue("code", "EMAIL_EXISTS");
         }
     }
 
@@ -107,17 +122,19 @@ class AuthServiceTest {
             var request = loginRequest();
 
             when(userRepository.findByEmail(request.email())).thenReturn(Optional.of(user));
-            when(passwordEncoder.matches(request.password(), user.getPasswordHash())).thenReturn(true);
+            when(passwordEncoder.matches(request.password(), user.getPasswordHash()))
+                    .thenReturn(true);
             when(jwtService.generateAccessToken(user.getId(), user.getRole())).thenReturn("access-token");
             when(jwtService.generateRefreshToken()).thenReturn("refresh-token");
             when(jwtService.getRefreshTokenExpiration()).thenReturn(2592000000L);
-            when(refreshTokenRepository.save(any(RefreshToken.class))).thenAnswer(invocation -> invocation.getArgument(0));
+            when(refreshTokenRepository.save(any(RefreshToken.class)))
+                    .thenAnswer(invocation -> invocation.getArgument(0));
 
             var actualResult = authService.login(request);
 
             assertThat(actualResult)
-                .extracting(AuthResponse::accessToken, AuthResponse::refreshToken)
-                .containsExactly("access-token", "refresh-token");
+                    .extracting(AuthResponse::accessToken, AuthResponse::refreshToken)
+                    .containsExactly("access-token", "refresh-token");
         }
 
         @Test
@@ -127,8 +144,7 @@ class AuthServiceTest {
 
             when(userRepository.findByEmail(request.email())).thenReturn(Optional.empty());
 
-            assertThatThrownBy(() -> authService.login(request))
-                .isInstanceOf(BadCredentialsException.class);
+            assertThatThrownBy(() -> authService.login(request)).isInstanceOf(BadCredentialsException.class);
         }
 
         @Test
@@ -137,10 +153,10 @@ class AuthServiceTest {
             var request = loginRequest();
 
             when(userRepository.findByEmail(request.email())).thenReturn(Optional.of(user));
-            when(passwordEncoder.matches(request.password(), user.getPasswordHash())).thenReturn(false);
+            when(passwordEncoder.matches(request.password(), user.getPasswordHash()))
+                    .thenReturn(false);
 
-            assertThatThrownBy(() -> authService.login(request))
-                .isInstanceOf(BadCredentialsException.class);
+            assertThatThrownBy(() -> authService.login(request)).isInstanceOf(BadCredentialsException.class);
         }
     }
 
@@ -159,14 +175,15 @@ class AuthServiceTest {
             when(jwtService.generateAccessToken(user.getId(), user.getRole())).thenReturn("new-access-token");
             when(jwtService.generateRefreshToken()).thenReturn("new-refresh-token");
             when(jwtService.getRefreshTokenExpiration()).thenReturn(2592000000L);
-            when(refreshTokenRepository.save(refreshTokenCaptor.capture())).thenAnswer(invocation -> invocation.getArgument(0));
+            when(refreshTokenRepository.save(refreshTokenCaptor.capture()))
+                    .thenAnswer(invocation -> invocation.getArgument(0));
 
             var actualResult = authService.refresh(request);
 
             verify(refreshTokenRepository).deleteByToken(request.refreshToken());
             assertThat(actualResult)
-                .extracting(AuthResponse::accessToken, AuthResponse::refreshToken)
-                .containsExactly("new-access-token", "new-refresh-token");
+                    .extracting(AuthResponse::accessToken, AuthResponse::refreshToken)
+                    .containsExactly("new-access-token", "new-refresh-token");
             assertThat(refreshTokenCaptor.getValue().getUser()).isEqualTo(user);
         }
 
@@ -178,8 +195,8 @@ class AuthServiceTest {
             when(refreshTokenRepository.findByToken(request.refreshToken())).thenReturn(Optional.empty());
 
             assertThatThrownBy(() -> authService.refresh(request))
-                .isInstanceOf(BadRequestException.class)
-                .hasFieldOrPropertyWithValue("code", "INVALID_REFRESH_TOKEN");
+                    .isInstanceOf(BadRequestException.class)
+                    .hasFieldOrPropertyWithValue("code", "INVALID_REFRESH_TOKEN");
         }
 
         @Test
@@ -192,8 +209,8 @@ class AuthServiceTest {
             when(refreshTokenRepository.deleteByToken(request.refreshToken())).thenReturn(1);
 
             assertThatThrownBy(() -> authService.refresh(request))
-                .isInstanceOf(BadRequestException.class)
-                .hasFieldOrPropertyWithValue("code", "REFRESH_TOKEN_EXPIRED");
+                    .isInstanceOf(BadRequestException.class)
+                    .hasFieldOrPropertyWithValue("code", "REFRESH_TOKEN_EXPIRED");
             verify(refreshTokenRepository).deleteByToken(request.refreshToken());
         }
     }
@@ -221,8 +238,13 @@ class AuthServiceTest {
             var actualResult = authService.getProfile(user);
 
             assertThat(actualResult)
-                .extracting(AuthResponse.UserProfile::id, AuthResponse.UserProfile::email, AuthResponse.UserProfile::displayName, AuthResponse.UserProfile::locale, AuthResponse.UserProfile::currency)
-                .containsExactly(USER_ID.toString(), USER_EMAIL, USER_DISPLAY_NAME, USER_LOCALE, USER_CURRENCY);
+                    .extracting(
+                            AuthResponse.UserProfile::id,
+                            AuthResponse.UserProfile::email,
+                            AuthResponse.UserProfile::displayName,
+                            AuthResponse.UserProfile::locale,
+                            AuthResponse.UserProfile::currency)
+                    .containsExactly(USER_ID.toString(), USER_EMAIL, USER_DISPLAY_NAME, USER_LOCALE, USER_CURRENCY);
         }
     }
 
@@ -240,8 +262,11 @@ class AuthServiceTest {
             var actualResult = authService.updateProfile(user, request);
 
             assertThat(actualResult)
-                .extracting(AuthResponse.UserProfile::displayName, AuthResponse.UserProfile::locale, AuthResponse.UserProfile::currency)
-                .containsExactly("New Name", USER_LOCALE, USER_CURRENCY);
+                    .extracting(
+                            AuthResponse.UserProfile::displayName,
+                            AuthResponse.UserProfile::locale,
+                            AuthResponse.UserProfile::currency)
+                    .containsExactly("New Name", USER_LOCALE, USER_CURRENCY);
             assertThat(user.getDisplayName()).isEqualTo("New Name");
             assertThat(user.getLocale()).isEqualTo(USER_LOCALE);
             assertThat(user.getCurrency()).isEqualTo(USER_CURRENCY);

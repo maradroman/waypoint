@@ -165,6 +165,9 @@ jobs:
       - name: Checkstyle
         run: ./waypoint-api/mvnw checkstyle:check -f waypoint-api/pom.xml
 
+      - name: Spotless
+        run: ./waypoint-api/mvnw spotless:check -f waypoint-api/pom.xml
+
   security-scan:
     name: Semgrep → CodeQL → OWASP DC → Gitleaks
     needs: static-analysis

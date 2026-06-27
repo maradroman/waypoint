@@ -8,12 +8,11 @@ import io.github.maradroman.waypointapi.goal.dto.ReorderGoalsRequest;
 import io.github.maradroman.waypointapi.goal.dto.UpdateGoalRequest;
 import io.github.maradroman.waypointapi.goal.model.Goal;
 import io.github.maradroman.waypointapi.goal.repository.GoalRepository;
+import java.util.List;
+import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.util.List;
-import java.util.UUID;
 
 @Service
 @Transactional
@@ -24,8 +23,7 @@ public class GoalService {
 
     @Transactional(readOnly = true)
     public List<GoalResponse> listGoals(User user) {
-        return goalRepository.findByUserIdOrderBySortOrderAsc(user.getId())
-                .stream()
+        return goalRepository.findByUserIdOrderBySortOrderAsc(user.getId()).stream()
                 .map(GoalResponse::from)
                 .toList();
     }
@@ -72,17 +70,15 @@ public class GoalService {
         for (int i = 0; i < request.goalIds().size(); i++) {
             UUID id = request.goalIds().get(i);
             int order = i;
-            goals.stream()
-                    .filter(g -> g.getId().equals(id))
-                    .findFirst()
-                    .ifPresent(g -> g.setSortOrder(order));
+            goals.stream().filter(g -> g.getId().equals(id)).findFirst().ifPresent(g -> g.setSortOrder(order));
         }
         goalRepository.saveAll(goals);
         return goals.stream().map(GoalResponse::from).toList();
     }
 
     public Goal findGoalForUser(User user, UUID goalId) {
-        Goal goal = goalRepository.findById(goalId)
+        Goal goal = goalRepository
+                .findById(goalId)
                 .orElseThrow(() -> new ResourceNotFoundException("GOAL_NOT_FOUND", "Goal not found"));
         if (!goal.getUser().getId().equals(user.getId())) {
             throw new ResourceNotFoundException("GOAL_NOT_FOUND", "Goal not found");

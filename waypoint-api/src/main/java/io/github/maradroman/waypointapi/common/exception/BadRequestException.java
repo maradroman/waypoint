@@ -16,5 +16,4 @@ public class BadRequestException extends RuntimeException {
         this.code = code;
         this.details = details;
     }
-
 }

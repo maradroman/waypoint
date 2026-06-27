@@ -1,35 +1,15 @@
 package io.github.maradroman.waypointapi.goal.service;
 
-import io.github.maradroman.waypointapi.auth.model.User;
-import io.github.maradroman.waypointapi.common.exception.ResourceNotFoundException;
-import io.github.maradroman.waypointapi.goal.dto.GoalResponse;
-import io.github.maradroman.waypointapi.goal.dto.UpdateGoalRequest;
-import io.github.maradroman.waypointapi.goal.model.Goal;
-import io.github.maradroman.waypointapi.goal.repository.GoalRepository;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Nested;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
-
-import java.util.List;
-import java.util.Optional;
-
+import static io.github.maradroman.waypointapi.testdata.TestDataConstant.GOAL_DESCRIPTION;
+import static io.github.maradroman.waypointapi.testdata.TestDataConstant.GOAL_ICON;
 import static io.github.maradroman.waypointapi.testdata.TestDataConstant.GOAL_ID;
 import static io.github.maradroman.waypointapi.testdata.TestDataConstant.GOAL_ID_2;
 import static io.github.maradroman.waypointapi.testdata.TestDataConstant.GOAL_TITLE;
 import static io.github.maradroman.waypointapi.testdata.TestDataConstant.GOAL_TITLE_2;
-import static io.github.maradroman.waypointapi.testdata.TestDataConstant.GOAL_DESCRIPTION;
-import static io.github.maradroman.waypointapi.testdata.TestDataConstant.GOAL_ICON;
-import static io.github.maradroman.waypointapi.testdata.TestDataConstant.USER_ID;
 import static io.github.maradroman.waypointapi.testdata.TestDataConstant.USER_ID_2;
-import static io.github.maradroman.waypointapi.testdata.TestDataGoalEntity.buildGoal;
-import static io.github.maradroman.waypointapi.testdata.TestDataGoalEntity.buildGoalWithSortOrder;
 import static io.github.maradroman.waypointapi.testdata.TestDataGoalDto.createGoalRequest;
 import static io.github.maradroman.waypointapi.testdata.TestDataGoalDto.reorderGoalsRequest;
-import static io.github.maradroman.waypointapi.testdata.TestDataGoalDto.goalResponse;
+import static io.github.maradroman.waypointapi.testdata.TestDataGoalEntity.buildGoal;
 import static io.github.maradroman.waypointapi.testdata.TestDataUserEntity.buildUser;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -37,6 +17,22 @@ import static org.assertj.core.api.Assertions.tuple;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+
+import io.github.maradroman.waypointapi.auth.model.User;
+import io.github.maradroman.waypointapi.common.exception.ResourceNotFoundException;
+import io.github.maradroman.waypointapi.goal.dto.GoalResponse;
+import io.github.maradroman.waypointapi.goal.dto.UpdateGoalRequest;
+import io.github.maradroman.waypointapi.goal.model.Goal;
+import io.github.maradroman.waypointapi.goal.repository.GoalRepository;
+import java.util.List;
+import java.util.Optional;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Nested;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 @ExtendWith(MockitoExtension.class)
 class GoalServiceTest {
@@ -58,8 +54,7 @@ class GoalServiceTest {
         void listGoals_returnsGoalsSortedBySortOrderTest() {
             var goal1 = buildGoal(GOAL_ID, user, GOAL_TITLE);
             var goal2 = buildGoal(GOAL_ID_2, user, GOAL_TITLE_2);
-            when(goalRepository.findByUserIdOrderBySortOrderAsc(user.getId()))
-                    .thenReturn(List.of(goal1, goal2));
+            when(goalRepository.findByUserIdOrderBySortOrderAsc(user.getId())).thenReturn(List.of(goal1, goal2));
 
             var actualResult = goalService.listGoals(user);
 
@@ -71,8 +66,7 @@ class GoalServiceTest {
 
         @Test
         void listGoals_returnsEmptyListWhenNoGoalsTest() {
-            when(goalRepository.findByUserIdOrderBySortOrderAsc(user.getId()))
-                    .thenReturn(List.of());
+            when(goalRepository.findByUserIdOrderBySortOrderAsc(user.getId())).thenReturn(List.of());
 
             var actualResult = goalService.listGoals(user);
 
@@ -186,9 +180,7 @@ class GoalServiceTest {
             var request = new UpdateGoalRequest(null, null, "piggy-bank");
             var actualResult = goalService.updateGoal(user, goal.getId(), request);
 
-            assertThat(actualResult)
-                    .extracting(GoalResponse::icon)
-                    .isEqualTo("piggy-bank");
+            assertThat(actualResult).extracting(GoalResponse::icon).isEqualTo("piggy-bank");
         }
     }
 
@@ -215,8 +207,7 @@ class GoalServiceTest {
         void reorderGoals_updatesSortOrdersAccordingToProvidedIdsTest() {
             var goal1 = buildGoal(GOAL_ID, user, GOAL_TITLE);
             var goal2 = buildGoal(GOAL_ID_2, user, GOAL_TITLE_2);
-            when(goalRepository.findByUserIdOrderBySortOrderAsc(user.getId()))
-                    .thenReturn(List.of(goal1, goal2));
+            when(goalRepository.findByUserIdOrderBySortOrderAsc(user.getId())).thenReturn(List.of(goal1, goal2));
 
             var request = reorderGoalsRequest(GOAL_ID_2, GOAL_ID);
             var actualResult = goalService.reorderGoals(user, request);

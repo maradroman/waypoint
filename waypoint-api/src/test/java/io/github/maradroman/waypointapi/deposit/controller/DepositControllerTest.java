@@ -1,30 +1,7 @@
 package io.github.maradroman.waypointapi.deposit.controller;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
-import io.github.maradroman.waypointapi.auth.model.User;
-import io.github.maradroman.waypointapi.auth.service.JwtService;
-import io.github.maradroman.waypointapi.common.security.CurrentUserResolver;
-import io.github.maradroman.waypointapi.deposit.service.DepositService;
-import io.github.maradroman.waypointapi.testdata.TestDataUserEntity;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
-import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
-import org.springframework.boot.test.context.TestConfiguration;
-import org.springframework.http.MediaType;
-import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.context.bean.override.mockito.MockitoBean;
-import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.web.method.support.HandlerMethodArgumentResolver;
-import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
-
-import java.util.List;
-
-import static io.github.maradroman.waypointapi.testdata.TestDataConstant.DEPOSIT_AMOUNT;
 import static io.github.maradroman.waypointapi.testdata.TestDataConstant.DEFAULT_TIMESTAMP;
+import static io.github.maradroman.waypointapi.testdata.TestDataConstant.DEPOSIT_AMOUNT;
 import static io.github.maradroman.waypointapi.testdata.TestDataConstant.DEPOSIT_ID;
 import static io.github.maradroman.waypointapi.testdata.TestDataConstant.GOAL_ID;
 import static io.github.maradroman.waypointapi.testdata.TestDataDepositDto.createDepositRequest;
@@ -40,6 +17,28 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import io.github.maradroman.waypointapi.auth.model.User;
+import io.github.maradroman.waypointapi.auth.service.JwtService;
+import io.github.maradroman.waypointapi.common.security.CurrentUserResolver;
+import io.github.maradroman.waypointapi.deposit.service.DepositService;
+import io.github.maradroman.waypointapi.testdata.TestDataUserEntity;
+import java.util.List;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.TestConfiguration;
+import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
+import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
+import org.springframework.http.MediaType;
+import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.web.method.support.HandlerMethodArgumentResolver;
+import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 @WebMvcTest(DepositController.class)
 @ActiveProfiles("test")
@@ -64,7 +63,8 @@ class DepositControllerTest {
     void setUp() {
         User mockUser = TestDataUserEntity.buildUser();
         lenient().when(currentUserResolver.supportsParameter(any())).thenReturn(true);
-        lenient().when(currentUserResolver.resolveArgument(any(), any(), any(), any()))
+        lenient()
+                .when(currentUserResolver.resolveArgument(any(), any(), any(), any()))
                 .thenReturn(mockUser);
     }
 
@@ -75,7 +75,8 @@ class DepositControllerTest {
 
         var actualResult = mockMvc.perform(get("/goals/{goalId}/deposits", GOAL_ID));
 
-        actualResult.andExpect(status().isOk())
+        actualResult
+                .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data").isArray())
                 .andExpect(jsonPath("$.data[0].id").value(DEPOSIT_ID.toString()))
                 .andExpect(jsonPath("$.data[0].amount").value(DEPOSIT_AMOUNT))
@@ -92,7 +93,8 @@ class DepositControllerTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(createDepositRequest(75000))));
 
-        actualResult.andExpect(status().isCreated())
+        actualResult
+                .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.data").exists())
                 .andExpect(jsonPath("$.data.id").value(DEPOSIT_ID.toString()))
                 .andExpect(jsonPath("$.data.amount").value(75000))
@@ -109,7 +111,8 @@ class DepositControllerTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(updateDepositRequest(75000))));
 
-        actualResult.andExpect(status().isOk())
+        actualResult
+                .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data").exists())
                 .andExpect(jsonPath("$.data.id").value(DEPOSIT_ID.toString()))
                 .andExpect(jsonPath("$.data.amount").value(75000))

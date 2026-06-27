@@ -1,12 +1,5 @@
 package io.github.maradroman.waypointapi.repository;
 
-import io.github.maradroman.waypointapi.testdata.TestDataJpa;
-import io.github.maradroman.waypointapi.transfer.model.Transfer;
-import io.github.maradroman.waypointapi.transfer.repository.TransferRepository;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-
 import static io.github.maradroman.waypointapi.testdata.TestDataConstant.DEFAULT_TIMESTAMP;
 import static io.github.maradroman.waypointapi.testdata.TestDataConstant.DEFAULT_TIMESTAMP_2;
 import static io.github.maradroman.waypointapi.testdata.TestDataConstant.GOAL_ID;
@@ -25,6 +18,13 @@ import static io.github.maradroman.waypointapi.testdata.TestDataConstant.TRANSFE
 import static io.github.maradroman.waypointapi.testdata.TestDataConstant.USER_ID;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.groups.Tuple.tuple;
+
+import io.github.maradroman.waypointapi.testdata.TestDataJpa;
+import io.github.maradroman.waypointapi.transfer.model.Transfer;
+import io.github.maradroman.waypointapi.transfer.repository.TransferRepository;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
 
 class TransferRepositoryTest extends TestDataJpa {
 
@@ -50,7 +50,8 @@ class TransferRepositoryTest extends TestDataJpa {
         persistGoal(GOAL_ID, USER_ID, GOAL_TITLE, 0);
         persistMilestone(MILESTONE_ID, GOAL_ID, MILESTONE_TITLE, MILESTONE_COST, 0);
         persistTransfer(TRANSFER_ID, GOAL_ID, MILESTONE_ID, TRANSFER_AMOUNT, TRANSFER_TYPE_ALLOCATE, DEFAULT_TIMESTAMP);
-        persistTransfer(TRANSFER_ID_2, GOAL_ID, MILESTONE_ID, TRANSFER_AMOUNT_2, TRANSFER_TYPE_ALLOCATE, DEFAULT_TIMESTAMP_2);
+        persistTransfer(
+                TRANSFER_ID_2, GOAL_ID, MILESTONE_ID, TRANSFER_AMOUNT_2, TRANSFER_TYPE_ALLOCATE, DEFAULT_TIMESTAMP_2);
         flushAndClear();
 
         var actualResult = transferRepository.findByGoalId(GOAL_ID);
@@ -68,7 +69,8 @@ class TransferRepositoryTest extends TestDataJpa {
         persistGoal(GOAL_ID, USER_ID, GOAL_TITLE, 0);
         persistMilestone(MILESTONE_ID, GOAL_ID, MILESTONE_TITLE, MILESTONE_COST, 0);
         persistTransfer(TRANSFER_ID, GOAL_ID, MILESTONE_ID, TRANSFER_AMOUNT, TRANSFER_TYPE_ALLOCATE, DEFAULT_TIMESTAMP);
-        persistTransfer(TRANSFER_ID_2, GOAL_ID, MILESTONE_ID, TRANSFER_AMOUNT_2, TRANSFER_TYPE_ALLOCATE, DEFAULT_TIMESTAMP_2);
+        persistTransfer(
+                TRANSFER_ID_2, GOAL_ID, MILESTONE_ID, TRANSFER_AMOUNT_2, TRANSFER_TYPE_ALLOCATE, DEFAULT_TIMESTAMP_2);
         flushAndClear();
 
         var actualResult = transferRepository.findByGoalIdOrderByTimestampDesc(GOAL_ID);
@@ -87,7 +89,8 @@ class TransferRepositoryTest extends TestDataJpa {
         persistMilestone(MILESTONE_ID, GOAL_ID, MILESTONE_TITLE, MILESTONE_COST, 0);
         persistMilestone(MILESTONE_ID_2, GOAL_ID, MILESTONE_TITLE_2, MILESTONE_COST, 1);
         persistTransfer(TRANSFER_ID, GOAL_ID, MILESTONE_ID, TRANSFER_AMOUNT, TRANSFER_TYPE_ALLOCATE, DEFAULT_TIMESTAMP);
-        persistTransfer(TRANSFER_ID_2, GOAL_ID, MILESTONE_ID_2, TRANSFER_AMOUNT_2, TRANSFER_TYPE_ALLOCATE, DEFAULT_TIMESTAMP_2);
+        persistTransfer(
+                TRANSFER_ID_2, GOAL_ID, MILESTONE_ID_2, TRANSFER_AMOUNT_2, TRANSFER_TYPE_ALLOCATE, DEFAULT_TIMESTAMP_2);
         flushAndClear();
 
         var actualResult = transferRepository.findByMilestoneIdOrderByTimestampDesc(MILESTONE_ID);

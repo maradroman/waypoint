@@ -1,25 +1,5 @@
 package io.github.maradroman.waypointapi.analytics.controller;
 
-import io.github.maradroman.waypointapi.analytics.service.AnalyticsService;
-import io.github.maradroman.waypointapi.auth.model.User;
-import io.github.maradroman.waypointapi.auth.service.JwtService;
-import io.github.maradroman.waypointapi.common.security.CurrentUserResolver;
-import io.github.maradroman.waypointapi.testdata.TestDataUserEntity;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
-import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
-import org.springframework.boot.test.context.TestConfiguration;
-import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.context.bean.override.mockito.MockitoBean;
-import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.web.method.support.HandlerMethodArgumentResolver;
-import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
-
-import java.util.List;
-
 import static io.github.maradroman.waypointapi.testdata.TestDataAnalyticsDto.goalAnalyticsResponse;
 import static io.github.maradroman.waypointapi.testdata.TestDataAnalyticsDto.summaryResponse;
 import static io.github.maradroman.waypointapi.testdata.TestDataConstant.GOAL_ID;
@@ -29,6 +9,25 @@ import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
+import io.github.maradroman.waypointapi.analytics.service.AnalyticsService;
+import io.github.maradroman.waypointapi.auth.model.User;
+import io.github.maradroman.waypointapi.auth.service.JwtService;
+import io.github.maradroman.waypointapi.common.security.CurrentUserResolver;
+import io.github.maradroman.waypointapi.testdata.TestDataUserEntity;
+import java.util.List;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.TestConfiguration;
+import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
+import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
+import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.web.method.support.HandlerMethodArgumentResolver;
+import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 @WebMvcTest(AnalyticsController.class)
 @ActiveProfiles("test")
@@ -51,7 +50,8 @@ class AnalyticsControllerTest {
     void setUp() {
         User mockUser = TestDataUserEntity.buildUser();
         lenient().when(currentUserResolver.supportsParameter(any())).thenReturn(true);
-        lenient().when(currentUserResolver.resolveArgument(any(), any(), any(), any()))
+        lenient()
+                .when(currentUserResolver.resolveArgument(any(), any(), any(), any()))
                 .thenReturn(mockUser);
     }
 
@@ -62,7 +62,8 @@ class AnalyticsControllerTest {
 
         var actualResult = mockMvc.perform(get("/goals/{id}/analytics", GOAL_ID));
 
-        actualResult.andExpect(status().isOk())
+        actualResult
+                .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data").exists())
                 .andExpect(jsonPath("$.data.totalDeposited").value(50000))
                 .andExpect(jsonPath("$.data.totalAllocated").value(10000))
@@ -78,7 +79,8 @@ class AnalyticsControllerTest {
 
         var actualResult = mockMvc.perform(get("/analytics/summary"));
 
-        actualResult.andExpect(status().isOk())
+        actualResult
+                .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data").exists())
                 .andExpect(jsonPath("$.data.totalSaved").value(150000))
                 .andExpect(jsonPath("$.data.totalTargets").value(500000))

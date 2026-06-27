@@ -13,7 +13,6 @@ public record UpsertPlannedFundRequest(
         @FutureOrPresentDate
         @Schema(description = "Date in YYYY-MM-DD format (must be today or in the future)", example = "2026-07-15")
         String date,
-        @Positive
-        @Schema(description = "Planned amount in cents", example = "50000")
-        Integer amount
-) {}
+
+        @Positive @Schema(description = "Planned amount in cents", example = "50000")
+        Integer amount) {}

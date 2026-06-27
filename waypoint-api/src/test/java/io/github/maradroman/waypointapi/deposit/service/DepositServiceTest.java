@@ -1,33 +1,15 @@
 package io.github.maradroman.waypointapi.deposit.service;
 
-import io.github.maradroman.waypointapi.auth.model.User;
-import io.github.maradroman.waypointapi.common.exception.ResourceNotFoundException;
-import io.github.maradroman.waypointapi.deposit.dto.DepositResponse;
-import io.github.maradroman.waypointapi.deposit.repository.DepositRepository;
-import io.github.maradroman.waypointapi.goal.service.GoalService;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Nested;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
-
-import java.util.List;
-import java.util.Optional;
-
-import static io.github.maradroman.waypointapi.testdata.TestDataConstant.DEPOSIT_ID;
 import static io.github.maradroman.waypointapi.testdata.TestDataConstant.DEPOSIT_AMOUNT;
 import static io.github.maradroman.waypointapi.testdata.TestDataConstant.DEPOSIT_AMOUNT_2;
-import static io.github.maradroman.waypointapi.testdata.TestDataConstant.GOAL_ID;
+import static io.github.maradroman.waypointapi.testdata.TestDataConstant.DEPOSIT_ID;
 import static io.github.maradroman.waypointapi.testdata.TestDataConstant.GOAL_ID_2;
 import static io.github.maradroman.waypointapi.testdata.TestDataConstant.GOAL_TITLE_2;
-import static io.github.maradroman.waypointapi.testdata.TestDataConstant.DEFAULT_TIMESTAMP;
 import static io.github.maradroman.waypointapi.testdata.TestDataConstant.USER_ID_2;
-import static io.github.maradroman.waypointapi.testdata.TestDataGoalEntity.buildGoal;
-import static io.github.maradroman.waypointapi.testdata.TestDataDepositEntity.buildDeposit;
 import static io.github.maradroman.waypointapi.testdata.TestDataDepositDto.createDepositRequest;
 import static io.github.maradroman.waypointapi.testdata.TestDataDepositDto.updateDepositRequest;
+import static io.github.maradroman.waypointapi.testdata.TestDataDepositEntity.buildDeposit;
+import static io.github.maradroman.waypointapi.testdata.TestDataGoalEntity.buildGoal;
 import static io.github.maradroman.waypointapi.testdata.TestDataUserEntity.buildUser;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -35,6 +17,21 @@ import static org.assertj.core.api.Assertions.tuple;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+
+import io.github.maradroman.waypointapi.auth.model.User;
+import io.github.maradroman.waypointapi.common.exception.ResourceNotFoundException;
+import io.github.maradroman.waypointapi.deposit.dto.DepositResponse;
+import io.github.maradroman.waypointapi.deposit.repository.DepositRepository;
+import io.github.maradroman.waypointapi.goal.service.GoalService;
+import java.util.List;
+import java.util.Optional;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Nested;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 @ExtendWith(MockitoExtension.class)
 class DepositServiceTest {
@@ -60,7 +57,8 @@ class DepositServiceTest {
             var goal = buildGoal(user);
             var deposit = buildDeposit(goal);
             when(goalService.findGoalForUser(user, goal.getId())).thenReturn(goal);
-            when(depositRepository.findByGoalIdOrderByTimestampDesc(goal.getId())).thenReturn(List.of(deposit));
+            when(depositRepository.findByGoalIdOrderByTimestampDesc(goal.getId()))
+                    .thenReturn(List.of(deposit));
 
             var actualResult = depositService.listDeposits(user, goal.getId());
 
@@ -84,9 +82,7 @@ class DepositServiceTest {
 
             var actualResult = depositService.createDeposit(user, goal.getId(), request);
 
-            assertThat(actualResult)
-                    .extracting(DepositResponse::amount)
-                    .isEqualTo(DEPOSIT_AMOUNT);
+            assertThat(actualResult).extracting(DepositResponse::amount).isEqualTo(DEPOSIT_AMOUNT);
         }
 
         @Test
@@ -98,9 +94,7 @@ class DepositServiceTest {
 
             var actualResult = depositService.createDeposit(user, goal.getId(), request);
 
-            assertThat(actualResult)
-                    .extracting(DepositResponse::amount)
-                    .isEqualTo(DEPOSIT_AMOUNT);
+            assertThat(actualResult).extracting(DepositResponse::amount).isEqualTo(DEPOSIT_AMOUNT);
         }
     }
 
@@ -119,9 +113,7 @@ class DepositServiceTest {
             var request = updateDepositRequest(DEPOSIT_AMOUNT_2);
             var actualResult = depositService.updateDeposit(user, goal.getId(), deposit.getId(), request);
 
-            assertThat(actualResult)
-                    .extracting(DepositResponse::amount)
-                    .isEqualTo(DEPOSIT_AMOUNT_2);
+            assertThat(actualResult).extracting(DepositResponse::amount).isEqualTo(DEPOSIT_AMOUNT_2);
         }
     }
 

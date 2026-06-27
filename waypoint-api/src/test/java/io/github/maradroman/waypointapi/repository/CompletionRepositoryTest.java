@@ -1,12 +1,5 @@
 package io.github.maradroman.waypointapi.repository;
 
-import io.github.maradroman.waypointapi.completion.model.Completion;
-import io.github.maradroman.waypointapi.completion.repository.CompletionRepository;
-import io.github.maradroman.waypointapi.testdata.TestDataJpa;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-
 import static io.github.maradroman.waypointapi.testdata.TestDataConstant.COMPLETION_AMOUNT;
 import static io.github.maradroman.waypointapi.testdata.TestDataConstant.COMPLETION_ID;
 import static io.github.maradroman.waypointapi.testdata.TestDataConstant.COMPLETION_ID_2;
@@ -20,6 +13,13 @@ import static io.github.maradroman.waypointapi.testdata.TestDataConstant.MILESTO
 import static io.github.maradroman.waypointapi.testdata.TestDataConstant.MILESTONE_TITLE;
 import static io.github.maradroman.waypointapi.testdata.TestDataConstant.USER_ID;
 import static org.assertj.core.api.Assertions.assertThat;
+
+import io.github.maradroman.waypointapi.completion.model.Completion;
+import io.github.maradroman.waypointapi.completion.repository.CompletionRepository;
+import io.github.maradroman.waypointapi.testdata.TestDataJpa;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
 
 class CompletionRepositoryTest extends TestDataJpa {
 

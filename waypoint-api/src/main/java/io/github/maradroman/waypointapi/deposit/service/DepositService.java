@@ -9,13 +9,12 @@ import io.github.maradroman.waypointapi.deposit.model.Deposit;
 import io.github.maradroman.waypointapi.deposit.repository.DepositRepository;
 import io.github.maradroman.waypointapi.goal.model.Goal;
 import io.github.maradroman.waypointapi.goal.service.GoalService;
-import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
 import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @Transactional
@@ -28,8 +27,7 @@ public class DepositService {
     @Transactional(readOnly = true)
     public List<DepositResponse> listDeposits(User user, UUID goalId) {
         goalService.findGoalForUser(user, goalId);
-        return depositRepository.findByGoalIdOrderByTimestampDesc(goalId)
-                .stream()
+        return depositRepository.findByGoalIdOrderByTimestampDesc(goalId).stream()
                 .map(DepositResponse::from)
                 .toList();
     }
@@ -60,7 +58,8 @@ public class DepositService {
 
     private Deposit findDepositForUser(User user, UUID goalId, UUID depositId) {
         Goal goal = goalService.findGoalForUser(user, goalId);
-        Deposit deposit = depositRepository.findById(depositId)
+        Deposit deposit = depositRepository
+                .findById(depositId)
                 .orElseThrow(() -> new ResourceNotFoundException("DEPOSIT_NOT_FOUND", "Deposit not found"));
         if (!deposit.getGoal().getId().equals(goal.getId())) {
             throw new ResourceNotFoundException("DEPOSIT_NOT_FOUND", "Deposit not found");

@@ -2,13 +2,12 @@ package io.github.maradroman.waypointapi.plannedfund.model;
 
 import io.github.maradroman.waypointapi.goal.model.Goal;
 import jakarta.persistence.*;
-import lombok.*;
-import org.hibernate.annotations.CreationTimestamp;
-import org.hibernate.annotations.UpdateTimestamp;
-
 import java.time.Instant;
 import java.time.LocalDate;
 import java.util.UUID;
+import lombok.*;
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
 
 @Entity
 @Table(name = "planned_funds")

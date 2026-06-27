@@ -3,7 +3,6 @@ package io.github.maradroman.waypointapi.analytics.service;
 import io.github.maradroman.waypointapi.analytics.dto.GoalAnalyticsResponse;
 import io.github.maradroman.waypointapi.analytics.dto.SummaryResponse;
 import io.github.maradroman.waypointapi.auth.model.User;
-import io.github.maradroman.waypointapi.completion.repository.CompletionRepository;
 import io.github.maradroman.waypointapi.deposit.model.Deposit;
 import io.github.maradroman.waypointapi.deposit.repository.DepositRepository;
 import io.github.maradroman.waypointapi.goal.model.Goal;
@@ -14,13 +13,12 @@ import io.github.maradroman.waypointapi.plannedfund.model.PlannedFund;
 import io.github.maradroman.waypointapi.plannedfund.repository.PlannedFundRepository;
 import io.github.maradroman.waypointapi.transfer.model.Transfer;
 import io.github.maradroman.waypointapi.transfer.repository.TransferRepository;
-import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
 import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @Transactional(readOnly = true)
@@ -34,7 +32,8 @@ public class AnalyticsService {
     private final PlannedFundRepository plannedFundRepository;
 
     public GoalAnalyticsResponse getGoalAnalytics(User user, UUID goalId) {
-        Goal goal = goalRepository.findById(goalId)
+        Goal goal = goalRepository
+                .findById(goalId)
                 .orElseThrow(() -> new io.github.maradroman.waypointapi.common.exception.ResourceNotFoundException(
                         "GOAL_NOT_FOUND", "Goal not found"));
         if (!goal.getUser().getId().equals(user.getId())) {
@@ -52,23 +51,23 @@ public class AnalyticsService {
         int walletBalance = totalDeposited - totalTransferred;
 
         List<Milestone> milestones = milestoneRepository.findByGoalIdOrderBySortOrderAsc(goalId);
-        List<Milestone> enabledMilestones = milestones.stream()
-                .filter(Milestone::getEnabled)
-                .toList();
-        List<UUID> enabledMilestoneIds = enabledMilestones.stream()
-                .map(Milestone::getId)
-                .toList();
+        List<Milestone> enabledMilestones =
+                milestones.stream().filter(Milestone::getEnabled).toList();
+        List<UUID> enabledMilestoneIds =
+                enabledMilestones.stream().map(Milestone::getId).toList();
 
-        long completedCount = enabledMilestones.stream().filter(Milestone::getCompleted).count();
-        int totalMilestoneCost = enabledMilestones.stream().mapToInt(Milestone::getCost).sum();
+        long completedCount =
+                enabledMilestones.stream().filter(Milestone::getCompleted).count();
+        int totalMilestoneCost =
+                enabledMilestones.stream().mapToInt(Milestone::getCost).sum();
         int totalMilestoneBalance = transferRepository.findByGoalId(goalId).stream()
-                .filter(t -> t.getAmount() > 0 && enabledMilestoneIds.contains(t.getMilestone().getId()))
+                .filter(t -> t.getAmount() > 0
+                        && enabledMilestoneIds.contains(t.getMilestone().getId()))
                 .mapToInt(Transfer::getAmount)
                 .sum();
 
-        int progressPercent = totalMilestoneCost > 0
-                ? (int) ((long) totalMilestoneBalance * 100 / totalMilestoneCost)
-                : 0;
+        int progressPercent =
+                totalMilestoneCost > 0 ? (int) ((long) totalMilestoneBalance * 100 / totalMilestoneCost) : 0;
 
         Milestone activeMilestone = enabledMilestones.stream()
                 .filter(m -> !m.getCompleted())
@@ -76,8 +75,7 @@ public class AnalyticsService {
                 .orElse(null);
 
         // Calculate potential completion date based on planned funds
-        LocalDate potentialCompletionDate = calculatePotentialCompletionDate(
-                goalId, walletBalance, totalMilestoneCost);
+        LocalDate potentialCompletionDate = calculatePotentialCompletionDate(goalId, walletBalance, totalMilestoneCost);
 
         return new GoalAnalyticsResponse(
                 goalId,
@@ -91,8 +89,7 @@ public class AnalyticsService {
                 progressPercent,
                 activeMilestone != null ? activeMilestone.getId() : null,
                 activeMilestone != null ? activeMilestone.getTitle() : null,
-                potentialCompletionDate
-        );
+                potentialCompletionDate);
     }
 
     private LocalDate calculatePotentialCompletionDate(UUID goalId, int currentBalance, int targetAmount) {
@@ -106,8 +103,8 @@ public class AnalyticsService {
         }
 
         LocalDate today = LocalDate.now();
-        List<PlannedFund> plannedFunds = plannedFundRepository
-                .findByGoalIdAndIsDeletedFalseAndDateGreaterThanEqualOrderByDateAsc(goalId, today);
+        List<PlannedFund> plannedFunds =
+                plannedFundRepository.findByGoalIdAndIsDeletedFalseAndDateGreaterThanEqualOrderByDateAsc(goalId, today);
 
         if (plannedFunds.isEmpty()) {
             return null;

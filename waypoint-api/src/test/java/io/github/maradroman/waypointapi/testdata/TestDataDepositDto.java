@@ -1,21 +1,20 @@
 package io.github.maradroman.waypointapi.testdata;
 
+import static io.github.maradroman.waypointapi.testdata.TestDataConstant.*;
+
 import io.github.maradroman.waypointapi.deposit.dto.CreateDepositRequest;
 import io.github.maradroman.waypointapi.deposit.dto.DepositResponse;
 import io.github.maradroman.waypointapi.deposit.dto.UpdateDepositRequest;
-import lombok.experimental.UtilityClass;
-
 import java.time.Instant;
 import java.util.UUID;
-
-import static io.github.maradroman.waypointapi.testdata.TestDataConstant.*;
+import lombok.experimental.UtilityClass;
 
 @UtilityClass
 public class TestDataDepositDto {
 
     public static DepositResponse depositResponse() {
-        return new DepositResponse(DEPOSIT_ID, GOAL_ID, DEPOSIT_AMOUNT, DEPOSIT_NOTE,
-                DEFAULT_TIMESTAMP, DEFAULT_TIMESTAMP);
+        return new DepositResponse(
+                DEPOSIT_ID, GOAL_ID, DEPOSIT_AMOUNT, DEPOSIT_NOTE, DEFAULT_TIMESTAMP, DEFAULT_TIMESTAMP);
     }
 
     public static DepositResponse depositResponse(UUID id, int amount, Instant timestamp) {

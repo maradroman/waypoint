@@ -1,30 +1,5 @@
 package io.github.maradroman.waypointapi.goal.controller;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
-import io.github.maradroman.waypointapi.auth.model.User;
-import io.github.maradroman.waypointapi.auth.service.JwtService;
-import io.github.maradroman.waypointapi.common.security.CurrentUserResolver;
-import io.github.maradroman.waypointapi.goal.dto.GoalResponse;
-import io.github.maradroman.waypointapi.goal.service.GoalService;
-import io.github.maradroman.waypointapi.testdata.TestDataUserEntity;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
-import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
-import org.springframework.boot.test.context.TestConfiguration;
-import org.springframework.http.MediaType;
-import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.context.bean.override.mockito.MockitoBean;
-import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.web.method.support.HandlerMethodArgumentResolver;
-import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
-
-import java.util.List;
-import java.util.UUID;
-
 import static io.github.maradroman.waypointapi.testdata.TestDataConstant.GOAL_DESCRIPTION;
 import static io.github.maradroman.waypointapi.testdata.TestDataConstant.GOAL_ID;
 import static io.github.maradroman.waypointapi.testdata.TestDataConstant.GOAL_ID_2;
@@ -43,6 +18,28 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import io.github.maradroman.waypointapi.auth.model.User;
+import io.github.maradroman.waypointapi.auth.service.JwtService;
+import io.github.maradroman.waypointapi.common.security.CurrentUserResolver;
+import io.github.maradroman.waypointapi.goal.service.GoalService;
+import io.github.maradroman.waypointapi.testdata.TestDataUserEntity;
+import java.util.List;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.TestConfiguration;
+import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
+import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
+import org.springframework.http.MediaType;
+import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.web.method.support.HandlerMethodArgumentResolver;
+import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 @WebMvcTest(GoalController.class)
 @ActiveProfiles("test")
@@ -67,7 +64,8 @@ class GoalControllerTest {
     void setUp() {
         User mockUser = TestDataUserEntity.buildUser();
         lenient().when(currentUserResolver.supportsParameter(any())).thenReturn(true);
-        lenient().when(currentUserResolver.resolveArgument(any(), any(), any(), any()))
+        lenient()
+                .when(currentUserResolver.resolveArgument(any(), any(), any(), any()))
                 .thenReturn(mockUser);
     }
 
@@ -78,7 +76,8 @@ class GoalControllerTest {
 
         var actualResult = mockMvc.perform(get("/goals"));
 
-        actualResult.andExpect(status().isOk())
+        actualResult
+                .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data").isArray())
                 .andExpect(jsonPath("$.data[0].id").value(GOAL_ID.toString()))
                 .andExpect(jsonPath("$.data[0].title").value(GOAL_TITLE))
@@ -95,7 +94,8 @@ class GoalControllerTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(createGoalRequest())));
 
-        actualResult.andExpect(status().isCreated())
+        actualResult
+                .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.data").exists())
                 .andExpect(jsonPath("$.data.id").value(GOAL_ID.toString()))
                 .andExpect(jsonPath("$.data.title").value(GOAL_TITLE))
@@ -110,7 +110,8 @@ class GoalControllerTest {
 
         var actualResult = mockMvc.perform(get("/goals/{id}", GOAL_ID));
 
-        actualResult.andExpect(status().isOk())
+        actualResult
+                .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data").exists())
                 .andExpect(jsonPath("$.data.id").value(GOAL_ID.toString()))
                 .andExpect(jsonPath("$.data.title").value(GOAL_TITLE))
@@ -127,7 +128,8 @@ class GoalControllerTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(updateGoalRequest("Updated Title"))));
 
-        actualResult.andExpect(status().isOk())
+        actualResult
+                .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data").exists())
                 .andExpect(jsonPath("$.data.id").value(GOAL_ID.toString()))
                 .andExpect(jsonPath("$.data.title").value(GOAL_TITLE))
@@ -146,17 +148,15 @@ class GoalControllerTest {
     @Test
     @DisplayName("PATCH /goals/reorder returns 200 with reordered goals")
     void reorderGoals_returns200_whenValidTest() throws Exception {
-        var reordered = List.of(
-                goalResponse(GOAL_ID, GOAL_TITLE, null),
-                goalResponse(GOAL_ID_2, "Vacation", null)
-        );
+        var reordered = List.of(goalResponse(GOAL_ID, GOAL_TITLE, null), goalResponse(GOAL_ID_2, "Vacation", null));
         when(goalService.reorderGoals(any(), any())).thenReturn(reordered);
 
         var actualResult = mockMvc.perform(patch("/goals/reorder")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(reorderGoalsRequest(GOAL_ID, GOAL_ID_2))));
 
-        actualResult.andExpect(status().isOk())
+        actualResult
+                .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data").isArray())
                 .andExpect(jsonPath("$.data[0].id").value(GOAL_ID.toString()))
                 .andExpect(jsonPath("$.data[1].id").value(GOAL_ID_2.toString()))
