@@ -59,7 +59,7 @@ function SidebarContent({ onNavigate, isCollapsed }: { onNavigate?: () => void; 
       <nav className="flex-1 space-y-1 p-2">
         {navItems.map((item) => {
           const Icon = item.icon
-          const active = location.pathname === item.href
+          const active = location.pathname === item.href || location.pathname.startsWith(item.href + '/')
           return (
             <Link
               key={item.href}
