@@ -320,12 +320,12 @@ export default function PlanningPage() {
                     aspect-square rounded-md text-sm flex items-center justify-center relative cursor-pointer
                     hover:bg-accent hover:text-accent-foreground
                     ${isToday ? 'ring-2 ring-ring' : ''}
-                    ${!isPast && isCompletionDate ? 'bg-green-100 dark:bg-green-900 text-green-900 dark:text-green-100 font-semibold ring-2 ring-primary ring-offset-0' : !isPast && hasPlannedFund ? 'bg-primary text-primary-foreground font-semibold' : ''}
+                    ${!isPast && isCompletionDate ? 'bg-accent/20 text-primary font-semibold ring-2 ring-accent ring-offset-0' : !isPast && hasPlannedFund ? 'bg-primary text-primary-foreground font-semibold' : ''}
                   `}
                 >
                   {day}
                   {hasDeposits && (
-                    <span className="absolute -top-1 -right-1 h-2.5 w-2.5 rounded-full bg-primary" />
+                    <span className="absolute -top-1 -right-1 h-2 w-2 sm:h-2.5 sm:w-2.5 rounded-full bg-primary" />
                   )}
                 </button>
               </PopoverTrigger>
@@ -539,7 +539,7 @@ export default function PlanningPage() {
               {analytics && (
                 <div className="text-sm">
                   {analytics.totalMilestoneCost > 0 && projectedBalance >= analytics.totalMilestoneCost ? (
-                    <span className="text-green-600 dark:text-green-400 font-medium">
+                    <span className="text-accent font-medium">
                       {t('planning.goalCanBeCompleted')}
                     </span>
                   ) : analytics.totalMilestoneCost > 0 ? (

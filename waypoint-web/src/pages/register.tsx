@@ -77,7 +77,7 @@ export default function RegisterPage() {
                 required
               />
             </div>
-            <Button type="submit" className="w-full" disabled={loading}>
+            <Button type="submit" className="w-full" variant="accent" disabled={loading}>
               {loading ? 'Creating account...' : 'Create account'}
             </Button>
             <p className="text-center text-sm text-muted-foreground">

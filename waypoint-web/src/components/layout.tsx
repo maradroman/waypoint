@@ -67,12 +67,12 @@ function SidebarContent({ onNavigate, isCollapsed }: { onNavigate?: () => void; 
               onClick={handleNavClick}
               className={`flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors ${
                 active
-                  ? 'bg-primary text-primary-foreground'
+                  ? 'bg-primary text-primary-foreground dark:bg-transparent dark:border dark:border-accent dark:text-foreground'
                   : 'hover:bg-muted'
               } ${isCollapsed ? 'justify-center' : ''}`}
               title={isCollapsed ? t(item.labelKey) : undefined}
             >
-              <Icon className="h-4 w-4" />
+              <Icon className={`h-4 w-4 ${active ? 'text-accent' : ''}`} />
               {!isCollapsed && t(item.labelKey)}
             </Link>
           )
@@ -87,12 +87,12 @@ function SidebarContent({ onNavigate, isCollapsed }: { onNavigate?: () => void; 
               onClick={handleNavClick}
               className={`flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors ${
                 location.pathname === '/admin'
-                  ? 'bg-primary text-primary-foreground'
+                  ? 'bg-primary text-primary-foreground dark:bg-transparent dark:border dark:border-accent dark:text-foreground'
                   : 'hover:bg-muted'
               } ${isCollapsed ? 'justify-center' : ''}`}
               title={isCollapsed ? t('nav.bugReports') : undefined}
             >
-              <Bug className="h-4 w-4" />
+              <Bug className={`h-4 w-4 ${location.pathname === '/admin' ? 'text-accent' : ''}`} />
               {!isCollapsed && t('nav.bugReports')}
             </Link>
           </nav>
@@ -103,9 +103,9 @@ function SidebarContent({ onNavigate, isCollapsed }: { onNavigate?: () => void; 
         {!isCollapsed && <ReportBugButton />}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="ghost" className={`w-full gap-2 ${isCollapsed ? 'justify-center px-0' : 'justify-start'}`} title={isCollapsed ? (user?.name ?? t('nav.user')) : undefined}>
+            <Button variant="ghost" className={`w-full gap-2 ${isCollapsed ? 'justify-center px-0' : 'justify-start'}`} title={isCollapsed ? (user?.displayName ?? t('nav.user')) : undefined}>
               <User className="h-4 w-4" />
-              {!isCollapsed && <span className="text-sm">{user?.name ?? t('nav.user')}</span>}
+              {!isCollapsed && <span className="text-sm">{user?.displayName ?? t('nav.user')}</span>}
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-48">

@@ -93,7 +93,7 @@ export default function DashboardPage() {
         {goals?.length === 0 ? (
           <div className="flex flex-col items-center gap-4 py-12 text-muted-foreground">
             <p>{t('dashboard.noGoals')}</p>
-            <Button onClick={() => navigate('/goals')}>{t('dashboard.createFirst')}</Button>
+            <Button variant="accent" onClick={() => navigate('/goals')}>{t('dashboard.createFirst')}</Button>
           </div>
         ) : (
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
