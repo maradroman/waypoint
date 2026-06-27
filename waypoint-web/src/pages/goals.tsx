@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { api } from '@/lib/api'
+import { useTranslation } from 'react-i18next'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
@@ -27,6 +28,7 @@ import { useNavigate } from 'react-router-dom'
 function GoalCard({ goal, onEdit }: { goal: Goal; onEdit: (goal: Goal) => void }) {
   const queryClient = useQueryClient()
   const navigate = useNavigate()
+  const { t } = useTranslation()
 
   const deleteMutation = useMutation({
     mutationFn: () => api.delete(`/goals/${goal.id}`),
@@ -57,17 +59,17 @@ function GoalCard({ goal, onEdit }: { goal: Goal; onEdit: (goal: Goal) => void }
               onEdit(goal)
             }}>
               <Pencil className="mr-2 h-4 w-4" />
-              Edit
+              {t('common.edit')}
             </DropdownMenuItem>
             <DropdownMenuItem
               className="text-destructive"
               onClick={(e) => {
                 e.stopPropagation()
-                if (confirm('Delete this goal?')) deleteMutation.mutate()
+                if (confirm(t('goals.deleteConfirm'))) deleteMutation.mutate()
               }}
             >
               <Trash2 className="mr-2 h-4 w-4" />
-              Delete
+              {t('common.delete')}
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
@@ -90,6 +92,7 @@ export default function GoalsPage() {
   const [description, setDescription] = useState('')
   const [icon, setIcon] = useState('')
   const queryClient = useQueryClient()
+  const { t } = useTranslation()
 
   const { data: goals, isLoading } = useQuery({
     queryKey: ['goals'],
@@ -138,7 +141,7 @@ export default function GoalsPage() {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-bold tracking-tight">Goals</h1>
+        <h1 className="text-3xl font-bold tracking-tight">{t('goals.title')}</h1>
         <Dialog open={open} onOpenChange={(isOpen) => {
           if (isOpen) {
             setEditingGoal(null)
@@ -151,12 +154,12 @@ export default function GoalsPage() {
           <DialogTrigger asChild>
             <Button>
               <Plus className="mr-2 h-4 w-4" />
-              New Goal
+              {t('goals.newGoal')}
             </Button>
           </DialogTrigger>
           <DialogContent>
             <DialogHeader>
-              <DialogTitle>{isEditing ? 'Edit Goal' : 'Create Goal'}</DialogTitle>
+              <DialogTitle>{isEditing ? t('goals.editGoal') : t('goals.createGoal')}</DialogTitle>
             </DialogHeader>
             <form
               onSubmit={(e) => {
@@ -166,7 +169,7 @@ export default function GoalsPage() {
               className="space-y-4"
             >
               <div className="space-y-2">
-                <Label htmlFor="title">Title</Label>
+                <Label htmlFor="title">{t('goals.titleLabel')}</Label>
                 <Input
                   id="title"
                   value={title}
@@ -176,7 +179,7 @@ export default function GoalsPage() {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="icon">Icon (emoji)</Label>
+                <Label htmlFor="icon">{t('goals.iconLabel')}</Label>
                 <Input
                   id="icon"
                   value={icon}
@@ -187,7 +190,7 @@ export default function GoalsPage() {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="desc">Description</Label>
+                <Label htmlFor="desc">{t('goals.descriptionLabel')}</Label>
                 <Textarea
                   id="desc"
                   value={description}
@@ -196,7 +199,7 @@ export default function GoalsPage() {
                 />
               </div>
               <Button type="submit" disabled={mutation.isPending} className="w-full">
-                {mutation.isPending ? (isEditing ? 'Updating...' : 'Creating...') : (isEditing ? 'Update' : 'Create')}
+                {mutation.isPending ? (isEditing ? t('common.updating') : t('common.creating')) : (isEditing ? t('common.update') : t('common.create'))}
               </Button>
             </form>
           </DialogContent>
@@ -212,8 +215,8 @@ export default function GoalsPage() {
       ) : goals?.length === 0 ? (
         <div className="flex flex-col items-center gap-4 py-20 text-muted-foreground">
           <FolderOpen className="h-16 w-16" />
-          <p className="text-lg">No goals yet</p>
-          <p className="text-sm">Create your first goal to get started</p>
+          <p className="text-lg">{t('goals.noGoals')}</p>
+          <p className="text-sm">{t('goals.createFirstGoal')}</p>
         </div>
       ) : (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">

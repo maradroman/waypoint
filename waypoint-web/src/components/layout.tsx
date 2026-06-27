@@ -1,6 +1,7 @@
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { useState } from 'react'
 import { useAuth } from '@/stores/auth'
+import { useTranslation } from 'react-i18next'
 import { Button } from '@/components/ui/button'
 import {
   Sheet,
@@ -26,8 +27,8 @@ import {
 } from 'lucide-react'
 
 const navItems = [
-  { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
-  { href: '/goals', label: 'Goals', icon: Target },
+  { href: '/dashboard', labelKey: 'nav.dashboard' as const, icon: LayoutDashboard },
+  { href: '/goals', labelKey: 'nav.goals' as const, icon: Target },
 ]
 
 function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
@@ -36,6 +37,7 @@ function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
   const logout = useAuth((s) => s.logout)
   const user = useAuth((s) => s.user)
   const isAdmin = useAuth((s) => s.isAdmin)
+  const { t } = useTranslation()
 
   const handleNavClick = () => {
     onNavigate?.()
@@ -66,7 +68,7 @@ function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
               }`}
             >
               <Icon className="h-4 w-4" />
-              {item.label}
+              {t(item.labelKey)}
             </Link>
           )
         })}
@@ -85,7 +87,7 @@ function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
               }`}
             >
               <Bug className="h-4 w-4" />
-              Bug Reports
+              {t('nav.bugReports')}
             </Link>
           </nav>
         </>
@@ -97,17 +99,17 @@ function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" className="w-full justify-start gap-2">
               <User className="h-4 w-4" />
-              <span className="text-sm">{user?.name ?? 'User'}</span>
+              <span className="text-sm">{user?.name ?? t('nav.user')}</span>
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-48">
             <DropdownMenuItem onClick={() => { navigate('/settings'); handleNavClick() }}>
               <Settings className="mr-2 h-4 w-4" />
-              Settings
+              {t('nav.settings')}
             </DropdownMenuItem>
             <DropdownMenuItem onClick={() => { logout(); navigate('/login'); handleNavClick() }}>
               <LogOut className="mr-2 h-4 w-4" />
-              Sign out
+              {t('nav.signOut')}
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>

@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { useEffect } from 'react'
 import { useAuth } from '@/stores/auth'
+import { setLanguage } from '@/lib/i18n'
 import { Toaster } from '@/components/ui/sonner'
 import AppLayout from '@/components/layout'
 import LoginPage from '@/pages/login'
@@ -52,10 +53,20 @@ function AuthGate({ children }: { children: React.ReactNode }) {
   const refreshAuth = useAuth((s) => s.refreshAuth)
   const isAuthenticated = useAuth((s) => s.isAuthenticated)
   const isLoading = useAuth((s) => s.isLoading)
+  const user = useAuth((s) => s.user)
 
   useEffect(() => {
     refreshAuth()
   }, [refreshAuth])
+
+  // Set language based on user's locale
+  useEffect(() => {
+    console.log('User locale:', user?.locale)
+    if (user?.locale) {
+      console.log('Setting language to:', user.locale)
+      setLanguage(user.locale)
+    }
+  }, [user?.locale])
 
   if (isLoading && !isAuthenticated) {
     return (

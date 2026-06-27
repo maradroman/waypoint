@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useAuth } from '@/stores/auth'
+import { useTranslation } from 'react-i18next'
 import { api } from '@/lib/api'
 import type { User } from '@/types/api'
 import { Button } from '@/components/ui/button'
@@ -19,12 +20,14 @@ import { useNavigate } from 'react-router-dom'
 
 const locales = [
   { value: 'en', label: 'English' },
+  { value: 'pl', label: 'Polski' },
   { value: 'uk', label: 'Українська' },
 ]
 
 const currencies = [
   { value: 'USD', label: 'USD ($)' },
   { value: 'EUR', label: 'EUR (€)' },
+  { value: 'PLN', label: 'PLN (zł)' },
   { value: 'UAH', label: 'UAH (₴)' },
   { value: 'GBP', label: 'GBP (£)' },
 ]
@@ -33,12 +36,13 @@ export default function SettingsPage() {
   const { user, setUser, logout } = useAuth()
   const navigate = useNavigate()
   const queryClient = useQueryClient()
+  const { t } = useTranslation()
   const [locale, setLocale] = useState(user?.locale ?? 'en')
   const [currency, setCurrency] = useState(user?.currency ?? 'USD')
 
   const updateMutation = useMutation({
     mutationFn: () =>
-      api.patch('/auth/profile', { locale, currency }),
+      api.patch('/auth/me', { locale, currency }),
     onSuccess: (data) => {
       setUser(data as User)
       queryClient.invalidateQueries()
@@ -59,7 +63,7 @@ export default function SettingsPage() {
   })
 
   const handleReset = () => {
-    if (confirm('This will delete all your data. Are you sure?')) {
+    if (confirm(t('settings.resetConfirm'))) {
       logout()
       navigate('/login')
     }
@@ -67,19 +71,19 @@ export default function SettingsPage() {
 
   return (
     <div className="mx-auto max-w-lg space-y-6">
-      <h1 className="text-3xl font-bold tracking-tight">Settings</h1>
+      <h1 className="text-3xl font-bold tracking-tight">{t('settings.title')}</h1>
 
       <Card>
         <CardHeader>
-          <CardTitle>Profile</CardTitle>
+          <CardTitle>{t('settings.profile')}</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="space-y-2">
-            <Label>Name</Label>
+            <Label>{t('settings.name')}</Label>
             <Input value={user?.name ?? ''} disabled />
           </div>
           <div className="space-y-2">
-            <Label>Email</Label>
+            <Label>{t('settings.email')}</Label>
             <Input value={user?.email ?? ''} disabled />
           </div>
         </CardContent>
@@ -87,11 +91,11 @@ export default function SettingsPage() {
 
       <Card>
         <CardHeader>
-          <CardTitle>Preferences</CardTitle>
+          <CardTitle>{t('settings.preferences')}</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="locale">Language</Label>
+            <Label htmlFor="locale">{t('settings.language')}</Label>
             <Select value={locale} onValueChange={setLocale}>
               <SelectTrigger id="locale">
                 <SelectValue />
@@ -104,7 +108,7 @@ export default function SettingsPage() {
             </Select>
           </div>
           <div className="space-y-2">
-            <Label htmlFor="currency">Currency</Label>
+            <Label htmlFor="currency">{t('settings.currency')}</Label>
             <Select value={currency} onValueChange={setCurrency}>
               <SelectTrigger id="currency">
                 <SelectValue />
@@ -121,22 +125,22 @@ export default function SettingsPage() {
             disabled={updateMutation.isPending}
             className="w-full"
           >
-            {updateMutation.isPending ? 'Saving...' : 'Save preferences'}
+            {updateMutation.isPending ? t('settings.saving') : t('settings.savePreferences')}
           </Button>
         </CardContent>
       </Card>
 
       <Card>
         <CardHeader>
-          <CardTitle>Data</CardTitle>
+          <CardTitle>{t('settings.data')}</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           <Button variant="outline" className="w-full" onClick={() => exportMutation.mutate()}>
-            Export data (JSON)
+            {t('settings.exportData')}
           </Button>
           <Separator />
           <Button variant="destructive" className="w-full" onClick={handleReset}>
-            Reset all data
+            {t('settings.resetData')}
           </Button>
         </CardContent>
       </Card>

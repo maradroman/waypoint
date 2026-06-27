@@ -1,6 +1,7 @@
 import { useState, useCallback, useRef, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { useTranslation } from 'react-i18next'
 import {
   DndContext,
   DragOverlay,
@@ -18,7 +19,7 @@ import {
 } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 import { api } from '@/lib/api'
-import { formatMoney } from '@/lib/format'
+import { useFormatMoney } from '@/lib/format'
 import { Button } from '@/components/ui/button'
 import { Switch } from '@/components/ui/switch'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -97,6 +98,8 @@ function SortableMilestoneItem({
   goalId: string
   onEdit: (milestone: Milestone) => void
 }) {
+  const formatMoney = useFormatMoney()
+  const { t } = useTranslation()
   const {
     attributes,
     listeners,
@@ -193,18 +196,18 @@ function SortableMilestoneItem({
           <div className="min-w-0 flex-1 space-y-2">
             <div className="flex items-center gap-2">
               <span className="font-medium">{milestone.title}</span>
-              {milestone.completed && <Badge variant="secondary">Done</Badge>}
-              {!milestone.enabled && <Badge variant="outline">Disabled</Badge>}
+              {milestone.completed && <Badge variant="secondary">{t('milestone.done')}</Badge>}
+              {!milestone.enabled && <Badge variant="outline">{t('milestone.disabled')}</Badge>}
             </div>
             {milestone.details && (
               <p className="text-sm text-muted-foreground">{milestone.details}</p>
             )}
             <div className="flex items-center gap-4 text-sm">
               <span>
-                Cost: <strong>${formatMoney(milestone.cost)}</strong>
+                {t('milestone.cost')}: <strong>{formatMoney(milestone.cost)}</strong>
               </span>
               <span>
-                Balance: <strong>${formatMoney(milestone.balance)}</strong>
+                {t('milestone.balance')}: <strong>{formatMoney(milestone.balance)}</strong>
               </span>
               <Progress value={coveragePercent} className="h-2 w-24" />
               <span className="text-xs text-muted-foreground">{coveragePercent}%</span>
@@ -214,17 +217,17 @@ function SortableMilestoneItem({
                 <DialogTrigger asChild>
                   <Button size="sm" variant="outline" disabled={!milestone.enabled}>
                     <ArrowDownToLine className="mr-1 h-4 w-4" />
-                    Allocate
+                    {t('milestone.allocate')}
                   </Button>
                 </DialogTrigger>
                 <DialogContent>
-                  <DialogHeader><DialogTitle>Allocate to {milestone.title}</DialogTitle></DialogHeader>
+                  <DialogHeader><DialogTitle>{t('milestone.allocateTo', { name: milestone.title })}</DialogTitle></DialogHeader>
                   <form onSubmit={(e) => {
                     e.preventDefault()
                     allocateMutation.mutate(Number(allocateAmount))
                   }} className="space-y-4">
                     <div className="space-y-2">
-                      <Label>Amount</Label>
+                      <Label>{t('milestone.amount')}</Label>
                       <Input
                         type="number"
                         value={allocateAmount}
@@ -234,7 +237,7 @@ function SortableMilestoneItem({
                       />
                     </div>
                     <Button type="submit" className="w-full">
-                      Allocate
+                      {t('milestone.allocate')}
                     </Button>
                   </form>
                 </DialogContent>
@@ -243,17 +246,17 @@ function SortableMilestoneItem({
                 <DialogTrigger asChild>
                   <Button size="sm" variant="outline" disabled={!milestone.enabled || milestone.balance === 0}>
                     <ArrowUpFromLine className="mr-1 h-4 w-4" />
-                    Withdraw
+                    {t('milestone.withdraw')}
                   </Button>
                 </DialogTrigger>
                 <DialogContent>
-                  <DialogHeader><DialogTitle>Withdraw from {milestone.title}</DialogTitle></DialogHeader>
+                  <DialogHeader><DialogTitle>{t('milestone.withdrawFrom', { name: milestone.title })}</DialogTitle></DialogHeader>
                   <form onSubmit={(e) => {
                     e.preventDefault()
                     withdrawMutation.mutate(Number(withdrawAmount))
                   }} className="space-y-4">
                     <div className="space-y-2">
-                      <Label>Amount (max ${formatMoney(milestone.balance)})</Label>
+                      <Label>{t('milestone.amountMax', { max: formatMoney(milestone.balance) })}</Label>
                       <Input
                         type="number"
                         value={withdrawAmount}
@@ -264,7 +267,7 @@ function SortableMilestoneItem({
                       />
                     </div>
                     <Button type="submit" className="w-full">
-                      Withdraw
+                      {t('milestone.withdraw')}
                     </Button>
                   </form>
                 </DialogContent>
@@ -272,7 +275,7 @@ function SortableMilestoneItem({
               {!milestone.completed && milestone.enabled && (
                 <Button size="sm" variant="default" onClick={() => completeMutation.mutate()}>
                   <CheckCircle2 className="mr-1 h-4 w-4" />
-                  Complete
+                  {t('milestone.complete')}
                 </Button>
               )}
             </div>
@@ -292,7 +295,7 @@ function SortableMilestoneItem({
                 variant="ghost"
                 className="h-7 w-7 text-destructive hover:text-destructive"
                 onClick={() => {
-                  if (confirm('Delete this milestone?')) {
+                  if (confirm(t('milestone.delete'))) {
                     deleteMutation.mutate()
                   }
                 }}
@@ -315,6 +318,8 @@ export default function GoalDetailPage() {
   const { goalId } = useParams<{ goalId: string }>()
   const navigate = useNavigate()
   const queryClient = useQueryClient()
+  const formatMoney = useFormatMoney()
+  const { t } = useTranslation()
   const [milestoneDialogOpen, setMilestoneDialogOpen] = useState(false)
   const [editingMilestone, setEditingMilestone] = useState<Milestone | null>(null)
   const [title, setTitle] = useState('')
@@ -492,7 +497,7 @@ export default function GoalDetailPage() {
       <div className="flex items-center justify-between">
         <div>
           <Button variant="ghost" className="-ml-4 mb-2" onClick={() => navigate('/goals')}>
-            ← Back
+            ← {t('common.back')}
           </Button>
           <h1 className="text-3xl font-bold tracking-tight">
             {goal.icon && <span className="mr-2">{goal.icon}</span>}
@@ -507,27 +512,23 @@ export default function GoalDetailPage() {
       <div className="grid gap-4 sm:grid-cols-3">
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Wallet Balance</CardTitle>
+            <CardTitle className="text-sm font-medium text-muted-foreground">{t('goalDetail.walletBalance')}</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">
-              $<FlipValue value={analytics?.walletBalance ?? 0} formatValue={formatMoney} className="text-2xl font-bold" />
-            </div>
+            <FlipValue value={analytics?.walletBalance ?? 0} formatValue={formatMoney} className="text-2xl font-bold" />
           </CardContent>
         </Card>
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Target</CardTitle>
+            <CardTitle className="text-sm font-medium text-muted-foreground">{t('goalDetail.target')}</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">
-              $<FlipValue value={analytics?.totalMilestoneCost ?? 0} formatValue={formatMoney} className="text-2xl font-bold" />
-            </div>
+            <FlipValue value={analytics?.totalMilestoneCost ?? 0} formatValue={formatMoney} className="text-2xl font-bold" />
           </CardContent>
         </Card>
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Completion</CardTitle>
+            <CardTitle className="text-sm font-medium text-muted-foreground">{t('goalDetail.completion')}</CardTitle>
           </CardHeader>
           <CardContent>
             <p className="text-2xl font-bold">
@@ -540,7 +541,7 @@ export default function GoalDetailPage() {
       <Separator />
 
       <div className="flex items-center justify-between">
-        <h2 className="text-xl font-semibold">Milestones</h2>
+        <h2 className="text-xl font-semibold">{t('goalDetail.milestones')}</h2>
         <div className="flex gap-2">
           {hasDisabled && (
             <Button
@@ -555,17 +556,17 @@ export default function GoalDetailPage() {
             <DialogTrigger asChild>
               <Button variant="outline">
                 <Plus className="mr-2 h-4 w-4" />
-                Add Funds
+                {t('goalDetail.addFunds')}
               </Button>
             </DialogTrigger>
             <DialogContent>
-              <DialogHeader><DialogTitle>Add Funds</DialogTitle></DialogHeader>
+              <DialogHeader><DialogTitle>{t('deposit.add')}</DialogTitle></DialogHeader>
               <form onSubmit={(e) => {
                 e.preventDefault()
                 createDeposit.mutate()
               }} className="space-y-4">
                 <div className="space-y-2">
-                  <Label>Amount</Label>
+                  <Label>{t('deposit.amount')}</Label>
                   <Input
                     type="number"
                     value={depositAmount}
@@ -575,14 +576,14 @@ export default function GoalDetailPage() {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label>Note (optional)</Label>
+                  <Label>{t('deposit.note')}</Label>
                   <Input
                     value={depositNote}
                     onChange={(e) => setDepositNote(e.target.value)}
                   />
                 </div>
                 <Button type="submit" className="w-full">
-                  Deposit
+                  {t('deposit.deposit')}
                 </Button>
               </form>
             </DialogContent>
@@ -599,12 +600,12 @@ export default function GoalDetailPage() {
             <DialogTrigger asChild>
               <Button>
                 <Plus className="mr-2 h-4 w-4" />
-                Milestone
+                {t('goalDetail.milestone')}
               </Button>
             </DialogTrigger>
             <DialogContent>
               <DialogHeader>
-                <DialogTitle>{editingMilestone ? 'Edit Milestone' : 'Add Milestone'}</DialogTitle>
+                <DialogTitle>{editingMilestone ? t('milestone.edit') : t('milestone.add')}</DialogTitle>
               </DialogHeader>
               <form onSubmit={(e) => {
                 e.preventDefault()
@@ -615,19 +616,19 @@ export default function GoalDetailPage() {
                 }
               }} className="space-y-4">
                 <div className="space-y-2">
-                  <Label>Title</Label>
+                  <Label>{t('milestone.title')}</Label>
                   <Input value={title} onChange={(e) => setTitle(e.target.value)} required maxLength={70} />
                 </div>
                 <div className="space-y-2">
-                  <Label>Cost</Label>
+                  <Label>{t('milestone.cost')}</Label>
                   <Input type="number" value={cost} onChange={(e) => setCost(e.target.value)} min={0} step="0.01" />
                 </div>
                 <div className="space-y-2">
-                  <Label>Details (optional)</Label>
+                  <Label>{t('milestone.details')}</Label>
                   <Input value={details} onChange={(e) => setDetails(e.target.value)} maxLength={200} />
                 </div>
                 <Button type="submit" className="w-full" disabled={createMilestone.isPending || updateMilestone.isPending}>
-                  {editingMilestone ? (updateMilestone.isPending ? 'Updating...' : 'Update') : (createMilestone.isPending ? 'Creating...' : 'Create')}
+                  {editingMilestone ? (updateMilestone.isPending ? t('common.updating') : t('common.update')) : (createMilestone.isPending ? t('common.creating') : t('common.create'))}
                 </Button>
               </form>
             </DialogContent>
@@ -651,7 +652,7 @@ export default function GoalDetailPage() {
             ))}
             {milestones?.length === 0 && (
               <p className="py-8 text-center text-muted-foreground">
-                No milestones yet. Add one to get started.
+                {t('milestone.noMilestones')}
               </p>
             )}
           </div>
@@ -672,16 +673,16 @@ export default function GoalDetailPage() {
       <Separator />
 
       <div>
-        <h2 className="mb-4 text-xl font-semibold">Deposits</h2>
+        <h2 className="mb-4 text-xl font-semibold">{t('goalDetail.deposits')}</h2>
         {deposits?.length === 0 ? (
-          <p className="text-sm text-muted-foreground">No deposits yet</p>
+          <p className="text-sm text-muted-foreground">{t('goalDetail.noDeposits')}</p>
         ) : (
           <div className="space-y-2">
             {deposits?.map((deposit) => (
               <Card key={deposit.id}>
                 <CardContent className="flex items-center justify-between p-4">
                   <div>
-                    <p className="font-medium">+${formatMoney(deposit.amount)}</p>
+                    <p className="font-medium">+{formatMoney(deposit.amount)}</p>
                     {deposit.note && (
                       <p className="text-sm text-muted-foreground">{deposit.note}</p>
                     )}
@@ -699,9 +700,9 @@ export default function GoalDetailPage() {
       <Separator />
 
       <div>
-        <h2 className="mb-4 text-xl font-semibold">Completions</h2>
+        <h2 className="mb-4 text-xl font-semibold">{t('goalDetail.completions')}</h2>
         {completions?.length === 0 ? (
-          <p className="text-sm text-muted-foreground">No completions yet</p>
+          <p className="text-sm text-muted-foreground">{t('goalDetail.noCompletions')}</p>
         ) : (
           <div className="space-y-2">
             {completions?.map((comp) => (
