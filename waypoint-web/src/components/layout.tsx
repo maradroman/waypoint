@@ -1,4 +1,5 @@
 import { Link, useLocation, useNavigate } from 'react-router-dom'
+import { useState } from 'react'
 import { useAuth } from '@/stores/auth'
 import { Button } from '@/components/ui/button'
 import {
@@ -29,17 +30,21 @@ const navItems = [
   { href: '/goals', label: 'Goals', icon: Target },
 ]
 
-function SidebarContent() {
+function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
   const location = useLocation()
   const navigate = useNavigate()
   const logout = useAuth((s) => s.logout)
   const user = useAuth((s) => s.user)
   const isAdmin = useAuth((s) => s.isAdmin)
 
+  const handleNavClick = () => {
+    onNavigate?.()
+  }
+
   return (
     <div className="flex h-full flex-col">
       <div className="p-4">
-        <Link to="/dashboard" className="flex items-center gap-2 font-semibold">
+        <Link to="/dashboard" className="flex items-center gap-2 font-semibold" onClick={handleNavClick}>
           <Target className="h-5 w-5" />
           Waypoint
         </Link>
@@ -53,6 +58,7 @@ function SidebarContent() {
             <Link
               key={item.href}
               to={item.href}
+              onClick={handleNavClick}
               className={`flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors ${
                 active
                   ? 'bg-primary text-primary-foreground'
@@ -71,6 +77,7 @@ function SidebarContent() {
           <nav className="space-y-1 p-2">
             <Link
               to="/admin"
+              onClick={handleNavClick}
               className={`flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors ${
                 location.pathname === '/admin'
                   ? 'bg-primary text-primary-foreground'
@@ -94,11 +101,11 @@ function SidebarContent() {
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-48">
-            <DropdownMenuItem onClick={() => navigate('/settings')}>
+            <DropdownMenuItem onClick={() => { navigate('/settings'); handleNavClick() }}>
               <Settings className="mr-2 h-4 w-4" />
               Settings
             </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => { logout(); navigate('/login') }}>
+            <DropdownMenuItem onClick={() => { logout(); navigate('/login'); handleNavClick() }}>
               <LogOut className="mr-2 h-4 w-4" />
               Sign out
             </DropdownMenuItem>
@@ -110,24 +117,32 @@ function SidebarContent() {
 }
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+
   return (
-    <div className="flex min-h-screen">
-      <aside className="hidden w-60 border-r bg-background md:block">
+    <div className="flex h-screen overflow-hidden">
+      <aside className="hidden h-full w-60 border-r bg-background md:block">
         <SidebarContent />
       </aside>
-      <Sheet>
-        <SheetTrigger asChild>
-          <Button variant="ghost" size="icon" className="fixed left-4 top-4 md:hidden">
-            <Menu className="h-5 w-5" />
-          </Button>
-        </SheetTrigger>
-        <SheetContent side="left" className="w-60 p-0">
-          <SidebarContent />
-        </SheetContent>
-      </Sheet>
-      <main className="flex-1 p-6 pt-16 md:pt-6">
-        {children}
-      </main>
+      <div className="flex flex-1 flex-col overflow-hidden">
+        <header className="z-40 shrink-0 border-b bg-background md:hidden">
+          <div className="flex h-12 items-center px-3">
+            <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
+              <SheetTrigger asChild>
+                <Button variant="ghost" size="icon">
+                  <Menu className="h-5 w-5" />
+                </Button>
+              </SheetTrigger>
+              <SheetContent side="left" className="w-60 p-0">
+                <SidebarContent onNavigate={() => setMobileMenuOpen(false)} />
+              </SheetContent>
+            </Sheet>
+          </div>
+        </header>
+        <main className="flex-1 overflow-y-auto p-3 md:p-6">
+          {children}
+        </main>
+      </div>
     </div>
   )
 }

@@ -24,7 +24,7 @@ import { Plus, MoreHorizontal, Pencil, Trash2, FolderOpen } from 'lucide-react'
 import type { Goal } from '@/types/api'
 import { useNavigate } from 'react-router-dom'
 
-function GoalCard({ goal }: { goal: Goal }) {
+function GoalCard({ goal, onEdit }: { goal: Goal; onEdit: (goal: Goal) => void }) {
   const queryClient = useQueryClient()
   const navigate = useNavigate()
 
@@ -54,7 +54,7 @@ function GoalCard({ goal }: { goal: Goal }) {
           <DropdownMenuContent align="end">
             <DropdownMenuItem onClick={(e) => {
               e.stopPropagation()
-              navigate(`/goals/${goal.id}/edit`)
+              onEdit(goal)
             }}>
               <Pencil className="mr-2 h-4 w-4" />
               Edit
@@ -85,6 +85,7 @@ function GoalCard({ goal }: { goal: Goal }) {
 
 export default function GoalsPage() {
   const [open, setOpen] = useState(false)
+  const [editingGoal, setEditingGoal] = useState<Goal | null>(null)
   const [title, setTitle] = useState('')
   const [description, setDescription] = useState('')
   const [icon, setIcon] = useState('')
@@ -95,23 +96,58 @@ export default function GoalsPage() {
     queryFn: () => api.get<Goal[]>('/goals'),
   })
 
+  const handleEdit = (goal: Goal) => {
+    setEditingGoal(goal)
+    setTitle(goal.title)
+    setDescription(goal.description || '')
+    setIcon(goal.icon || '')
+    setOpen(true)
+  }
+
+  const handleClose = () => {
+    setOpen(false)
+    setTimeout(() => {
+      setEditingGoal(null)
+      setTitle('')
+      setDescription('')
+      setIcon('')
+    }, 200)
+  }
+
   const createMutation = useMutation({
     mutationFn: () =>
       api.post('/goals', { title, description: description || undefined, icon: icon || undefined }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['goals'] })
-      setTitle('')
-      setDescription('')
-      setIcon('')
-      setOpen(false)
+      handleClose()
     },
   })
+
+  const updateMutation = useMutation({
+    mutationFn: () =>
+      api.patch(`/goals/${editingGoal?.id}`, { title, description: description || undefined, icon: icon || undefined }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['goals'] })
+      handleClose()
+    },
+  })
+
+  const isEditing = editingGoal !== null
+  const mutation = isEditing ? updateMutation : createMutation
 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h1 className="text-3xl font-bold tracking-tight">Goals</h1>
-        <Dialog open={open} onOpenChange={setOpen}>
+        <Dialog open={open} onOpenChange={(isOpen) => {
+          if (isOpen) {
+            setEditingGoal(null)
+            setTitle('')
+            setDescription('')
+            setIcon('')
+          }
+          setOpen(isOpen)
+        }}>
           <DialogTrigger asChild>
             <Button>
               <Plus className="mr-2 h-4 w-4" />
@@ -120,12 +156,12 @@ export default function GoalsPage() {
           </DialogTrigger>
           <DialogContent>
             <DialogHeader>
-              <DialogTitle>Create Goal</DialogTitle>
+              <DialogTitle>{isEditing ? 'Edit Goal' : 'Create Goal'}</DialogTitle>
             </DialogHeader>
             <form
               onSubmit={(e) => {
                 e.preventDefault()
-                createMutation.mutate()
+                mutation.mutate()
               }}
               className="space-y-4"
             >
@@ -136,6 +172,7 @@ export default function GoalsPage() {
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
                   required
+                  maxLength={70}
                 />
               </div>
               <div className="space-y-2">
@@ -145,6 +182,8 @@ export default function GoalsPage() {
                   value={icon}
                   onChange={(e) => setIcon(e.target.value)}
                   placeholder="🎯"
+                  className="placeholder:opacity-30"
+                  maxLength={10}
                 />
               </div>
               <div className="space-y-2">
@@ -153,10 +192,11 @@ export default function GoalsPage() {
                   id="desc"
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
+                  maxLength={200}
                 />
               </div>
-              <Button type="submit" disabled={createMutation.isPending} className="w-full">
-                {createMutation.isPending ? 'Creating...' : 'Create'}
+              <Button type="submit" disabled={mutation.isPending} className="w-full">
+                {mutation.isPending ? (isEditing ? 'Updating...' : 'Creating...') : (isEditing ? 'Update' : 'Create')}
               </Button>
             </form>
           </DialogContent>
@@ -178,7 +218,7 @@ export default function GoalsPage() {
       ) : (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {goals?.map((goal) => (
-            <GoalCard key={goal.id} goal={goal} />
+            <GoalCard key={goal.id} goal={goal} onEdit={handleEdit} />
           ))}
         </div>
       )}

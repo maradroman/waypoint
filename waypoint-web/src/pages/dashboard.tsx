@@ -1,5 +1,6 @@
 import { useQuery } from '@tanstack/react-query'
 import { api } from '@/lib/api'
+import { formatMoney } from '@/lib/format'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Target, Wallet, ArrowRightLeft, CheckCircle2 } from 'lucide-react'
@@ -57,7 +58,7 @@ export default function DashboardPage() {
             <Wallet className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <p className="text-2xl font-bold">{summary?.totalSaved ?? 0}</p>
+            <p className="text-2xl font-bold">${formatMoney(summary?.totalSaved ?? 0)}</p>
           </CardContent>
         </Card>
         <Card>
@@ -68,7 +69,7 @@ export default function DashboardPage() {
             <ArrowRightLeft className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <p className="text-2xl font-bold">{summary?.totalTargets ?? 0}</p>
+            <p className="text-2xl font-bold">${formatMoney(summary?.totalTargets ?? 0)}</p>
           </CardContent>
         </Card>
         <Card>

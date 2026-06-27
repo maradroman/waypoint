@@ -18,6 +18,7 @@ import {
 } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 import { api } from '@/lib/api'
+import { formatMoney } from '@/lib/format'
 import { Button } from '@/components/ui/button'
 import { Switch } from '@/components/ui/switch'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -41,10 +42,12 @@ import {
   Undo2,
   GripVertical,
   CheckCircle2,
+  Pencil,
+  Trash2,
 } from 'lucide-react'
 import type { Goal, Milestone, Deposit, Completion } from '@/types/api'
 
-function FlipValue({ value, className }: { value: number; className?: string }) {
+function FlipValue({ value, className, formatValue }: { value: number; className?: string; formatValue?: (v: number) => string }) {
   const [display, setDisplay] = useState(value)
   const [animating, setAnimating] = useState(false)
   const [oldVal, setOldVal] = useState(value)
@@ -63,6 +66,7 @@ function FlipValue({ value, className }: { value: number; className?: string }) 
     }
   }, [value])
 
+  const format = formatValue || ((v: number) => String(v))
   const wide = animating ? (oldVal > value ? oldVal : value) : display
 
   return (
@@ -71,15 +75,15 @@ function FlipValue({ value, className }: { value: number; className?: string }) 
         className={`col-start-1 row-start-1 ${animating ? 'animate-flip-out' : ''}`}
         style={{ backfaceVisibility: 'hidden', transformOrigin: 'bottom' }}
       >
-        {animating ? oldVal : display}
+        {format(animating ? oldVal : display)}
       </span>
       <span
         className={`col-start-1 row-start-1 ${animating ? 'animate-flip-in' : 'invisible'}`}
         style={{ backfaceVisibility: 'hidden', transformOrigin: 'top' }}
       >
-        {value}
+        {format(value)}
       </span>
-      <span className="col-start-1 row-start-1 invisible">{wide}</span>
+      <span className="col-start-1 row-start-1 invisible">{format(wide)}</span>
     </span>
   )
 }
@@ -87,9 +91,11 @@ function FlipValue({ value, className }: { value: number; className?: string }) 
 function SortableMilestoneItem({
   milestone,
   goalId,
+  onEdit,
 }: {
   milestone: Milestone
   goalId: string
+  onEdit: (milestone: Milestone) => void
 }) {
   const {
     attributes,
@@ -116,12 +122,13 @@ function SortableMilestoneItem({
     mutationFn: (amount: number) =>
       api.post(`/goals/${goalId}/transfers/allocate`, {
         milestoneId: milestone.id,
-        amount,
+        amount: Math.round(amount * 100),
       }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['milestones', goalId] })
       queryClient.invalidateQueries({ queryKey: ['analytics', goalId] })
       setAllocateOpen(false)
+      setAllocateAmount('')
     },
   })
 
@@ -129,12 +136,13 @@ function SortableMilestoneItem({
     mutationFn: (amount: number) =>
       api.post(`/goals/${goalId}/transfers/withdraw`, {
         milestoneId: milestone.id,
-        amount,
+        amount: Math.round(amount * 100),
       }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['milestones', goalId] })
       queryClient.invalidateQueries({ queryKey: ['analytics', goalId] })
       setWithdrawOpen(false)
+      setWithdrawAmount('')
     },
   })
 
@@ -158,6 +166,14 @@ function SortableMilestoneItem({
     },
   })
 
+  const deleteMutation = useMutation({
+    mutationFn: () => api.delete(`/goals/${goalId}/milestones/${milestone.id}`),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['milestones', goalId] })
+      queryClient.invalidateQueries({ queryKey: ['analytics', goalId] })
+    },
+  })
+
   const coveragePercent = milestone.cost > 0
     ? Math.round((milestone.balance / milestone.cost) * 100)
     : 0
@@ -165,16 +181,16 @@ function SortableMilestoneItem({
   return (
     <div ref={setNodeRef} style={style}>
       <Card className={!milestone.enabled ? 'opacity-50' : ''}>
-        <CardContent className="flex gap-4 p-4">
+        <CardContent className="flex gap-2 p-4 sm:gap-4">
           <button
-            className="cursor-grab touch-none self-start mt-1"
+            className="cursor-grab touch-none self-start mt-1 shrink-0"
             {...attributes}
             {...listeners}
             aria-label="Drag to reorder"
           >
-            <GripVertical className="h-5 w-5 shrink-0 text-muted-foreground" />
+            <GripVertical className="h-5 w-5 text-muted-foreground" />
           </button>
-          <div className="flex-1 space-y-2">
+          <div className="min-w-0 flex-1 space-y-2">
             <div className="flex items-center gap-2">
               <span className="font-medium">{milestone.title}</span>
               {milestone.completed && <Badge variant="secondary">Done</Badge>}
@@ -185,10 +201,10 @@ function SortableMilestoneItem({
             )}
             <div className="flex items-center gap-4 text-sm">
               <span>
-                Cost: <strong>{milestone.cost}</strong>
+                Cost: <strong>${formatMoney(milestone.cost)}</strong>
               </span>
               <span>
-                Balance: <strong>{milestone.balance}</strong>
+                Balance: <strong>${formatMoney(milestone.balance)}</strong>
               </span>
               <Progress value={coveragePercent} className="h-2 w-24" />
               <span className="text-xs text-muted-foreground">{coveragePercent}%</span>
@@ -237,7 +253,7 @@ function SortableMilestoneItem({
                     withdrawMutation.mutate(Number(withdrawAmount))
                   }} className="space-y-4">
                     <div className="space-y-2">
-                      <Label>Amount (max {milestone.balance})</Label>
+                      <Label>Amount (max ${formatMoney(milestone.balance)})</Label>
                       <Input
                         type="number"
                         value={withdrawAmount}
@@ -261,11 +277,34 @@ function SortableMilestoneItem({
               )}
             </div>
           </div>
-          <Switch
-            checked={milestone.enabled}
-            onCheckedChange={() => toggleMutation.mutate()}
-            className="self-end shrink-0"
-          />
+          <div className="flex shrink-0 flex-col items-end justify-between self-stretch">
+            <div className="flex gap-0.5">
+              <Button
+                size="icon"
+                variant="ghost"
+                className="h-7 w-7"
+                onClick={() => onEdit(milestone)}
+              >
+                <Pencil className="h-3.5 w-3.5" />
+              </Button>
+              <Button
+                size="icon"
+                variant="ghost"
+                className="h-7 w-7 text-destructive hover:text-destructive"
+                onClick={() => {
+                  if (confirm('Delete this milestone?')) {
+                    deleteMutation.mutate()
+                  }
+                }}
+              >
+                <Trash2 className="h-3.5 w-3.5" />
+              </Button>
+            </div>
+            <Switch
+              checked={milestone.enabled}
+              onCheckedChange={() => toggleMutation.mutate()}
+            />
+          </div>
         </CardContent>
       </Card>
     </div>
@@ -276,7 +315,8 @@ export default function GoalDetailPage() {
   const { goalId } = useParams<{ goalId: string }>()
   const navigate = useNavigate()
   const queryClient = useQueryClient()
-  const [createOpen, setCreateOpen] = useState(false)
+  const [milestoneDialogOpen, setMilestoneDialogOpen] = useState(false)
+  const [editingMilestone, setEditingMilestone] = useState<Milestone | null>(null)
   const [title, setTitle] = useState('')
   const [cost, setCost] = useState('')
   const [details, setDetails] = useState('')
@@ -319,27 +359,57 @@ export default function GoalDetailPage() {
     enabled: !!goalId,
   })
 
+  const handleEditMilestone = (milestone: Milestone) => {
+    setEditingMilestone(milestone)
+    setTitle(milestone.title)
+    setCost(String(milestone.cost / 100))
+    setDetails(milestone.details || '')
+    setMilestoneDialogOpen(true)
+  }
+
+  const handleCloseMilestoneDialog = () => {
+    setMilestoneDialogOpen(false)
+    setTimeout(() => {
+      setEditingMilestone(null)
+      setTitle('')
+      setCost('')
+      setDetails('')
+    }, 200)
+  }
+
   const createMilestone = useMutation({
     mutationFn: () =>
       api.post(`/goals/${goalId}/milestones`, {
         title,
-        cost: cost ? Number(cost) : undefined,
+        cost: cost ? Math.round(Number(cost) * 100) : undefined,
         details: details || undefined,
         enabled: true,
       }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['milestones', goalId] })
-      setTitle('')
-      setCost('')
-      setDetails('')
-      setCreateOpen(false)
+      queryClient.invalidateQueries({ queryKey: ['analytics', goalId] })
+      handleCloseMilestoneDialog()
+    },
+  })
+
+  const updateMilestone = useMutation({
+    mutationFn: () =>
+      api.patch(`/goals/${goalId}/milestones/${editingMilestone?.id}`, {
+        title,
+        cost: cost ? Math.round(Number(cost) * 100) : undefined,
+        details: details || undefined,
+      }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['milestones', goalId] })
+      queryClient.invalidateQueries({ queryKey: ['analytics', goalId] })
+      handleCloseMilestoneDialog()
     },
   })
 
   const createDeposit = useMutation({
     mutationFn: () =>
       api.post(`/goals/${goalId}/deposits`, {
-        amount: Number(depositAmount),
+        amount: Math.round(Number(depositAmount) * 100),
         note: depositNote || undefined,
       }),
     onSuccess: () => {
@@ -421,7 +491,7 @@ export default function GoalDetailPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <Button variant="ghost" className="mb-2" onClick={() => navigate('/goals')}>
+          <Button variant="ghost" className="-ml-4 mb-2" onClick={() => navigate('/goals')}>
             ← Back
           </Button>
           <h1 className="text-3xl font-bold tracking-tight">
@@ -440,7 +510,9 @@ export default function GoalDetailPage() {
             <CardTitle className="text-sm font-medium text-muted-foreground">Wallet Balance</CardTitle>
           </CardHeader>
           <CardContent>
-            <FlipValue value={analytics?.walletBalance ?? 0} className="text-2xl font-bold" />
+            <div className="text-2xl font-bold">
+              $<FlipValue value={analytics?.walletBalance ?? 0} formatValue={formatMoney} className="text-2xl font-bold" />
+            </div>
           </CardContent>
         </Card>
         <Card>
@@ -448,7 +520,9 @@ export default function GoalDetailPage() {
             <CardTitle className="text-sm font-medium text-muted-foreground">Target</CardTitle>
           </CardHeader>
           <CardContent>
-            <FlipValue value={analytics?.totalMilestoneCost ?? 0} className="text-2xl font-bold" />
+            <div className="text-2xl font-bold">
+              $<FlipValue value={analytics?.totalMilestoneCost ?? 0} formatValue={formatMoney} className="text-2xl font-bold" />
+            </div>
           </CardContent>
         </Card>
         <Card>
@@ -513,7 +587,15 @@ export default function GoalDetailPage() {
               </form>
             </DialogContent>
           </Dialog>
-          <Dialog open={createOpen} onOpenChange={setCreateOpen}>
+          <Dialog open={milestoneDialogOpen} onOpenChange={(isOpen) => {
+            if (isOpen) {
+              setEditingMilestone(null)
+              setTitle('')
+              setCost('')
+              setDetails('')
+            }
+            setMilestoneDialogOpen(isOpen)
+          }}>
             <DialogTrigger asChild>
               <Button>
                 <Plus className="mr-2 h-4 w-4" />
@@ -521,25 +603,31 @@ export default function GoalDetailPage() {
               </Button>
             </DialogTrigger>
             <DialogContent>
-              <DialogHeader><DialogTitle>Add Milestone</DialogTitle></DialogHeader>
+              <DialogHeader>
+                <DialogTitle>{editingMilestone ? 'Edit Milestone' : 'Add Milestone'}</DialogTitle>
+              </DialogHeader>
               <form onSubmit={(e) => {
                 e.preventDefault()
-                createMilestone.mutate()
+                if (editingMilestone) {
+                  updateMilestone.mutate()
+                } else {
+                  createMilestone.mutate()
+                }
               }} className="space-y-4">
                 <div className="space-y-2">
                   <Label>Title</Label>
-                  <Input value={title} onChange={(e) => setTitle(e.target.value)} required />
+                  <Input value={title} onChange={(e) => setTitle(e.target.value)} required maxLength={70} />
                 </div>
                 <div className="space-y-2">
                   <Label>Cost</Label>
-                  <Input type="number" value={cost} onChange={(e) => setCost(e.target.value)} min={0} />
+                  <Input type="number" value={cost} onChange={(e) => setCost(e.target.value)} min={0} step="0.01" />
                 </div>
                 <div className="space-y-2">
                   <Label>Details (optional)</Label>
-                  <Input value={details} onChange={(e) => setDetails(e.target.value)} />
+                  <Input value={details} onChange={(e) => setDetails(e.target.value)} maxLength={200} />
                 </div>
-                <Button type="submit" className="w-full" disabled={createMilestone.isPending}>
-                  Create
+                <Button type="submit" className="w-full" disabled={createMilestone.isPending || updateMilestone.isPending}>
+                  {editingMilestone ? (updateMilestone.isPending ? 'Updating...' : 'Update') : (createMilestone.isPending ? 'Creating...' : 'Create')}
                 </Button>
               </form>
             </DialogContent>
@@ -559,7 +647,7 @@ export default function GoalDetailPage() {
         >
           <div className="space-y-3">
             {milestones?.map((ms) => (
-              <SortableMilestoneItem key={ms.id} milestone={ms} goalId={goal.id} />
+              <SortableMilestoneItem key={ms.id} milestone={ms} goalId={goal.id} onEdit={handleEditMilestone} />
             ))}
             {milestones?.length === 0 && (
               <p className="py-8 text-center text-muted-foreground">
@@ -593,7 +681,7 @@ export default function GoalDetailPage() {
               <Card key={deposit.id}>
                 <CardContent className="flex items-center justify-between p-4">
                   <div>
-                    <p className="font-medium">+{deposit.amount}</p>
+                    <p className="font-medium">+${formatMoney(deposit.amount)}</p>
                     {deposit.note && (
                       <p className="text-sm text-muted-foreground">{deposit.note}</p>
                     )}
