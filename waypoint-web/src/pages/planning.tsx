@@ -22,15 +22,23 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from '@/components/ui/popover'
-import { CalendarIcon, InfoIcon, LayoutGrid, ArrowLeft } from 'lucide-react'
+import { CalendarIcon, InfoIcon, LayoutGrid, ArrowLeft, ChevronLeft, ChevronRight, Repeat, Trash2 } from 'lucide-react'
+import { Switch } from '@/components/ui/switch'
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from '@/components/ui/dialog'
 import { uk, pl, enUS } from 'date-fns/locale'
+
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import {
   Tooltip,
   TooltipContent,
-  TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip'
-import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 
 export default function PlanningPage() {
   const { t, i18n } = useTranslation()
@@ -53,6 +61,16 @@ export default function PlanningPage() {
   })
   const [selectedMonthIndex, setSelectedMonthIndex] = useState<number | null>(null)
   const [isMobile, setIsMobile] = useState(() => window.innerWidth < 768)
+  const [monthOffset, setMonthOffset] = useState(0)
+  const [repeatOpen, setRepeatOpen] = useState(false)
+  const [repeatAmount, setRepeatAmount] = useState('')
+  const [repeatDay, setRepeatDay] = useState('')
+  const [repeatCountExisting, setRepeatCountExisting] = useState(true)
+  const [clearOpen, setClearOpen] = useState(false)
+  const [clearDate, setClearDate] = useState<Date | undefined>()
+  const [clearMonth, setClearMonth] = useState<Date | undefined>()
+  const [tooltipOpen, setTooltipOpen] = useState(false)
+  const [clearConfirmOpen, setClearConfirmOpen] = useState(false)
 
   // Track screen size changes
   useEffect(() => {
@@ -101,6 +119,17 @@ export default function PlanningPage() {
     queryFn: () => api.get<GoalAnalytics>(`/goals/${selectedGoalId}/analytics`),
     enabled: !!selectedGoalId,
   })
+
+  const defaultClearDate = useMemo(() => {
+    if (analytics?.potentialCompletionDate) {
+      const d = new Date(analytics.potentialCompletionDate)
+      d.setDate(d.getDate() + 1)
+      return d
+    }
+    const tomorrow = new Date()
+    tomorrow.setDate(tomorrow.getDate() + 1)
+    return tomorrow
+  }, [analytics?.potentialCompletionDate])
 
   const { data: deposits } = useQuery({
     queryKey: ['deposits', selectedGoalId],
@@ -162,18 +191,18 @@ export default function PlanningPage() {
 
   const projectedBalance = selectedDate ? calculateProjectedBalance(selectedDate) : 0
 
-  // Generate 12 months starting from current month
-  const generateMonths = () => {
+  // Generate 12 months starting from current month (plus offset)
+  const generateMonths = (offset: number) => {
     const months = []
     const today = new Date()
     for (let i = 0; i < 12; i++) {
-      const date = new Date(today.getFullYear(), today.getMonth() + i, 1)
+      const date = new Date(today.getFullYear(), today.getMonth() + offset + i, 1)
       months.push(date)
     }
     return months
   }
 
-  const months = useMemo(() => generateMonths(), [])
+  const months = useMemo(() => generateMonths(monthOffset), [monthOffset])
 
   const getDaysInMonth = (date: Date) => {
     const year = date.getFullYear()
@@ -319,13 +348,13 @@ export default function PlanningPage() {
                   className={`
                     aspect-square rounded-md text-sm flex items-center justify-center relative cursor-pointer
                     hover:bg-accent hover:text-accent-foreground
-                    ${isToday ? 'ring-2 ring-ring' : ''}
-                    ${!isPast && isCompletionDate ? 'bg-green-100 dark:bg-green-900 text-green-900 dark:text-green-100 font-semibold ring-2 ring-primary ring-offset-0' : !isPast && hasPlannedFund ? 'bg-primary text-primary-foreground font-semibold' : ''}
+                    ${isToday ? 'ring-2 ring-muted-foreground/30' : ''}
+                    ${!isPast && isCompletionDate ? 'bg-accent/20 text-primary font-semibold ring-2 ring-accent ring-offset-0' : !isPast && hasPlannedFund ? 'bg-primary text-primary-foreground font-semibold' : ''}
                   `}
                 >
                   {day}
                   {hasDeposits && (
-                    <span className="absolute -top-1 -right-1 h-2.5 w-2.5 rounded-full bg-primary" />
+                    <span className="absolute -top-1 -right-1 h-2 w-2 sm:h-2.5 sm:w-2.5 rounded-full bg-primary" />
                   )}
                 </button>
               </PopoverTrigger>
@@ -415,6 +444,7 @@ export default function PlanningPage() {
   const goalParam = searchParams.get('goal')
 
   return (
+    <>
     <div className="space-y-6 pb-8">
       <div>
         {goalParam && (
@@ -512,41 +542,49 @@ export default function PlanningPage() {
                   </PopoverContent>
                 </Popover>
                 <span className="font-bold text-2xl whitespace-nowrap">{formatMoney(projectedBalance)}</span>
-                <TooltipProvider delayDuration={200}>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <InfoIcon className="h-4 w-4 text-muted-foreground cursor-help flex-shrink-0" />
-                    </TooltipTrigger>
-                    <TooltipContent className="p-4">
-                      <div className="space-y-2 text-sm">
-                        <div className="flex justify-between gap-6">
-                          <span className="text-muted-foreground">{t('planning.currentBalance')}</span>
-                          <span className="font-medium">{formatMoney(analytics?.walletBalance ?? 0)}</span>
-                        </div>
-                        <div className="flex justify-between gap-6">
-                          <span className="text-muted-foreground">{t('planning.plannedFunds')}</span>
-                          <span className="font-medium">{formatMoney(projectedBalance - (analytics?.walletBalance ?? 0))}</span>
-                        </div>
-                        <div className="border-t pt-2 mt-2 flex justify-between gap-6">
-                          <span className="font-semibold">{t('planning.projectedTotal')}</span>
-                          <span className="font-bold">{formatMoney(projectedBalance)}</span>
-                        </div>
+                <Tooltip open={tooltipOpen} onOpenChange={setTooltipOpen}>
+                  <TooltipTrigger asChild>
+                    <button
+                      className="cursor-pointer flex-shrink-0"
+                      onClick={(e) => { e.preventDefault(); setTooltipOpen(prev => !prev) }}
+                    >
+                      <InfoIcon className="h-4 w-4 text-muted-foreground" />
+                    </button>
+                  </TooltipTrigger>
+                  <TooltipContent className="p-4">
+                    <div className="space-y-2 text-sm">
+                      <div className="flex justify-between gap-6">
+                        <span className="text-muted-foreground">{t('planning.currentBalance')}</span>
+                        <span className="font-medium">{formatMoney(analytics?.walletBalance ?? 0)}</span>
                       </div>
-                    </TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
+                      <div className="flex justify-between gap-6">
+                        <span className="text-muted-foreground">{t('planning.plannedFunds')}</span>
+                        <span className="font-medium">{formatMoney(projectedBalance - (analytics?.walletBalance ?? 0))}</span>
+                      </div>
+                      <div className="border-t pt-2 mt-2 flex justify-between gap-6">
+                        <span className="font-semibold">{t('planning.projectedTotal')}</span>
+                        <span className="font-bold">{formatMoney(projectedBalance)}</span>
+                      </div>
+                    </div>
+                  </TooltipContent>
+                </Tooltip>
               </div>
               {analytics && (
-                <div className="text-sm">
-                  {analytics.totalMilestoneCost > 0 && projectedBalance >= analytics.totalMilestoneCost ? (
-                    <span className="text-green-600 dark:text-green-400 font-medium">
-                      {t('planning.goalCanBeCompleted')}
-                    </span>
-                  ) : analytics.totalMilestoneCost > 0 ? (
+                <div className="text-sm space-y-1">
+                  {analytics.totalMilestoneCost > 0 && projectedBalance < analytics.totalMilestoneCost && (
                     <span className="text-muted-foreground">
                       {t('planning.remaining')}: {formatMoney(analytics.totalMilestoneCost - projectedBalance)}
                     </span>
-                  ) : null}
+                  )}
+                  {analytics.potentialCompletionDate && (
+                    <div className="text-accent-outline font-medium">
+                      {(() => {
+                        const d = new Date(analytics.potentialCompletionDate!)
+                        const m = t(`planning.monthsGenitive.${getMonthTranslationKey(d.getMonth())}`)
+                        return t('planning.canBeCompletedBy', { date: `${d.getDate()} ${m} ${d.getFullYear()}` })
+                      })()}
+                    </div>
+                  )}
                 </div>
               )}
             </>
@@ -554,33 +592,120 @@ export default function PlanningPage() {
         </CardContent>
       </Card>
 
+      {analytics && analytics.totalMilestoneCost > 0 && (
+        <div className="flex flex-wrap gap-2">
+          {!analytics.potentialCompletionDate && projectedBalance < analytics.totalMilestoneCost && (
+          <Button
+            variant="outline"
+            size="sm"
+            className="gap-2"
+            onClick={() => setRepeatOpen(true)}
+          >
+            <Repeat className="h-3 w-3" />
+            {t('planning.repeatedFunding')}
+          </Button>
+          )}
+          {Object.keys(plannedFunds).length > 0 && (
+          <Popover open={clearOpen} onOpenChange={(open) => { setClearOpen(open); if (open) { setClearDate(defaultClearDate); setClearMonth(defaultClearDate) } }}>
+            <PopoverTrigger asChild>
+              <Button variant="outline" size="sm" className="gap-2">
+                <Trash2 className="h-3 w-3" />
+                {t('planning.clearFromDate')}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-4" side="bottom" align="start">
+              <div className="space-y-4">
+                <div className="flex justify-end -mb-3">
+                  <Button
+                    variant="link"
+                    size="sm"
+                    className="h-auto p-0 text-xs"
+                    onClick={() => { setClearDate(new Date()); setClearMonth(new Date()) }}
+                  >
+                    {t('common.today')}
+                  </Button>
+                </div>
+                <Calendar
+                  mode="single"
+                  selected={clearDate}
+                  onSelect={(d) => { setClearDate(d); if (d) setClearMonth(d) }}
+                  month={clearMonth}
+                  onMonthChange={setClearMonth}
+                  className="min-w-[240px] border-0 bg-transparent shadow-none mt-2"
+                  locale={getLocale()}
+                   classNames={{
+                    today: 'rounded-md ring-2 ring-muted-foreground/30',
+                    day: 'group/day relative aspect-square h-full w-full select-none p-0 text-center [&:first-child[data-selected=true]_button]:rounded-md [&:last-child[data-selected=true]_button]:rounded-md',
+                  }}
+                  style={
+                    { '--primary': 'var(--accent)', '--primary-foreground': 'var(--accent-foreground)' } as React.CSSProperties
+                  }
+                />
+                {clearDate && (() => {
+                  const selectedKey = formatDateKey(clearDate.getFullYear(), clearDate.getMonth(), clearDate.getDate())
+                  const toDelete = Object.keys(plannedFunds).filter(k => k >= selectedKey).length
+                  if (toDelete === 0) {
+                    return <p className="text-sm text-muted-foreground max-w-[250px]">{t('planning.noPlannedFunds')}</p>
+                  }
+                  return (
+                    <>
+                      <p className="text-sm text-muted-foreground max-w-[250px]">{t('planning.entriesToDelete', { count: toDelete })}</p>
+                      <div className="flex gap-2 justify-end">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="cursor-pointer !text-red-600 !bg-red-50 !border-red-600 hover:!bg-red-100 hover:!text-red-700 hover:!border-red-700 dark:!text-red-400 dark:!bg-red-950/30 dark:!border-red-400 dark:hover:!bg-red-950/50 dark:hover:!text-red-300 dark:hover:!border-red-300"
+                          onClick={() => {
+                            setClearOpen(false)
+                            setClearConfirmOpen(true)
+                          }}
+                        >
+                          {t('common.delete')}
+                        </Button>
+                      </div>
+                    </>
+                  )
+                })()}
+              </div>
+            </PopoverContent>
+          </Popover>
+          )}
+        </div>
+      )}
+
       {selectedGoalId && (
         <>
           {isMobile ? (
             <>
-              {/* Mobile view toggle */}
+              {/* Mobile: prev/next + view toggle */}
               <div className="flex justify-between items-center">
-                {mobileView === 'grid' && selectedMonthIndex !== null ? (
-                  <Button
-                    variant="ghost"
-                    onClick={() => setSelectedMonthIndex(null)}
-                  >
-                    <ArrowLeft className="h-4 w-4 mr-2" />
-                    {t('common.back')}
-                  </Button>
-                ) : (
-                  <div />
-                )}
-                <Tabs value={mobileView} onValueChange={(v) => setMobileView(v as 'scroll' | 'grid')}>
-                  <TabsList>
-                    <TabsTrigger value="scroll">
-                      <CalendarIcon className="h-4 w-4" />
-                    </TabsTrigger>
-                    <TabsTrigger value="grid">
-                      <LayoutGrid className="h-4 w-4" />
-                    </TabsTrigger>
-                  </TabsList>
-                </Tabs>
+                <Button variant="outline" size="icon" onClick={() => setMonthOffset(o => o - 12)}>
+                  <ChevronLeft className="h-4 w-4" />
+                </Button>
+                <div className="flex items-center gap-2">
+                  {mobileView === 'grid' && selectedMonthIndex !== null ? (
+                    <Button
+                      variant="ghost"
+                      onClick={() => setSelectedMonthIndex(null)}
+                    >
+                      <ArrowLeft className="h-4 w-4 mr-2" />
+                      {t('common.back')}
+                    </Button>
+                  ) : null}
+                  <Tabs value={mobileView} onValueChange={(v) => setMobileView(v as 'scroll' | 'grid')}>
+                    <TabsList>
+                      <TabsTrigger value="scroll">
+                        <CalendarIcon className="h-4 w-4" />
+                      </TabsTrigger>
+                      <TabsTrigger value="grid">
+                        <LayoutGrid className="h-4 w-4" />
+                      </TabsTrigger>
+                    </TabsList>
+                  </Tabs>
+                </div>
+                <Button variant="outline" size="icon" onClick={() => setMonthOffset(o => o + 12)}>
+                  <ChevronRight className="h-4 w-4" />
+                </Button>
               </div>
 
               {mobileView === 'grid' ? (
@@ -632,8 +757,17 @@ export default function PlanningPage() {
               )}
             </>
           ) : (
-            /* Desktop/Tablet: always show full grid (2 cols on md, 4 cols on lg) */
-            <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
+            /* Desktop/Tablet: always show full grid (2 cols on md, 3 cols on lg, 4 cols on xl) */
+            <>
+              <div className="flex items-center justify-between mb-2">
+                <Button variant="outline" size="icon" onClick={() => setMonthOffset(o => o - 12)}>
+                  <ChevronLeft className="h-4 w-4" />
+                </Button>
+                <Button variant="outline" size="icon" onClick={() => setMonthOffset(o => o + 12)}>
+                  <ChevronRight className="h-4 w-4" />
+                </Button>
+              </div>
+              <div className="grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
               {months.map(month => (
                 <div key={month.toISOString()} style={{ isolation: 'isolate' }}>
                   <MonthCalendar
@@ -646,10 +780,180 @@ export default function PlanningPage() {
                   />
                 </div>
               ))}
-            </div>
+              </div>
+            </>
           )}
         </>
       )}
     </div>
+
+      <Dialog open={repeatOpen} onOpenChange={setRepeatOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{t('planning.repeatedFunding')}</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            <div className="space-y-2">
+              <Label>{t('planning.repeatAmountLabel')}</Label>
+              <Input
+                type="number"
+                min="0.01"
+                step="0.01"
+                placeholder="0.00"
+                value={repeatAmount}
+                onChange={e => setRepeatAmount(e.target.value)}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>{t('planning.repeatDayLabel')}</Label>
+              <Select
+                value={repeatDay}
+                onValueChange={setRepeatDay}
+                disabled={!repeatAmount || parseFloat(repeatAmount) <= 0}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder={t('planning.selectDay')} />
+                </SelectTrigger>
+                <SelectContent>
+                  {Array.from({ length: 31 }, (_, i) => i + 1).map(d => (
+                    <SelectItem key={d} value={String(d)}>{d}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            {repeatAmount && repeatDay && parseFloat(repeatAmount) > 0 && analytics && (
+              <div className="text-sm space-y-3">
+                <div className="flex items-center gap-2">
+                  <Switch
+                    id="count-existing"
+                    checked={repeatCountExisting}
+                    onCheckedChange={setRepeatCountExisting}
+                  />
+                  <Label htmlFor="count-existing" className="cursor-pointer">
+                    {t('planning.repeatCountLabel')}
+                  </Label>
+                </div>
+                {(() => {
+                  const amount = Math.round(parseFloat(repeatAmount) * 100)
+                  const day = parseInt(repeatDay)
+
+                  const today = new Date()
+                  let running = repeatCountExisting ? projectedBalance : (analytics.walletBalance ?? 0)
+                  let month = today.getMonth() + 1
+                  let year = today.getFullYear()
+                  let found: Date | null = null
+
+                  for (let i = 0; i < 1200; i++) {
+                    const safeDay = Math.min(day, new Date(year, month + 1, 0).getDate())
+                    const depDate = new Date(year, month, safeDay)
+                    running += amount
+                    if (running >= analytics.totalMilestoneCost) {
+                      found = depDate
+                      break
+                    }
+                    month++
+                    if (month > 11) { month = 0; year++ }
+                  }
+
+                  if (found) {
+                    const months = t(`planning.monthsGenitive.${getMonthTranslationKey(found.getMonth())}`)
+                    const dateStr = `${found.getDate()} ${months} ${found.getFullYear()}`
+                    const amountStr = formatMoney(amount)
+                    const explanationKey = repeatCountExisting
+                      ? 'planning.completionExplanationIncluding'
+                      : 'planning.completionExplanationExcluding'
+                    return (
+                      <>
+                        <p className="text-muted-foreground">
+                          {t(explanationKey, { amount: amountStr, day })}{' '}
+                          <strong>{dateStr}</strong>
+                          {t('planning.completionExplanationAfter')}
+                        </p>
+                        <p className="font-medium">{t('planning.saveQuestion')}</p>
+                      </>
+                    )
+                  }
+
+                  return <span className="text-muted-foreground">{t('planning.tooLong')}</span>
+                })()}
+              </div>
+            )}
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setRepeatOpen(false)}>
+              {t('common.no')}
+            </Button>
+            <Button
+              onClick={() => {
+                if (!analytics || !repeatAmount || !repeatDay) return
+                const amount = Math.round(parseFloat(repeatAmount) * 100)
+                const day = parseInt(repeatDay)
+                if (amount <= 0 || day < 1 || day > 31) return
+
+                const today = new Date()
+                let month = today.getMonth() + 1
+                let year = today.getFullYear()
+                let running = repeatCountExisting ? projectedBalance : (analytics.walletBalance ?? 0)
+
+                const entries: { date: string; amount: number }[] = []
+                for (let i = 0; i < 1200 && running < analytics.totalMilestoneCost; i++) {
+                  const safeDay = Math.min(day, new Date(year, month + 1, 0).getDate())
+                  const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(safeDay).padStart(2, '0')}`
+                  running += amount
+                  entries.push({ date: dateStr, amount })
+                  month++
+                  if (month > 11) { month = 0; year++ }
+                }
+
+                for (const e of entries) {
+                  upsertMutation.mutate({ date: e.date, amount: e.amount })
+                }
+                setRepeatOpen(false)
+                setRepeatAmount('')
+                setRepeatDay('')
+              }}
+              disabled={!repeatAmount || !repeatDay || parseFloat(repeatAmount) <= 0}
+            >
+              {t('common.yes')}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={clearConfirmOpen} onOpenChange={setClearConfirmOpen}>
+        <DialogContent onPointerDownOutside={(e) => e.preventDefault()}>
+          <DialogHeader>
+            <DialogTitle>{t('planning.confirmClear')}</DialogTitle>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setClearConfirmOpen(false)}>
+              {t('common.cancel')}
+            </Button>
+            <Button
+              variant="outline"
+              className="cursor-pointer !text-red-600 !bg-red-50 !border-red-600 hover:!bg-red-100 hover:!text-red-700 hover:!border-red-700 dark:!text-red-400 dark:!bg-red-950/30 dark:!border-red-400 dark:hover:!bg-red-950/50 dark:hover:!text-red-300 dark:hover:!border-red-300"
+              onClick={() => {
+                if (!clearDate) return
+                const selectedKey = formatDateKey(clearDate.getFullYear(), clearDate.getMonth(), clearDate.getDate())
+                const toDelete = Object.keys(plannedFunds).filter(k => k >= selectedKey)
+                for (const dateKey of toDelete) {
+                  setPlannedFunds(prev => {
+                    const newFunds = { ...prev }
+                    delete newFunds[dateKey]
+                    return newFunds
+                  })
+                  deleteMutation.mutate(dateKey)
+                }
+                setClearConfirmOpen(false)
+                setClearOpen(false)
+                setClearDate(undefined)
+              }}
+            >
+              {t('planning.clearFromDate')}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </>
   )
 }

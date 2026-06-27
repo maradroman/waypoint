@@ -17,9 +17,12 @@
     "delete": "Видалити",
     "cancel": "Скасувати",
     "save": "Зберегти",
+    "yes": "Так",
+    "no": "Ні",
     "close": "Закрити",
     "creating": "Створення...",
-    "updating": "Оновлення..."
+    "updating": "Оновлення...",
+    "today": "Сьогодні"
   },
   "dashboard": {
     "title": "Огляд",
@@ -130,7 +133,22 @@
     "projectedTotal": "Прогнозована сума",
     "deposited": "Внесено {{amount}}",
     "remaining": "Залишилось",
-    "goalCanBeCompleted": "Ціль може бути досягнута!",
+    "canBeCompletedBy": "Може бути досягнуто до {{date}}",
+    "repeatedFunding": "Регулярне поповнення",
+    "repeatPrompt": "Хочете пришвидшити заощадження за допомогою регулярних внесків?",
+    "repeatAmountLabel": "Скільки ви плануєте вносити щомісяця?",
+    "repeatDayLabel": "В який день місяця ви плануєте вносити депозит?",
+    "selectDay": "Виберіть день",
+    "completionExplanationIncluding": "Враховуючи вже введені заплановані кошти, з {{amount}} щомісяця {{day}} числа ціль може бути досягнуто",
+    "completionExplanationExcluding": "Не враховуючи вже введені заплановані кошти, з {{amount}} щомісяця {{day}} числа ціль може бути досягнуто",
+    "completionExplanationAfter": ".",
+    "repeatCountLabel": "Враховувати вже введені заплановані кошти",
+    "saveQuestion": "Бажаєте додати ці внески до планування?",
+    "tooLong": "Більше 100 років",
+    "clearFromDate": "Очистити з дати",
+    "noPlannedFunds": "Немає запланованих вкладень після цієї дати",
+    "entriesToDelete": "{{count}} запланованих записів з цієї дати буде видалено",
+    "confirmClear": "Ви впевнені, що хочете видалити всі заплановані кошти з цієї дати?",
     "months": {
       "january": "Січень",
       "february": "Лютий",
@@ -144,6 +162,20 @@
       "october": "Жовтень",
       "november": "Листопад",
       "december": "Грудень"
+    },
+    "monthsGenitive": {
+      "january": "Січня",
+      "february": "Лютого",
+      "march": "Березня",
+      "april": "Квітня",
+      "may": "Травня",
+      "june": "Червня",
+      "july": "Липня",
+      "august": "Серпня",
+      "september": "Вересня",
+      "october": "Жовтня",
+      "november": "Листопада",
+      "december": "Грудня"
     },
     "weekDays": {
       "sun": "Нд",

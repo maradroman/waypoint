@@ -218,7 +218,7 @@ function SortableMilestoneItem({
             <div className="flex flex-wrap gap-2">
               <Dialog open={allocateOpen} onOpenChange={setAllocateOpen}>
                 <DialogTrigger asChild>
-                  <Button size="sm" variant="outline" disabled={!milestone.enabled}>
+                  <Button size="sm" variant="outline-accent" disabled={!milestone.enabled}>
                     <ArrowDownToLine className="mr-1 h-4 w-4" />
                     {t('milestone.allocate')}
                   </Button>
@@ -239,7 +239,7 @@ function SortableMilestoneItem({
                         min={1}
                       />
                     </div>
-                    <Button type="submit" className="w-full">
+                    <Button type="submit" className="w-full" variant="outline-accent">
                       {t('milestone.allocate')}
                     </Button>
                   </form>
@@ -587,7 +587,7 @@ export default function GoalDetailPage() {
           )}
           <Dialog open={depositOpen} onOpenChange={setDepositOpen}>
             <DialogTrigger asChild>
-              <Button variant="outline">
+              <Button variant="accent">
                 <Plus className="mr-2 h-4 w-4" />
                 {t('goalDetail.addFunds')}
               </Button>
@@ -615,7 +615,7 @@ export default function GoalDetailPage() {
                     onChange={(e) => setDepositNote(e.target.value)}
                   />
                 </div>
-                <Button type="submit" className="w-full">
+                <Button type="submit" className="w-full" variant="accent">
                   {t('deposit.deposit')}
                 </Button>
               </form>
@@ -631,7 +631,7 @@ export default function GoalDetailPage() {
             setMilestoneDialogOpen(isOpen)
           }}>
             <DialogTrigger asChild>
-              <Button>
+              <Button variant="outline-accent">
                 <Plus className="mr-2 h-4 w-4" />
                 {t('goalDetail.milestone')}
               </Button>
@@ -742,7 +742,7 @@ export default function GoalDetailPage() {
               <Card key={comp.id}>
                 <CardContent className="flex items-center justify-between p-4">
                   <div className="flex items-center gap-2">
-                    <CheckCircle2 className="h-5 w-5 text-green-500" />
+                    <CheckCircle2 className="h-5 w-5 text-accent" />
                     <span>{comp.milestoneTitle}</span>
                   </div>
                   <div className="flex items-center gap-2">
