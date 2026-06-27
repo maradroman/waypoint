@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { Switch } from '@/components/ui/switch'
 import {
   Select,
   SelectContent,
@@ -15,6 +16,7 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { Separator } from '@/components/ui/separator'
+import { Sun, Moon } from 'lucide-react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useNavigate } from 'react-router-dom'
 
@@ -37,17 +39,28 @@ export default function SettingsPage() {
   const navigate = useNavigate()
   const queryClient = useQueryClient()
   const { t } = useTranslation()
-  const [locale, setLocale] = useState(user?.locale ?? 'en')
-  const [currency, setCurrency] = useState(user?.currency ?? 'USD')
 
   const updateMutation = useMutation({
-    mutationFn: () =>
-      api.patch('/auth/me', { locale, currency }),
+    mutationFn: (data: { locale?: string; currency?: string; theme?: string }) =>
+      api.patch('/auth/me', data),
     onSuccess: (data) => {
       setUser(data as User)
       queryClient.invalidateQueries()
     },
   })
+
+  const handleLocaleChange = (locale: string) => {
+    updateMutation.mutate({ locale })
+  }
+
+  const handleCurrencyChange = (currency: string) => {
+    updateMutation.mutate({ currency })
+  }
+
+  const handleThemeChange = (checked: boolean) => {
+    const theme = checked ? 'dark' : 'light'
+    updateMutation.mutate({ theme })
+  }
 
   const exportMutation = useMutation({
     mutationFn: () => api.get('/goals'),
@@ -96,7 +109,7 @@ export default function SettingsPage() {
         <CardContent className="space-y-4">
           <div className="space-y-2">
             <Label htmlFor="locale">{t('settings.language')}</Label>
-            <Select value={locale} onValueChange={setLocale}>
+            <Select value={user?.locale ?? 'en'} onValueChange={handleLocaleChange}>
               <SelectTrigger id="locale">
                 <SelectValue />
               </SelectTrigger>
@@ -109,7 +122,7 @@ export default function SettingsPage() {
           </div>
           <div className="space-y-2">
             <Label htmlFor="currency">{t('settings.currency')}</Label>
-            <Select value={currency} onValueChange={setCurrency}>
+            <Select value={user?.currency ?? 'USD'} onValueChange={handleCurrencyChange}>
               <SelectTrigger id="currency">
                 <SelectValue />
               </SelectTrigger>
@@ -120,13 +133,18 @@ export default function SettingsPage() {
               </SelectContent>
             </Select>
           </div>
-          <Button
-            onClick={() => updateMutation.mutate()}
-            disabled={updateMutation.isPending}
-            className="w-full"
-          >
-            {updateMutation.isPending ? t('settings.saving') : t('settings.savePreferences')}
-          </Button>
+          <div className="space-y-2">
+            <Label htmlFor="theme">{t('settings.theme')}</Label>
+            <div className="flex items-center justify-center gap-2">
+              <Sun className="h-4 w-4" />
+              <Switch
+                id="theme"
+                checked={user?.theme === 'dark'}
+                onCheckedChange={handleThemeChange}
+              />
+              <Moon className="h-4 w-4" />
+            </div>
+          </div>
         </CardContent>
       </Card>
 

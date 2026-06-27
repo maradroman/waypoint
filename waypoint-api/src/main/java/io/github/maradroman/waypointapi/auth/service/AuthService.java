@@ -95,6 +95,9 @@ public class AuthService {
         if (request.currency() != null) {
             user.setCurrency(request.currency());
         }
+        if (request.theme() != null) {
+            user.setTheme(request.theme());
+        }
         user = userRepository.save(user);
         return toProfile(user);
     }
@@ -120,6 +123,7 @@ public class AuthService {
                 user.getDisplayName(),
                 user.getLocale(),
                 user.getCurrency(),
+                user.getTheme(),
                 user.getRole()
         );
     }

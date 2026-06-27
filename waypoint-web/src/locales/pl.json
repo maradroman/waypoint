@@ -98,6 +98,7 @@
     "email": "Email",
     "language": "Język",
     "currency": "Waluta",
+    "theme": "Motyw",
     "savePreferences": "Zapisz preferencje",
     "saving": "Zapisywanie...",
     "exportData": "Eksportuj dane (JSON)",

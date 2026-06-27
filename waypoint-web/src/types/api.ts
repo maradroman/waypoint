@@ -4,6 +4,7 @@ export interface User {
   name: string
   locale: string
   currency: string
+  theme: string
   role: string
 }
 

@@ -233,7 +233,7 @@ class AuthServiceTest {
         @Test
         @DisplayName("updates displayName, locale, currency selectively")
         void updateProfile_updatesDisplayNameLocaleCurrencySelectivelyTest() {
-            var request = new UpdateProfileRequest("New Name", null, null);
+            var request = new UpdateProfileRequest("New Name", null, null, null);
 
             when(userRepository.save(user)).thenReturn(user);
 
@@ -250,7 +250,7 @@ class AuthServiceTest {
         @Test
         @DisplayName("updates locale selectively")
         void updateProfile_updatesLocaleSelectivelyTest() {
-            var request = new UpdateProfileRequest(null, "fr", null);
+            var request = new UpdateProfileRequest(null, "fr", null, null);
 
             when(userRepository.save(user)).thenReturn(user);
 
@@ -265,7 +265,7 @@ class AuthServiceTest {
         @Test
         @DisplayName("updates currency selectively")
         void updateProfile_updatesCurrencySelectivelyTest() {
-            var request = new UpdateProfileRequest(null, null, "EUR");
+            var request = new UpdateProfileRequest(null, null, "EUR", null);
 
             when(userRepository.save(user)).thenReturn(user);
 

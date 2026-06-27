@@ -13,5 +13,8 @@ public record UpdateProfileRequest(
         String locale,
         @Size(min = 2, max = 3)
         @Schema(description = "Currency code (ISO 4217)", example = "USD")
-        String currency
+        String currency,
+        @Size(min = 4, max = 5)
+        @Schema(description = "Theme preference", example = "light", allowableValues = {"light", "dark"})
+        String theme
 ) {}

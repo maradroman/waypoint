@@ -18,6 +18,7 @@ public class TestDataConstant {
     public static final String USER_PASSWORD_HASH = "$2a$10$hashedpassword";
     public static final String USER_LOCALE = "en";
     public static final String USER_CURRENCY = "USD";
+    public static final String USER_THEME = "light";
     public static final String USER_ROLE = "USER";
     public static final String USER_ROLE_ADMIN = "ADMIN";
 

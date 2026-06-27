@@ -98,6 +98,7 @@
     "email": "Email",
     "language": "Мова",
     "currency": "Валюта",
+    "theme": "Тема",
     "savePreferences": "Зберегти налаштування",
     "saving": "Збереження...",
     "exportData": "Експортувати дані (JSON)",

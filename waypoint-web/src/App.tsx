@@ -68,6 +68,16 @@ function AuthGate({ children }: { children: React.ReactNode }) {
     }
   }, [user?.locale])
 
+  // Set theme based on user's preference
+  useEffect(() => {
+    const theme = user?.theme ?? 'light'
+    if (theme === 'dark') {
+      document.documentElement.classList.add('dark')
+    } else {
+      document.documentElement.classList.remove('dark')
+    }
+  }, [user?.theme])
+
   if (isLoading && !isAuthenticated) {
     return (
       <div className="flex min-h-screen items-center justify-center">

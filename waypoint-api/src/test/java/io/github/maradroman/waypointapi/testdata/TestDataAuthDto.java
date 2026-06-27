@@ -29,11 +29,11 @@ public class TestDataAuthDto {
     }
 
     public static UpdateProfileRequest updateProfileRequest(String displayName) {
-        return new UpdateProfileRequest(displayName, USER_LOCALE, USER_CURRENCY);
+        return new UpdateProfileRequest(displayName, USER_LOCALE, USER_CURRENCY, USER_THEME);
     }
 
     public static AuthResponse authResponse() {
         return new AuthResponse("access-token", "refresh-token",
-                new AuthResponse.UserProfile(USER_ID.toString(), USER_EMAIL, USER_DISPLAY_NAME, USER_LOCALE, USER_CURRENCY, USER_ROLE));
+                new AuthResponse.UserProfile(USER_ID.toString(), USER_EMAIL, USER_DISPLAY_NAME, USER_LOCALE, USER_CURRENCY, USER_THEME, USER_ROLE));
     }
 }

@@ -23,6 +23,8 @@ public record AuthResponse(
             String locale,
             @Schema(description = "Currency code", example = "USD")
             String currency,
+            @Schema(description = "Theme preference", example = "light", allowableValues = {"light", "dark"})
+            String theme,
             @Schema(description = "User role", example = "USER", allowableValues = {"USER", "ADMIN"})
             String role
     ) {}
