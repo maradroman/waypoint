@@ -19,6 +19,7 @@ import { Separator } from '@/components/ui/separator'
 import { Sun, Moon } from 'lucide-react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useNavigate } from 'react-router-dom'
+import { ConfirmDialog } from '@/components/ui/confirm-dialog'
 
 const locales = [
   { value: 'en', label: 'English' },
@@ -39,6 +40,7 @@ export default function SettingsPage() {
   const navigate = useNavigate()
   const queryClient = useQueryClient()
   const { t } = useTranslation()
+  const [confirmResetOpen, setConfirmResetOpen] = useState(false)
 
   const updateMutation = useMutation({
     mutationFn: (data: { locale?: string; currency?: string; theme?: string }) =>
@@ -76,10 +78,8 @@ export default function SettingsPage() {
   })
 
   const handleReset = () => {
-    if (confirm(t('settings.resetConfirm'))) {
-      logout()
-      navigate('/login')
-    }
+    logout()
+    navigate('/login')
   }
 
   return (
@@ -157,11 +157,20 @@ export default function SettingsPage() {
             {t('settings.exportData')}
           </Button>
           <Separator />
-          <Button variant="destructive" className="w-full" onClick={handleReset}>
+          <Button variant="destructive" className="w-full" onClick={() => setConfirmResetOpen(true)}>
             {t('settings.resetData')}
           </Button>
         </CardContent>
       </Card>
+
+      <ConfirmDialog
+        open={confirmResetOpen}
+        onOpenChange={setConfirmResetOpen}
+        title={t('settings.resetConfirm')}
+        confirmText={t('settings.resetData')}
+        cancelText={t('common.cancel')}
+        onConfirm={handleReset}
+      />
     </div>
   )
 }

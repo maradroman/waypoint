@@ -1,5 +1,5 @@
 import { useState, useCallback, useRef, useEffect } from 'react'
-import { useParams, useNavigate } from 'react-router-dom'
+import { useParams, useNavigate, Link } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
 import {
@@ -45,8 +45,10 @@ import {
   CheckCircle2,
   Pencil,
   Trash2,
+  ExternalLink,
 } from 'lucide-react'
-import type { Goal, Milestone, Deposit, Completion } from '@/types/api'
+import type { Goal, Milestone, Deposit, Completion, GoalAnalytics } from '@/types/api'
+import { ConfirmDialog } from '@/components/ui/confirm-dialog'
 
 function FlipValue({ value, className, formatValue }: { value: number; className?: string; formatValue?: (v: number) => string }) {
   const [display, setDisplay] = useState(value)
@@ -120,6 +122,7 @@ function SortableMilestoneItem({
   const [allocateAmount, setAllocateAmount] = useState('')
   const [withdrawOpen, setWithdrawOpen] = useState(false)
   const [withdrawAmount, setWithdrawAmount] = useState('')
+  const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false)
 
   const allocateMutation = useMutation({
     mutationFn: (amount: number) =>
@@ -294,11 +297,7 @@ function SortableMilestoneItem({
                 size="icon"
                 variant="ghost"
                 className="h-7 w-7 text-destructive hover:text-destructive"
-                onClick={() => {
-                  if (confirm(t('milestone.delete'))) {
-                    deleteMutation.mutate()
-                  }
-                }}
+                onClick={() => setConfirmDeleteOpen(true)}
               >
                 <Trash2 className="h-3.5 w-3.5" />
               </Button>
@@ -310,6 +309,15 @@ function SortableMilestoneItem({
           </div>
         </CardContent>
       </Card>
+
+      <ConfirmDialog
+        open={confirmDeleteOpen}
+        onOpenChange={setConfirmDeleteOpen}
+        title={t('milestone.delete')}
+        confirmText={t('common.delete')}
+        cancelText={t('common.cancel')}
+        onConfirm={() => deleteMutation.mutate()}
+      />
     </div>
   )
 }
@@ -319,7 +327,7 @@ export default function GoalDetailPage() {
   const navigate = useNavigate()
   const queryClient = useQueryClient()
   const formatMoney = useFormatMoney()
-  const { t } = useTranslation()
+  const { t, i18n } = useTranslation()
   const [milestoneDialogOpen, setMilestoneDialogOpen] = useState(false)
   const [editingMilestone, setEditingMilestone] = useState<Milestone | null>(null)
   const [title, setTitle] = useState('')
@@ -360,7 +368,7 @@ export default function GoalDetailPage() {
 
   const { data: analytics } = useQuery({
     queryKey: ['analytics', goalId],
-    queryFn: () => api.get<{ walletBalance: number; totalMilestoneCost: number; progressPercent: number }>(`/goals/${goalId}/analytics`),
+    queryFn: () => api.get<GoalAnalytics>(`/goals/${goalId}/analytics`),
     enabled: !!goalId,
   })
 
@@ -509,33 +517,58 @@ export default function GoalDetailPage() {
         </div>
       </div>
 
-      <div className="grid gap-4 sm:grid-cols-3">
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">{t('goalDetail.walletBalance')}</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <FlipValue value={analytics?.walletBalance ?? 0} formatValue={formatMoney} className="text-2xl font-bold" />
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">{t('goalDetail.target')}</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <FlipValue value={analytics?.totalMilestoneCost ?? 0} formatValue={formatMoney} className="text-2xl font-bold" />
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">{t('goalDetail.completion')}</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-2xl font-bold">
+      <div className="space-y-3">
+        <div className="grid gap-4 sm:grid-cols-2">
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-medium text-muted-foreground">{t('goalDetail.walletBalance')}</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <FlipValue value={analytics?.walletBalance ?? 0} formatValue={formatMoney} className="text-2xl font-bold" />
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-medium text-muted-foreground">{t('goalDetail.target')}</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <FlipValue value={analytics?.totalMilestoneCost ?? 0} formatValue={formatMoney} className="text-2xl font-bold" />
+            </CardContent>
+          </Card>
+        </div>
+
+        <div className="space-y-2">
+          <div className="flex items-center justify-between text-sm">
+            <span className="text-muted-foreground">{t('planning.remaining')}: {formatMoney((analytics?.totalMilestoneCost ?? 0) - (analytics?.walletBalance ?? 0))}</span>
+            <span className="font-medium">
               <FlipValue value={analytics?.progressPercent ?? 0} />%
+            </span>
+          </div>
+          <Progress value={analytics?.progressPercent ?? 0} className="h-2" />
+          {analytics?.potentialCompletionDate ? (
+            <p className="text-sm text-muted-foreground">
+              {t('goalDetail.potentialCompletionDate', {
+                date: new Date(analytics.potentialCompletionDate).toLocaleDateString(i18n.language, {
+                  year: 'numeric',
+                  month: 'long',
+                  day: 'numeric'
+                })
+              })}{' '}
+              <Link to={`/planning?goal=${goalId}`} className="inline-flex items-center gap-1 underline hover:text-foreground">
+                {t('goalDetail.seePlanningLink')}
+                <ExternalLink className="h-3 w-3" />
+              </Link>
             </p>
-          </CardContent>
-        </Card>
+          ) : (
+            <p className="text-sm text-muted-foreground">
+              <Link to={`/planning?goal=${goalId}`} className="inline-flex items-center gap-1 underline hover:text-foreground">
+                {t('goalDetail.planLink')}
+                <ExternalLink className="h-3 w-3" />
+              </Link>{' '}
+              {t('goalDetail.planAheadPromptPrefix')}
+            </p>
+          )}
+        </div>
       </div>
 
       <Separator />

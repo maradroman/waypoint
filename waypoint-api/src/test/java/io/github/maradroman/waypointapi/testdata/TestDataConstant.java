@@ -59,6 +59,15 @@ public class TestDataConstant {
     public static final UUID COMPLETION_ID_2 = UUID.fromString("00000000-0000-0000-0000-000000000051");
     public static final int COMPLETION_AMOUNT = 100000;
 
+    // Planned Fund
+    public static final UUID PLANNED_FUND_ID = UUID.fromString("00000000-0000-0000-0000-000000000055");
+    public static final UUID PLANNED_FUND_ID_2 = UUID.fromString("00000000-0000-0000-0000-000000000056");
+    public static final java.time.LocalDate PLANNED_FUND_DATE = java.time.LocalDate.of(2026, 7, 15);
+    public static final java.time.LocalDate PLANNED_FUND_DATE_2 = java.time.LocalDate.of(2026, 8, 20);
+    public static final java.time.LocalDate PAST_DATE = java.time.LocalDate.of(2020, 1, 1);
+    public static final int PLANNED_FUND_AMOUNT = 50000;
+    public static final int PLANNED_FUND_AMOUNT_2 = 75000;
+
     // Auth
     public static final String REFRESH_TOKEN_VALUE = "refresh-token-value-123";
     public static final String REFRESH_TOKEN_VALUE_2 = "refresh-token-value-456";

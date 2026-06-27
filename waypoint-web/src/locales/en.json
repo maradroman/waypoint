@@ -2,6 +2,7 @@
   "nav": {
     "dashboard": "Dashboard",
     "goals": "Goals",
+    "planning": "Planning",
     "settings": "Settings",
     "bugReports": "Bug Reports",
     "signOut": "Sign out",
@@ -54,7 +55,11 @@
     "completions": "Completions",
     "noDeposits": "No deposits yet",
     "noCompletions": "No completions yet",
-    "goalNotFound": "Goal not found"
+    "goalNotFound": "Goal not found",
+    "potentialCompletionDate": "Can potentially be completed by {{date}}",
+    "planAheadPromptPrefix": "ahead your funds to see potential completion date",
+    "planLink": "Plan",
+    "seePlanningLink": "See planning"
   },
   "milestone": {
     "add": "Add Milestone",
@@ -104,6 +109,51 @@
     "exportData": "Export data (JSON)",
     "resetData": "Reset all data",
     "resetConfirm": "This will delete all your data. Are you sure?"
+  },
+  "planning": {
+    "title": "Planning",
+    "description": "Plan your future savings and see projected balances based on expected deposits.",
+    "selectGoal": "Select Goal",
+    "selectGoalPlaceholder": "Select goal",
+    "expectedFunds": "Expected Funds",
+    "current": "Current: {{amount}}",
+    "save": "Save",
+    "remove": "Remove",
+    "projectedBalance": "Projected Balance",
+    "forGoal": "for goal",
+    "forDate": "for date",
+    "onDate": "on date",
+    "selectDate": "Select Date",
+    "pickDate": "Pick a date",
+    "currentBalance": "Current Balance",
+    "plannedFunds": "Planned Funds",
+    "projectedTotal": "Projected Total",
+    "deposited": "Deposited {{amount}}",
+    "remaining": "Remaining",
+    "goalCanBeCompleted": "Goal can be completed!",
+    "months": {
+      "january": "January",
+      "february": "February",
+      "march": "March",
+      "april": "April",
+      "may": "May",
+      "june": "June",
+      "july": "July",
+      "august": "August",
+      "september": "September",
+      "october": "October",
+      "november": "November",
+      "december": "December"
+    },
+    "weekDays": {
+      "sun": "Sun",
+      "mon": "Mon",
+      "tue": "Tue",
+      "wed": "Wed",
+      "thu": "Thu",
+      "fri": "Fri",
+      "sat": "Sat"
+    }
   },
   "bugReport": {
     "reportBug": "Report a bug",

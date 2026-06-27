@@ -9,6 +9,7 @@ import RegisterPage from '@/pages/register'
 import DashboardPage from '@/pages/dashboard'
 import GoalsPage from '@/pages/goals'
 import GoalDetailPage from '@/pages/goal-detail'
+import PlanningPage from '@/pages/planning'
 import SettingsPage from '@/pages/settings'
 import AdminPage from '@/pages/admin'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -61,9 +62,7 @@ function AuthGate({ children }: { children: React.ReactNode }) {
 
   // Set language based on user's locale
   useEffect(() => {
-    console.log('User locale:', user?.locale)
     if (user?.locale) {
-      console.log('Setting language to:', user.locale)
       setLanguage(user.locale)
     }
   }, [user?.locale])
@@ -131,6 +130,14 @@ export default function App() {
             element={
               <ProtectedRoute>
                 <GoalDetailPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/planning"
+            element={
+              <ProtectedRoute>
+                <PlanningPage />
               </ProtectedRoute>
             }
           />

@@ -2,6 +2,7 @@ package io.github.maradroman.waypointapi.analytics.dto;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 
+import java.time.LocalDate;
 import java.util.UUID;
 
 @Schema(description = "Goal analytics response")
@@ -27,5 +28,7 @@ public record GoalAnalyticsResponse(
         @Schema(description = "Currently active (first enabled, not completed) milestone UUID")
         UUID activeMilestoneId,
         @Schema(description = "Currently active milestone title", example = "Save $5,000")
-        String activeMilestoneTitle
+        String activeMilestoneTitle,
+        @Schema(description = "Potential completion date based on planned funds", example = "2026-12-31")
+        LocalDate potentialCompletionDate
 ) {}

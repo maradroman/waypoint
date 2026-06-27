@@ -1,6 +1,37 @@
+import type { Goal } from '@/types/api'
+
 const BASE_URL = import.meta.env.VITE_API_URL ?? (import.meta.env.DEV ? 'http://localhost:8080/api/v1' : '/api/v1')
 
 let accessToken: string | null = null
+
+// Map backend icon values to emojis
+function mapIconToEmoji(icon: string | null | undefined): string | null {
+  if (!icon) return null
+  if (icon === 'target') return '🎯'
+  return icon
+}
+
+// Transform goal objects to map icons
+function transformGoal(goal: Goal): Goal {
+  return {
+    ...goal,
+    icon: mapIconToEmoji(goal.icon)
+  }
+}
+
+function transformResponse<T>(data: T): T {
+  // Handle single goal
+  if (data && typeof data === 'object' && 'icon' in data && 'title' in data) {
+    return transformGoal(data as unknown as Goal) as unknown as T
+  }
+
+  // Handle array of goals
+  if (Array.isArray(data) && data.length > 0 && 'icon' in data[0] && 'title' in data[0]) {
+    return data.map(item => transformGoal(item as unknown as Goal)) as unknown as T
+  }
+
+  return data
+}
 
 export function setAccessToken(token: string | null) {
   accessToken = token
@@ -50,10 +81,10 @@ async function request<T>(
 
   // Unwrap ResponseEnvelope: all backend success responses are { data: T, meta: {...} }
   if (parsed && typeof parsed === 'object' && 'data' in parsed) {
-    return parsed.data as T
+    return transformResponse(parsed.data as T)
   }
 
-  return parsed as T
+  return transformResponse(parsed as T)
 }
 
 export const api = {
@@ -99,6 +130,29 @@ export function uploadWithProgress<T>(
     xhr.onerror = () => reject(new ApiError(0, null))
     xhr.send(formData)
   })
+}
+
+// Types
+export interface PlannedFund {
+  id: string
+  goalId: string
+  date: string // YYYY-MM-DD format
+  amount: number // in cents
+}
+
+// Planned Funds API
+export const plannedFunds = {
+  list: (goalId: string) =>
+    api.get<PlannedFund[]>(`/goals/${goalId}/planned-funds`),
+
+  upsert: (goalId: string, date: string, amount: number) =>
+    api.put<PlannedFund>(`/goals/${goalId}/planned-funds/${date}`, {
+      date,
+      amount,
+    }),
+
+  delete: (goalId: string, date: string) =>
+    api.delete<void>(`/goals/${goalId}/planned-funds/${date}`),
 }
 
 export { ApiError }

@@ -43,8 +43,6 @@ loadLanguage('en').then((module) => {
 
 export async function setLanguage(locale: string) {
   const lang = localeMap[locale] || localeMap[locale.split('-')[0]] || 'en'
-  console.log('setLanguage called with locale:', locale, '-> mapped to:', lang)
-  console.log('Current i18n language:', i18n.language)
 
   // Load the language if not already loaded
   if (!i18n.hasResourceBundle(lang, 'translation')) {
@@ -53,7 +51,6 @@ export async function setLanguage(locale: string) {
   }
 
   i18n.changeLanguage(lang)
-  console.log('After change, i18n language:', i18n.language)
 }
 
 export default i18n

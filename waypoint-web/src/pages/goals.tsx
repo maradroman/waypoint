@@ -24,11 +24,13 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { Plus, MoreHorizontal, Pencil, Trash2, FolderOpen } from 'lucide-react'
 import type { Goal } from '@/types/api'
 import { useNavigate } from 'react-router-dom'
+import { ConfirmDialog } from '@/components/ui/confirm-dialog'
 
 function GoalCard({ goal, onEdit }: { goal: Goal; onEdit: (goal: Goal) => void }) {
   const queryClient = useQueryClient()
   const navigate = useNavigate()
   const { t } = useTranslation()
+  const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false)
 
   const deleteMutation = useMutation({
     mutationFn: () => api.delete(`/goals/${goal.id}`),
@@ -38,50 +40,60 @@ function GoalCard({ goal, onEdit }: { goal: Goal; onEdit: (goal: Goal) => void }
   })
 
   return (
-    <Card
-      className="cursor-pointer transition-shadow hover:shadow-md"
-      onClick={() => navigate(`/goals/${goal.id}`)}
-    >
-      <CardHeader className="flex flex-row items-start justify-between space-y-0 pb-2">
-        <CardTitle className="text-lg font-medium">
-          {goal.icon && <span className="mr-2">{goal.icon}</span>}
-          {goal.title}
-        </CardTitle>
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
-            <Button variant="ghost" size="icon" className="h-8 w-8">
-              <MoreHorizontal className="h-4 w-4" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuItem onClick={(e) => {
-              e.stopPropagation()
-              onEdit(goal)
-            }}>
-              <Pencil className="mr-2 h-4 w-4" />
-              {t('common.edit')}
-            </DropdownMenuItem>
-            <DropdownMenuItem
-              className="text-destructive"
-              onClick={(e) => {
+    <>
+      <Card
+        className="cursor-pointer transition-shadow hover:shadow-md"
+        onClick={() => navigate(`/goals/${goal.id}`)}
+      >
+        <CardHeader className="flex flex-row items-start justify-between space-y-0 pb-2">
+          <CardTitle className="text-lg font-medium">
+            {goal.icon && <span className="mr-2">{goal.icon}</span>}
+            {goal.title}
+          </CardTitle>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
+              <Button variant="ghost" size="icon" className="h-8 w-8">
+                <MoreHorizontal className="h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem onClick={(e) => {
                 e.stopPropagation()
-                if (confirm(t('goals.deleteConfirm'))) deleteMutation.mutate()
-              }}
-            >
-              <Trash2 className="mr-2 h-4 w-4" />
-              {t('common.delete')}
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-      </CardHeader>
-      <CardContent>
-        {goal.description && (
-          <p className="text-sm text-muted-foreground line-clamp-2">
-            {goal.description}
-          </p>
-        )}
-      </CardContent>
-    </Card>
+                onEdit(goal)
+              }}>
+                <Pencil className="mr-2 h-4 w-4" />
+                {t('common.edit')}
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                className="text-destructive"
+                onClick={(e) => {
+                  e.stopPropagation()
+                  setConfirmDeleteOpen(true)
+                }}
+              >
+                <Trash2 className="mr-2 h-4 w-4" />
+                {t('common.delete')}
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </CardHeader>
+        <CardContent>
+          {goal.description && (
+            <p className="text-sm text-muted-foreground line-clamp-2">
+              {goal.description}
+            </p>
+          )}
+        </CardContent>
+      </Card>
+      <ConfirmDialog
+        open={confirmDeleteOpen}
+        onOpenChange={setConfirmDeleteOpen}
+        title={t('goals.deleteConfirm')}
+        confirmText={t('common.delete')}
+        cancelText={t('common.cancel')}
+        onConfirm={() => deleteMutation.mutate()}
+      />
+    </>
   )
 }
 
