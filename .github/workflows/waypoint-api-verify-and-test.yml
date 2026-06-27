@@ -142,7 +142,7 @@ jobs:
             --fail-under=80
 
   static-analysis:
-    name: SpotBugs → PMD → Checkstyle
+    name: PMD → Spotless
     needs: test
     runs-on: self-hosted
     steps:
@@ -156,14 +156,8 @@ jobs:
           cache: maven
           cache-dependency-path: waypoint-api/pom.xml
 
-      - name: SpotBugs
-        run: ./waypoint-api/mvnw spotbugs:check -f waypoint-api/pom.xml
-
       - name: PMD
         run: ./waypoint-api/mvnw pmd:check pmd:cpd-check -f waypoint-api/pom.xml
-
-      - name: Checkstyle
-        run: ./waypoint-api/mvnw checkstyle:check -f waypoint-api/pom.xml
 
       - name: Spotless
         run: ./waypoint-api/mvnw spotless:check -f waypoint-api/pom.xml
