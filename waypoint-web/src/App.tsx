@@ -3,6 +3,7 @@ import { useEffect } from 'react'
 import { useAuth } from '@/stores/auth'
 import { setLanguage } from '@/lib/i18n'
 import { Toaster } from '@/components/ui/sonner'
+import { TooltipProvider } from '@/components/ui/tooltip'
 import AppLayout from '@/components/layout'
 import LoginPage from '@/pages/login'
 import RegisterPage from '@/pages/register'
@@ -92,6 +93,7 @@ export default function App() {
   return (
     <BrowserRouter>
       <AuthGate>
+        <TooltipProvider delayDuration={200}>
         <Routes>
           <Route
             path="/login"
@@ -160,6 +162,7 @@ export default function App() {
           <Route path="*" element={<Navigate to="/dashboard" replace />} />
         </Routes>
         <Toaster />
+        </TooltipProvider>
       </AuthGate>
     </BrowserRouter>
   )

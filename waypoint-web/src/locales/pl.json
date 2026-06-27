@@ -17,9 +17,12 @@
     "delete": "Usuń",
     "cancel": "Anuluj",
     "save": "Zapisz",
+    "yes": "Tak",
+    "no": "Nie",
     "close": "Zamknij",
     "creating": "Tworzenie...",
-    "updating": "Aktualizacja..."
+    "updating": "Aktualizacja...",
+    "today": "Dziś"
   },
   "dashboard": {
     "title": "Przegląd",
@@ -130,7 +133,22 @@
     "projectedTotal": "Prognozowana suma",
     "deposited": "Wpłacono {{amount}}",
     "remaining": "Pozostało",
-    "goalCanBeCompleted": "Cel może zostać ukończony!",
+    "canBeCompletedBy": "Może zostać ukończony do {{date}}",
+    "repeatedFunding": "Regularne wpłaty",
+    "repeatPrompt": "Chcesz przyspieszyć oszczędzanie dzięki regularnym wpłatom?",
+    "repeatAmountLabel": "Ile planujesz wpłacać każdego miesiąca?",
+    "repeatDayLabel": "Którego dnia miesiąca planujesz wpłacać?",
+    "selectDay": "Wybierz dzień",
+    "completionExplanationIncluding": "Wliczając już wprowadzone planowane środki, z {{amount}} wpłacanego {{day}} dnia miesiąca cel może zostać ukończony",
+    "completionExplanationExcluding": "Nie licząc już wprowadzonych planowanych środków, z {{amount}} wpłacanego {{day}} dnia miesiąca cel może zostać ukończony",
+    "completionExplanationAfter": ".",
+    "repeatCountLabel": "Uwzględnij już wprowadzone planowane środki",
+    "saveQuestion": "Czy chcesz zapisać ten plan w widoku planowania?",
+    "tooLong": "Ponad 100 lat",
+    "clearFromDate": "Wyczyść od daty",
+    "noPlannedFunds": "Brak zaplanowanych środków na tę datę",
+    "entriesToDelete": "{{count}} zaplanowanych wpisów od tej daty zostanie usuniętych",
+    "confirmClear": "Czy na pewno chcesz usunąć wszystkie zaplanowane środki od tej daty?",
     "months": {
       "january": "Styczeń",
       "february": "Luty",
@@ -144,6 +162,20 @@
       "october": "Październik",
       "november": "Listopad",
       "december": "Grudzień"
+    },
+    "monthsGenitive": {
+      "january": "Stycznia",
+      "february": "Lutego",
+      "march": "Marca",
+      "april": "Kwietnia",
+      "may": "Maja",
+      "june": "Czerwca",
+      "july": "Lipca",
+      "august": "Sierpnia",
+      "september": "Września",
+      "october": "Października",
+      "november": "Listopada",
+      "december": "Grudnia"
     },
     "weekDays": {
       "sun": "Nd",
