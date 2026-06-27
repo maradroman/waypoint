@@ -5,6 +5,7 @@ import io.github.maradroman.waypointapi.completion.model.Completion;
 import io.github.maradroman.waypointapi.deposit.model.Deposit;
 import io.github.maradroman.waypointapi.goal.model.Goal;
 import io.github.maradroman.waypointapi.milestone.model.Milestone;
+import io.github.maradroman.waypointapi.plannedfund.model.PlannedFund;
 import io.github.maradroman.waypointapi.transfer.model.Transfer;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
@@ -15,6 +16,7 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.context.ActiveProfiles;
 
 import java.time.Instant;
+import java.time.LocalDate;
 import java.util.UUID;
 
 import static io.github.maradroman.waypointapi.testdata.TestDataConstant.*;
@@ -35,6 +37,7 @@ public abstract class TestDataJpa {
         jdbcTemplate.execute("DELETE FROM transfers");
         jdbcTemplate.execute("DELETE FROM milestones");
         jdbcTemplate.execute("DELETE FROM deposits");
+        jdbcTemplate.execute("DELETE FROM planned_funds");
         jdbcTemplate.execute("DELETE FROM bug_report_attachments");
         jdbcTemplate.execute("DELETE FROM bug_reports");
         jdbcTemplate.execute("DELETE FROM goals");
@@ -45,9 +48,9 @@ public abstract class TestDataJpa {
     protected User persistUser(UUID id, String email) {
         var now = Instant.now();
         jdbcTemplate.update("""
-                INSERT INTO users (id, email, password_hash, display_name, locale, currency, role, created_at, updated_at)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-                """, id, email, USER_PASSWORD_HASH, USER_DISPLAY_NAME, USER_LOCALE, USER_CURRENCY, USER_ROLE, now, now);
+                INSERT INTO users (id, email, password_hash, display_name, locale, currency, theme, role, created_at, updated_at)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                """, id, email, USER_PASSWORD_HASH, USER_DISPLAY_NAME, USER_LOCALE, USER_CURRENCY, USER_THEME, USER_ROLE, now, now);
         return em.find(User.class, id);
     }
 
@@ -98,6 +101,19 @@ public abstract class TestDataJpa {
                 VALUES (?, ?, ?, ?, ?, ?)
                 """, id, goalId, milestoneId, amount, timestamp, now);
         return em.find(Completion.class, id);
+    }
+
+    protected PlannedFund persistPlannedFund(UUID id, UUID goalId, LocalDate date, int amount, boolean isDeleted) {
+        var now = Instant.now();
+        jdbcTemplate.update("""
+                INSERT INTO planned_funds (id, goal_id, date, amount, is_deleted, created_at, updated_at)
+                VALUES (?, ?, ?, ?, ?, ?, ?)
+                """, id, goalId, date, amount, isDeleted, now, now);
+        return em.find(PlannedFund.class, id);
+    }
+
+    protected PlannedFund persistPlannedFund(UUID id, UUID goalId, LocalDate date, int amount) {
+        return persistPlannedFund(id, goalId, date, amount, false);
     }
 
     protected void flushAndClear() {

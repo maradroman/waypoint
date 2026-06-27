@@ -1,11 +1,13 @@
 import { useState } from 'react'
 import { useAuth } from '@/stores/auth'
+import { useTranslation } from 'react-i18next'
 import { api } from '@/lib/api'
 import type { User } from '@/types/api'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { Switch } from '@/components/ui/switch'
 import {
   Select,
   SelectContent,
@@ -14,17 +16,21 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { Separator } from '@/components/ui/separator'
+import { Sun, Moon } from 'lucide-react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useNavigate } from 'react-router-dom'
+import { ConfirmDialog } from '@/components/ui/confirm-dialog'
 
 const locales = [
   { value: 'en', label: 'English' },
+  { value: 'pl', label: 'Polski' },
   { value: 'uk', label: 'Українська' },
 ]
 
 const currencies = [
   { value: 'USD', label: 'USD ($)' },
   { value: 'EUR', label: 'EUR (€)' },
+  { value: 'PLN', label: 'PLN (zł)' },
   { value: 'UAH', label: 'UAH (₴)' },
   { value: 'GBP', label: 'GBP (£)' },
 ]
@@ -33,17 +39,30 @@ export default function SettingsPage() {
   const { user, setUser, logout } = useAuth()
   const navigate = useNavigate()
   const queryClient = useQueryClient()
-  const [locale, setLocale] = useState(user?.locale ?? 'en')
-  const [currency, setCurrency] = useState(user?.currency ?? 'USD')
+  const { t } = useTranslation()
+  const [confirmResetOpen, setConfirmResetOpen] = useState(false)
 
   const updateMutation = useMutation({
-    mutationFn: () =>
-      api.patch('/auth/profile', { locale, currency }),
+    mutationFn: (data: { locale?: string; currency?: string; theme?: string }) =>
+      api.patch('/auth/me', data),
     onSuccess: (data) => {
       setUser(data as User)
       queryClient.invalidateQueries()
     },
   })
+
+  const handleLocaleChange = (locale: string) => {
+    updateMutation.mutate({ locale })
+  }
+
+  const handleCurrencyChange = (currency: string) => {
+    updateMutation.mutate({ currency })
+  }
+
+  const handleThemeChange = (checked: boolean) => {
+    const theme = checked ? 'dark' : 'light'
+    updateMutation.mutate({ theme })
+  }
 
   const exportMutation = useMutation({
     mutationFn: () => api.get('/goals'),
@@ -59,27 +78,25 @@ export default function SettingsPage() {
   })
 
   const handleReset = () => {
-    if (confirm('This will delete all your data. Are you sure?')) {
-      logout()
-      navigate('/login')
-    }
+    logout()
+    navigate('/login')
   }
 
   return (
     <div className="mx-auto max-w-lg space-y-6">
-      <h1 className="text-3xl font-bold tracking-tight">Settings</h1>
+      <h1 className="text-3xl font-bold tracking-tight">{t('settings.title')}</h1>
 
       <Card>
         <CardHeader>
-          <CardTitle>Profile</CardTitle>
+          <CardTitle>{t('settings.profile')}</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="space-y-2">
-            <Label>Name</Label>
+            <Label>{t('settings.name')}</Label>
             <Input value={user?.name ?? ''} disabled />
           </div>
           <div className="space-y-2">
-            <Label>Email</Label>
+            <Label>{t('settings.email')}</Label>
             <Input value={user?.email ?? ''} disabled />
           </div>
         </CardContent>
@@ -87,12 +104,12 @@ export default function SettingsPage() {
 
       <Card>
         <CardHeader>
-          <CardTitle>Preferences</CardTitle>
+          <CardTitle>{t('settings.preferences')}</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="locale">Language</Label>
-            <Select value={locale} onValueChange={setLocale}>
+            <Label htmlFor="locale">{t('settings.language')}</Label>
+            <Select value={user?.locale ?? 'en'} onValueChange={handleLocaleChange}>
               <SelectTrigger id="locale">
                 <SelectValue />
               </SelectTrigger>
@@ -104,8 +121,8 @@ export default function SettingsPage() {
             </Select>
           </div>
           <div className="space-y-2">
-            <Label htmlFor="currency">Currency</Label>
-            <Select value={currency} onValueChange={setCurrency}>
+            <Label htmlFor="currency">{t('settings.currency')}</Label>
+            <Select value={user?.currency ?? 'USD'} onValueChange={handleCurrencyChange}>
               <SelectTrigger id="currency">
                 <SelectValue />
               </SelectTrigger>
@@ -116,30 +133,44 @@ export default function SettingsPage() {
               </SelectContent>
             </Select>
           </div>
-          <Button
-            onClick={() => updateMutation.mutate()}
-            disabled={updateMutation.isPending}
-            className="w-full"
-          >
-            {updateMutation.isPending ? 'Saving...' : 'Save preferences'}
-          </Button>
+          <div className="space-y-2">
+            <Label htmlFor="theme">{t('settings.theme')}</Label>
+            <div className="flex items-center justify-center gap-2">
+              <Sun className="h-4 w-4" />
+              <Switch
+                id="theme"
+                checked={user?.theme === 'dark'}
+                onCheckedChange={handleThemeChange}
+              />
+              <Moon className="h-4 w-4" />
+            </div>
+          </div>
         </CardContent>
       </Card>
 
       <Card>
         <CardHeader>
-          <CardTitle>Data</CardTitle>
+          <CardTitle>{t('settings.data')}</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           <Button variant="outline" className="w-full" onClick={() => exportMutation.mutate()}>
-            Export data (JSON)
+            {t('settings.exportData')}
           </Button>
           <Separator />
-          <Button variant="destructive" className="w-full" onClick={handleReset}>
-            Reset all data
+          <Button variant="destructive" className="w-full" onClick={() => setConfirmResetOpen(true)}>
+            {t('settings.resetData')}
           </Button>
         </CardContent>
       </Card>
+
+      <ConfirmDialog
+        open={confirmResetOpen}
+        onOpenChange={setConfirmResetOpen}
+        title={t('settings.resetConfirm')}
+        confirmText={t('settings.resetData')}
+        cancelText={t('common.cancel')}
+        onConfirm={handleReset}
+      />
     </div>
   )
 }

@@ -40,6 +40,10 @@ public class User {
 
     @Column(nullable = false)
     @Builder.Default
+    private String theme = "light";
+
+    @Column(nullable = false)
+    @Builder.Default
     private String role = "USER";
 
     @CreationTimestamp

@@ -1,6 +1,7 @@
 import { useRef, useState } from 'react'
 import { useMutation } from '@tanstack/react-query'
 import { useLocation, useParams } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
 import { api, uploadWithProgress } from '@/lib/api'
 import { useAuth } from '@/stores/auth'
@@ -57,6 +58,7 @@ export function ReportBugButton() {
   const user = useAuth((s) => s.user)
   const location = useLocation()
   const params = useParams()
+  const { t } = useTranslation()
 
   const createMutation = useMutation({
     mutationFn: (vars: { description: string; metadata: Record<string, unknown> }) =>
@@ -73,11 +75,11 @@ export function ReportBugButton() {
     const valid: File[] = []
     for (const file of incoming) {
       if (file.size > MAX_FILE_SIZE) {
-        toast.error(`${file.name} exceeds 100MB limit`)
+        toast.error(t('bugReport.fileTooLarge', { name: file.name }))
         continue
       }
       if (!ACCEPTED_TYPES.some((t) => file.type.startsWith(t))) {
-        toast.error(`${file.name} is not an image or video`)
+        toast.error(t('bugReport.invalidFileType', { name: file.name }))
         continue
       }
       valid.push(file)
@@ -134,12 +136,12 @@ export function ReportBugButton() {
         )
       }
 
-      toast.success('Bug report submitted — thank you!')
+      toast.success(t('bugReport.success'))
       resetState()
       setOpen(false)
     } catch {
       setUploadProgress(null)
-      toast.error('Could not submit the report. Please try again.')
+      toast.error(t('bugReport.error'))
     }
   }
 
@@ -156,31 +158,31 @@ export function ReportBugButton() {
       <DialogTrigger asChild>
         <Button variant="ghost" className="w-full justify-start gap-2">
           <Bug className="h-4 w-4" />
-          <span className="text-sm">Report a bug</span>
+          <span className="text-sm">{t('bugReport.reportBug')}</span>
         </Button>
       </DialogTrigger>
       <DialogContent onPaste={handlePaste}>
         <DialogHeader>
-          <DialogTitle>Report a bug</DialogTitle>
+          <DialogTitle>{t('bugReport.title')}</DialogTitle>
           <DialogDescription>
-            Describe what happened. Device and page details are attached automatically to help us reproduce it.
+            {t('bugReport.description')}
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="bug-description">What happened?</Label>
+            <Label htmlFor="bug-description">{t('bugReport.whatHappened')}</Label>
             <Textarea
               id="bug-description"
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              placeholder="Steps to reproduce, what you expected, and what actually happened..."
+              placeholder={t('bugReport.placeholder')}
               required
               className="min-h-[120px]"
             />
           </div>
 
           <div className="space-y-2">
-            <Label>Attachments (optional)</Label>
+            <Label>{t('bugReport.attachments')}</Label>
             <input
               ref={fileInputRef}
               type="file"
@@ -198,10 +200,10 @@ export function ReportBugButton() {
               disabled={isSubmitting}
             >
               <Paperclip className="h-4 w-4" />
-              Add screenshot or screen recording
+              {t('bugReport.addAttachment')}
             </Button>
             <p className="text-xs text-muted-foreground">
-              You can also paste a screenshot with {navigator.platform.toLowerCase().includes('mac') ? '⌘V' : 'Ctrl+V'}
+              {t('bugReport.pasteHint')} {navigator.platform.toLowerCase().includes('mac') ? '⌘V' : 'Ctrl+V'}
             </p>
             {files.length > 0 && (
               <div className="space-y-2">
@@ -238,7 +240,7 @@ export function ReportBugButton() {
             <div className="space-y-1">
               <Progress value={uploadProgress} />
               <p className="text-center text-xs text-muted-foreground">
-                Uploading attachments... {uploadProgress}%
+                {t('bugReport.uploadingProgress', { progress: uploadProgress })}
               </p>
             </div>
           )}
@@ -246,9 +248,9 @@ export function ReportBugButton() {
           <Button type="submit" disabled={isSubmitting} className="w-full">
             {isSubmitting
               ? uploadProgress !== null
-                ? 'Uploading...'
-                : 'Submitting...'
-              : 'Submit report'}
+                ? t('bugReport.uploading')
+                : t('bugReport.submitting')
+              : t('bugReport.submitReport')}
           </Button>
         </form>
       </DialogContent>

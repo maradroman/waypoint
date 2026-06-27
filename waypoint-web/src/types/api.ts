@@ -4,6 +4,7 @@ export interface User {
   name: string
   locale: string
   currency: string
+  theme: string
   role: string
 }
 
@@ -115,34 +116,12 @@ export interface Completion {
 }
 
 export interface GoalAnalytics {
-  goalId: string
-  depositsTotal: number
-  completionsTotal: number
-  allocatedTotal: number
-  balance: number
-  targetAmount: number
-  remainingAmount: number
-  completionRatio: number
-  completionPercent: number
-  fundedMilestonesCount: number
-  totalMilestonesCount: number
-  averageCoverageRatio: number
-  nextMilestone: {
-    id: string
-    title: string
-    cost: number
-    balance: number
-  } | null
-  milestones: Array<{
-    id: string
-    title: string
-    cost: number
-    balance: number
-    coverageRatio: number
-    completed: boolean
-    enabled: boolean
-  }>
+  walletBalance: number
+  totalMilestoneCost: number
+  progressPercent: number
+  potentialCompletionDate: string | null
 }
+
 
 export interface SummaryResponse {
   totalSaved: number

@@ -1,6 +1,7 @@
 import { useState, useCallback, useRef, useEffect } from 'react'
-import { useParams, useNavigate } from 'react-router-dom'
+import { useParams, useNavigate, Link } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { useTranslation } from 'react-i18next'
 import {
   DndContext,
   DragOverlay,
@@ -18,6 +19,7 @@ import {
 } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 import { api } from '@/lib/api'
+import { useFormatMoney } from '@/lib/format'
 import { Button } from '@/components/ui/button'
 import { Switch } from '@/components/ui/switch'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -41,10 +43,14 @@ import {
   Undo2,
   GripVertical,
   CheckCircle2,
+  Pencil,
+  Trash2,
+  ExternalLink,
 } from 'lucide-react'
-import type { Goal, Milestone, Deposit, Completion } from '@/types/api'
+import type { Goal, Milestone, Deposit, Completion, GoalAnalytics } from '@/types/api'
+import { ConfirmDialog } from '@/components/ui/confirm-dialog'
 
-function FlipValue({ value, className }: { value: number; className?: string }) {
+function FlipValue({ value, className, formatValue }: { value: number; className?: string; formatValue?: (v: number) => string }) {
   const [display, setDisplay] = useState(value)
   const [animating, setAnimating] = useState(false)
   const [oldVal, setOldVal] = useState(value)
@@ -63,6 +69,7 @@ function FlipValue({ value, className }: { value: number; className?: string }) 
     }
   }, [value])
 
+  const format = formatValue || ((v: number) => String(v))
   const wide = animating ? (oldVal > value ? oldVal : value) : display
 
   return (
@@ -71,15 +78,15 @@ function FlipValue({ value, className }: { value: number; className?: string }) 
         className={`col-start-1 row-start-1 ${animating ? 'animate-flip-out' : ''}`}
         style={{ backfaceVisibility: 'hidden', transformOrigin: 'bottom' }}
       >
-        {animating ? oldVal : display}
+        {format(animating ? oldVal : display)}
       </span>
       <span
         className={`col-start-1 row-start-1 ${animating ? 'animate-flip-in' : 'invisible'}`}
         style={{ backfaceVisibility: 'hidden', transformOrigin: 'top' }}
       >
-        {value}
+        {format(value)}
       </span>
-      <span className="col-start-1 row-start-1 invisible">{wide}</span>
+      <span className="col-start-1 row-start-1 invisible">{format(wide)}</span>
     </span>
   )
 }
@@ -87,10 +94,14 @@ function FlipValue({ value, className }: { value: number; className?: string }) 
 function SortableMilestoneItem({
   milestone,
   goalId,
+  onEdit,
 }: {
   milestone: Milestone
   goalId: string
+  onEdit: (milestone: Milestone) => void
 }) {
+  const formatMoney = useFormatMoney()
+  const { t } = useTranslation()
   const {
     attributes,
     listeners,
@@ -111,17 +122,19 @@ function SortableMilestoneItem({
   const [allocateAmount, setAllocateAmount] = useState('')
   const [withdrawOpen, setWithdrawOpen] = useState(false)
   const [withdrawAmount, setWithdrawAmount] = useState('')
+  const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false)
 
   const allocateMutation = useMutation({
     mutationFn: (amount: number) =>
       api.post(`/goals/${goalId}/transfers/allocate`, {
         milestoneId: milestone.id,
-        amount,
+        amount: Math.round(amount * 100),
       }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['milestones', goalId] })
       queryClient.invalidateQueries({ queryKey: ['analytics', goalId] })
       setAllocateOpen(false)
+      setAllocateAmount('')
     },
   })
 
@@ -129,12 +142,13 @@ function SortableMilestoneItem({
     mutationFn: (amount: number) =>
       api.post(`/goals/${goalId}/transfers/withdraw`, {
         milestoneId: milestone.id,
-        amount,
+        amount: Math.round(amount * 100),
       }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['milestones', goalId] })
       queryClient.invalidateQueries({ queryKey: ['analytics', goalId] })
       setWithdrawOpen(false)
+      setWithdrawAmount('')
     },
   })
 
@@ -158,6 +172,14 @@ function SortableMilestoneItem({
     },
   })
 
+  const deleteMutation = useMutation({
+    mutationFn: () => api.delete(`/goals/${goalId}/milestones/${milestone.id}`),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['milestones', goalId] })
+      queryClient.invalidateQueries({ queryKey: ['analytics', goalId] })
+    },
+  })
+
   const coveragePercent = milestone.cost > 0
     ? Math.round((milestone.balance / milestone.cost) * 100)
     : 0
@@ -165,30 +187,30 @@ function SortableMilestoneItem({
   return (
     <div ref={setNodeRef} style={style}>
       <Card className={!milestone.enabled ? 'opacity-50' : ''}>
-        <CardContent className="flex gap-4 p-4">
+        <CardContent className="flex gap-2 p-4 sm:gap-4">
           <button
-            className="cursor-grab touch-none self-start mt-1"
+            className="cursor-grab touch-none self-start mt-1 shrink-0"
             {...attributes}
             {...listeners}
             aria-label="Drag to reorder"
           >
-            <GripVertical className="h-5 w-5 shrink-0 text-muted-foreground" />
+            <GripVertical className="h-5 w-5 text-muted-foreground" />
           </button>
-          <div className="flex-1 space-y-2">
+          <div className="min-w-0 flex-1 space-y-2">
             <div className="flex items-center gap-2">
               <span className="font-medium">{milestone.title}</span>
-              {milestone.completed && <Badge variant="secondary">Done</Badge>}
-              {!milestone.enabled && <Badge variant="outline">Disabled</Badge>}
+              {milestone.completed && <Badge variant="secondary">{t('milestone.done')}</Badge>}
+              {!milestone.enabled && <Badge variant="outline">{t('milestone.disabled')}</Badge>}
             </div>
             {milestone.details && (
               <p className="text-sm text-muted-foreground">{milestone.details}</p>
             )}
             <div className="flex items-center gap-4 text-sm">
               <span>
-                Cost: <strong>{milestone.cost}</strong>
+                {t('milestone.cost')}: <strong>{formatMoney(milestone.cost)}</strong>
               </span>
               <span>
-                Balance: <strong>{milestone.balance}</strong>
+                {t('milestone.balance')}: <strong>{formatMoney(milestone.balance)}</strong>
               </span>
               <Progress value={coveragePercent} className="h-2 w-24" />
               <span className="text-xs text-muted-foreground">{coveragePercent}%</span>
@@ -198,17 +220,17 @@ function SortableMilestoneItem({
                 <DialogTrigger asChild>
                   <Button size="sm" variant="outline" disabled={!milestone.enabled}>
                     <ArrowDownToLine className="mr-1 h-4 w-4" />
-                    Allocate
+                    {t('milestone.allocate')}
                   </Button>
                 </DialogTrigger>
                 <DialogContent>
-                  <DialogHeader><DialogTitle>Allocate to {milestone.title}</DialogTitle></DialogHeader>
+                  <DialogHeader><DialogTitle>{t('milestone.allocateTo', { name: milestone.title })}</DialogTitle></DialogHeader>
                   <form onSubmit={(e) => {
                     e.preventDefault()
                     allocateMutation.mutate(Number(allocateAmount))
                   }} className="space-y-4">
                     <div className="space-y-2">
-                      <Label>Amount</Label>
+                      <Label>{t('milestone.amount')}</Label>
                       <Input
                         type="number"
                         value={allocateAmount}
@@ -218,7 +240,7 @@ function SortableMilestoneItem({
                       />
                     </div>
                     <Button type="submit" className="w-full">
-                      Allocate
+                      {t('milestone.allocate')}
                     </Button>
                   </form>
                 </DialogContent>
@@ -227,17 +249,17 @@ function SortableMilestoneItem({
                 <DialogTrigger asChild>
                   <Button size="sm" variant="outline" disabled={!milestone.enabled || milestone.balance === 0}>
                     <ArrowUpFromLine className="mr-1 h-4 w-4" />
-                    Withdraw
+                    {t('milestone.withdraw')}
                   </Button>
                 </DialogTrigger>
                 <DialogContent>
-                  <DialogHeader><DialogTitle>Withdraw from {milestone.title}</DialogTitle></DialogHeader>
+                  <DialogHeader><DialogTitle>{t('milestone.withdrawFrom', { name: milestone.title })}</DialogTitle></DialogHeader>
                   <form onSubmit={(e) => {
                     e.preventDefault()
                     withdrawMutation.mutate(Number(withdrawAmount))
                   }} className="space-y-4">
                     <div className="space-y-2">
-                      <Label>Amount (max {milestone.balance})</Label>
+                      <Label>{t('milestone.amountMax', { max: formatMoney(milestone.balance) })}</Label>
                       <Input
                         type="number"
                         value={withdrawAmount}
@@ -248,7 +270,7 @@ function SortableMilestoneItem({
                       />
                     </div>
                     <Button type="submit" className="w-full">
-                      Withdraw
+                      {t('milestone.withdraw')}
                     </Button>
                   </form>
                 </DialogContent>
@@ -256,18 +278,46 @@ function SortableMilestoneItem({
               {!milestone.completed && milestone.enabled && (
                 <Button size="sm" variant="default" onClick={() => completeMutation.mutate()}>
                   <CheckCircle2 className="mr-1 h-4 w-4" />
-                  Complete
+                  {t('milestone.complete')}
                 </Button>
               )}
             </div>
           </div>
-          <Switch
-            checked={milestone.enabled}
-            onCheckedChange={() => toggleMutation.mutate()}
-            className="self-end shrink-0"
-          />
+          <div className="flex shrink-0 flex-col items-end justify-between self-stretch">
+            <div className="flex gap-0.5">
+              <Button
+                size="icon"
+                variant="ghost"
+                className="h-7 w-7"
+                onClick={() => onEdit(milestone)}
+              >
+                <Pencil className="h-3.5 w-3.5" />
+              </Button>
+              <Button
+                size="icon"
+                variant="ghost"
+                className="h-7 w-7 text-destructive hover:text-destructive"
+                onClick={() => setConfirmDeleteOpen(true)}
+              >
+                <Trash2 className="h-3.5 w-3.5" />
+              </Button>
+            </div>
+            <Switch
+              checked={milestone.enabled}
+              onCheckedChange={() => toggleMutation.mutate()}
+            />
+          </div>
         </CardContent>
       </Card>
+
+      <ConfirmDialog
+        open={confirmDeleteOpen}
+        onOpenChange={setConfirmDeleteOpen}
+        title={t('milestone.delete')}
+        confirmText={t('common.delete')}
+        cancelText={t('common.cancel')}
+        onConfirm={() => deleteMutation.mutate()}
+      />
     </div>
   )
 }
@@ -276,7 +326,10 @@ export default function GoalDetailPage() {
   const { goalId } = useParams<{ goalId: string }>()
   const navigate = useNavigate()
   const queryClient = useQueryClient()
-  const [createOpen, setCreateOpen] = useState(false)
+  const formatMoney = useFormatMoney()
+  const { t, i18n } = useTranslation()
+  const [milestoneDialogOpen, setMilestoneDialogOpen] = useState(false)
+  const [editingMilestone, setEditingMilestone] = useState<Milestone | null>(null)
   const [title, setTitle] = useState('')
   const [cost, setCost] = useState('')
   const [details, setDetails] = useState('')
@@ -315,31 +368,61 @@ export default function GoalDetailPage() {
 
   const { data: analytics } = useQuery({
     queryKey: ['analytics', goalId],
-    queryFn: () => api.get<{ walletBalance: number; totalMilestoneCost: number; progressPercent: number }>(`/goals/${goalId}/analytics`),
+    queryFn: () => api.get<GoalAnalytics>(`/goals/${goalId}/analytics`),
     enabled: !!goalId,
   })
+
+  const handleEditMilestone = (milestone: Milestone) => {
+    setEditingMilestone(milestone)
+    setTitle(milestone.title)
+    setCost(String(milestone.cost / 100))
+    setDetails(milestone.details || '')
+    setMilestoneDialogOpen(true)
+  }
+
+  const handleCloseMilestoneDialog = () => {
+    setMilestoneDialogOpen(false)
+    setTimeout(() => {
+      setEditingMilestone(null)
+      setTitle('')
+      setCost('')
+      setDetails('')
+    }, 200)
+  }
 
   const createMilestone = useMutation({
     mutationFn: () =>
       api.post(`/goals/${goalId}/milestones`, {
         title,
-        cost: cost ? Number(cost) : undefined,
+        cost: cost ? Math.round(Number(cost) * 100) : undefined,
         details: details || undefined,
         enabled: true,
       }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['milestones', goalId] })
-      setTitle('')
-      setCost('')
-      setDetails('')
-      setCreateOpen(false)
+      queryClient.invalidateQueries({ queryKey: ['analytics', goalId] })
+      handleCloseMilestoneDialog()
+    },
+  })
+
+  const updateMilestone = useMutation({
+    mutationFn: () =>
+      api.patch(`/goals/${goalId}/milestones/${editingMilestone?.id}`, {
+        title,
+        cost: cost ? Math.round(Number(cost) * 100) : undefined,
+        details: details || undefined,
+      }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['milestones', goalId] })
+      queryClient.invalidateQueries({ queryKey: ['analytics', goalId] })
+      handleCloseMilestoneDialog()
     },
   })
 
   const createDeposit = useMutation({
     mutationFn: () =>
       api.post(`/goals/${goalId}/deposits`, {
-        amount: Number(depositAmount),
+        amount: Math.round(Number(depositAmount) * 100),
         note: depositNote || undefined,
       }),
     onSuccess: () => {
@@ -421,8 +504,8 @@ export default function GoalDetailPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <Button variant="ghost" className="mb-2" onClick={() => navigate('/goals')}>
-            ← Back
+          <Button variant="ghost" className="-ml-4 mb-2" onClick={() => navigate('/goals')}>
+            ← {t('common.back')}
           </Button>
           <h1 className="text-3xl font-bold tracking-tight">
             {goal.icon && <span className="mr-2">{goal.icon}</span>}
@@ -434,39 +517,64 @@ export default function GoalDetailPage() {
         </div>
       </div>
 
-      <div className="grid gap-4 sm:grid-cols-3">
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Wallet Balance</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <FlipValue value={analytics?.walletBalance ?? 0} className="text-2xl font-bold" />
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Target</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <FlipValue value={analytics?.totalMilestoneCost ?? 0} className="text-2xl font-bold" />
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Completion</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-2xl font-bold">
+      <div className="space-y-3">
+        <div className="grid gap-4 sm:grid-cols-2">
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-medium text-muted-foreground">{t('goalDetail.walletBalance')}</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <FlipValue value={analytics?.walletBalance ?? 0} formatValue={formatMoney} className="text-2xl font-bold" />
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-medium text-muted-foreground">{t('goalDetail.target')}</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <FlipValue value={analytics?.totalMilestoneCost ?? 0} formatValue={formatMoney} className="text-2xl font-bold" />
+            </CardContent>
+          </Card>
+        </div>
+
+        <div className="space-y-2">
+          <div className="flex items-center justify-between text-sm">
+            <span className="text-muted-foreground">{t('planning.remaining')}: {formatMoney((analytics?.totalMilestoneCost ?? 0) - (analytics?.walletBalance ?? 0))}</span>
+            <span className="font-medium">
               <FlipValue value={analytics?.progressPercent ?? 0} />%
+            </span>
+          </div>
+          <Progress value={analytics?.progressPercent ?? 0} className="h-2" />
+          {analytics?.potentialCompletionDate ? (
+            <p className="text-sm text-muted-foreground">
+              {t('goalDetail.potentialCompletionDate', {
+                date: new Date(analytics.potentialCompletionDate).toLocaleDateString(i18n.language, {
+                  year: 'numeric',
+                  month: 'long',
+                  day: 'numeric'
+                })
+              })}{' '}
+              <Link to={`/planning?goal=${goalId}`} className="inline-flex items-center gap-1 underline hover:text-foreground">
+                {t('goalDetail.seePlanningLink')}
+                <ExternalLink className="h-3 w-3" />
+              </Link>
             </p>
-          </CardContent>
-        </Card>
+          ) : (
+            <p className="text-sm text-muted-foreground">
+              <Link to={`/planning?goal=${goalId}`} className="inline-flex items-center gap-1 underline hover:text-foreground">
+                {t('goalDetail.planLink')}
+                <ExternalLink className="h-3 w-3" />
+              </Link>{' '}
+              {t('goalDetail.planAheadPromptPrefix')}
+            </p>
+          )}
+        </div>
       </div>
 
       <Separator />
 
       <div className="flex items-center justify-between">
-        <h2 className="text-xl font-semibold">Milestones</h2>
+        <h2 className="text-xl font-semibold">{t('goalDetail.milestones')}</h2>
         <div className="flex gap-2">
           {hasDisabled && (
             <Button
@@ -481,17 +589,17 @@ export default function GoalDetailPage() {
             <DialogTrigger asChild>
               <Button variant="outline">
                 <Plus className="mr-2 h-4 w-4" />
-                Add Funds
+                {t('goalDetail.addFunds')}
               </Button>
             </DialogTrigger>
             <DialogContent>
-              <DialogHeader><DialogTitle>Add Funds</DialogTitle></DialogHeader>
+              <DialogHeader><DialogTitle>{t('deposit.add')}</DialogTitle></DialogHeader>
               <form onSubmit={(e) => {
                 e.preventDefault()
                 createDeposit.mutate()
               }} className="space-y-4">
                 <div className="space-y-2">
-                  <Label>Amount</Label>
+                  <Label>{t('deposit.amount')}</Label>
                   <Input
                     type="number"
                     value={depositAmount}
@@ -501,45 +609,59 @@ export default function GoalDetailPage() {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label>Note (optional)</Label>
+                  <Label>{t('deposit.note')}</Label>
                   <Input
                     value={depositNote}
                     onChange={(e) => setDepositNote(e.target.value)}
                   />
                 </div>
                 <Button type="submit" className="w-full">
-                  Deposit
+                  {t('deposit.deposit')}
                 </Button>
               </form>
             </DialogContent>
           </Dialog>
-          <Dialog open={createOpen} onOpenChange={setCreateOpen}>
+          <Dialog open={milestoneDialogOpen} onOpenChange={(isOpen) => {
+            if (isOpen) {
+              setEditingMilestone(null)
+              setTitle('')
+              setCost('')
+              setDetails('')
+            }
+            setMilestoneDialogOpen(isOpen)
+          }}>
             <DialogTrigger asChild>
               <Button>
                 <Plus className="mr-2 h-4 w-4" />
-                Milestone
+                {t('goalDetail.milestone')}
               </Button>
             </DialogTrigger>
             <DialogContent>
-              <DialogHeader><DialogTitle>Add Milestone</DialogTitle></DialogHeader>
+              <DialogHeader>
+                <DialogTitle>{editingMilestone ? t('milestone.edit') : t('milestone.add')}</DialogTitle>
+              </DialogHeader>
               <form onSubmit={(e) => {
                 e.preventDefault()
-                createMilestone.mutate()
+                if (editingMilestone) {
+                  updateMilestone.mutate()
+                } else {
+                  createMilestone.mutate()
+                }
               }} className="space-y-4">
                 <div className="space-y-2">
-                  <Label>Title</Label>
-                  <Input value={title} onChange={(e) => setTitle(e.target.value)} required />
+                  <Label>{t('milestone.title')}</Label>
+                  <Input value={title} onChange={(e) => setTitle(e.target.value)} required maxLength={70} />
                 </div>
                 <div className="space-y-2">
-                  <Label>Cost</Label>
-                  <Input type="number" value={cost} onChange={(e) => setCost(e.target.value)} min={0} />
+                  <Label>{t('milestone.cost')}</Label>
+                  <Input type="number" value={cost} onChange={(e) => setCost(e.target.value)} min={0} step="0.01" />
                 </div>
                 <div className="space-y-2">
-                  <Label>Details (optional)</Label>
-                  <Input value={details} onChange={(e) => setDetails(e.target.value)} />
+                  <Label>{t('milestone.details')}</Label>
+                  <Input value={details} onChange={(e) => setDetails(e.target.value)} maxLength={200} />
                 </div>
-                <Button type="submit" className="w-full" disabled={createMilestone.isPending}>
-                  Create
+                <Button type="submit" className="w-full" disabled={createMilestone.isPending || updateMilestone.isPending}>
+                  {editingMilestone ? (updateMilestone.isPending ? t('common.updating') : t('common.update')) : (createMilestone.isPending ? t('common.creating') : t('common.create'))}
                 </Button>
               </form>
             </DialogContent>
@@ -559,11 +681,11 @@ export default function GoalDetailPage() {
         >
           <div className="space-y-3">
             {milestones?.map((ms) => (
-              <SortableMilestoneItem key={ms.id} milestone={ms} goalId={goal.id} />
+              <SortableMilestoneItem key={ms.id} milestone={ms} goalId={goal.id} onEdit={handleEditMilestone} />
             ))}
             {milestones?.length === 0 && (
               <p className="py-8 text-center text-muted-foreground">
-                No milestones yet. Add one to get started.
+                {t('milestone.noMilestones')}
               </p>
             )}
           </div>
@@ -584,16 +706,16 @@ export default function GoalDetailPage() {
       <Separator />
 
       <div>
-        <h2 className="mb-4 text-xl font-semibold">Deposits</h2>
+        <h2 className="mb-4 text-xl font-semibold">{t('goalDetail.deposits')}</h2>
         {deposits?.length === 0 ? (
-          <p className="text-sm text-muted-foreground">No deposits yet</p>
+          <p className="text-sm text-muted-foreground">{t('goalDetail.noDeposits')}</p>
         ) : (
           <div className="space-y-2">
             {deposits?.map((deposit) => (
               <Card key={deposit.id}>
                 <CardContent className="flex items-center justify-between p-4">
                   <div>
-                    <p className="font-medium">+{deposit.amount}</p>
+                    <p className="font-medium">+{formatMoney(deposit.amount)}</p>
                     {deposit.note && (
                       <p className="text-sm text-muted-foreground">{deposit.note}</p>
                     )}
@@ -611,9 +733,9 @@ export default function GoalDetailPage() {
       <Separator />
 
       <div>
-        <h2 className="mb-4 text-xl font-semibold">Completions</h2>
+        <h2 className="mb-4 text-xl font-semibold">{t('goalDetail.completions')}</h2>
         {completions?.length === 0 ? (
-          <p className="text-sm text-muted-foreground">No completions yet</p>
+          <p className="text-sm text-muted-foreground">{t('goalDetail.noCompletions')}</p>
         ) : (
           <div className="space-y-2">
             {completions?.map((comp) => (

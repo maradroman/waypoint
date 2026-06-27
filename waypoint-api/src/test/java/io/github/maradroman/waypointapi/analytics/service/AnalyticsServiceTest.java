@@ -9,6 +9,7 @@ import io.github.maradroman.waypointapi.goal.model.Goal;
 import io.github.maradroman.waypointapi.goal.repository.GoalRepository;
 import io.github.maradroman.waypointapi.milestone.model.Milestone;
 import io.github.maradroman.waypointapi.milestone.repository.MilestoneRepository;
+import io.github.maradroman.waypointapi.plannedfund.repository.PlannedFundRepository;
 import io.github.maradroman.waypointapi.transfer.repository.TransferRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -32,6 +33,7 @@ import static io.github.maradroman.waypointapi.testdata.TestDataTransferEntity.b
 import static io.github.maradroman.waypointapi.testdata.TestDataUserEntity.buildUser;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -41,6 +43,7 @@ class AnalyticsServiceTest {
     @Mock private MilestoneRepository milestoneRepository;
     @Mock private DepositRepository depositRepository;
     @Mock private TransferRepository transferRepository;
+    @Mock private PlannedFundRepository plannedFundRepository;
 
     @InjectMocks private AnalyticsService analyticsService;
 
@@ -53,6 +56,10 @@ class AnalyticsServiceTest {
         user = buildUser();
         otherUser = buildUser(USER_ID_2);
         goal = buildGoal(user);
+        // Mock plannedFundRepository to return empty list by default (lenient for tests that don't use it)
+        lenient().when(plannedFundRepository.findByGoalIdAndIsDeletedFalseAndDateGreaterThanEqualOrderByDateAsc(
+                org.mockito.ArgumentMatchers.any(), org.mockito.ArgumentMatchers.any()))
+                .thenReturn(List.of());
     }
 
     @Nested

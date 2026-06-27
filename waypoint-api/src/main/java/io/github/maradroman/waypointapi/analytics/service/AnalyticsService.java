@@ -10,12 +10,15 @@ import io.github.maradroman.waypointapi.goal.model.Goal;
 import io.github.maradroman.waypointapi.goal.repository.GoalRepository;
 import io.github.maradroman.waypointapi.milestone.model.Milestone;
 import io.github.maradroman.waypointapi.milestone.repository.MilestoneRepository;
+import io.github.maradroman.waypointapi.plannedfund.model.PlannedFund;
+import io.github.maradroman.waypointapi.plannedfund.repository.PlannedFundRepository;
 import io.github.maradroman.waypointapi.transfer.model.Transfer;
 import io.github.maradroman.waypointapi.transfer.repository.TransferRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
 
@@ -28,6 +31,7 @@ public class AnalyticsService {
     private final MilestoneRepository milestoneRepository;
     private final DepositRepository depositRepository;
     private final TransferRepository transferRepository;
+    private final PlannedFundRepository plannedFundRepository;
 
     public GoalAnalyticsResponse getGoalAnalytics(User user, UUID goalId) {
         Goal goal = goalRepository.findById(goalId)
@@ -71,6 +75,10 @@ public class AnalyticsService {
                 .findFirst()
                 .orElse(null);
 
+        // Calculate potential completion date based on planned funds
+        LocalDate potentialCompletionDate = calculatePotentialCompletionDate(
+                goalId, walletBalance, totalMilestoneCost);
+
         return new GoalAnalyticsResponse(
                 goalId,
                 totalDeposited,
@@ -82,8 +90,39 @@ public class AnalyticsService {
                 enabledMilestones.size(),
                 progressPercent,
                 activeMilestone != null ? activeMilestone.getId() : null,
-                activeMilestone != null ? activeMilestone.getTitle() : null
+                activeMilestone != null ? activeMilestone.getTitle() : null,
+                potentialCompletionDate
         );
+    }
+
+    private LocalDate calculatePotentialCompletionDate(UUID goalId, int currentBalance, int targetAmount) {
+        if (targetAmount <= 0) {
+            return null;
+        }
+
+        // If already completed, return null
+        if (currentBalance >= targetAmount) {
+            return null;
+        }
+
+        LocalDate today = LocalDate.now();
+        List<PlannedFund> plannedFunds = plannedFundRepository
+                .findByGoalIdAndIsDeletedFalseAndDateGreaterThanEqualOrderByDateAsc(goalId, today);
+
+        if (plannedFunds.isEmpty()) {
+            return null;
+        }
+
+        int projectedBalance = currentBalance;
+        for (PlannedFund fund : plannedFunds) {
+            projectedBalance += fund.getAmount();
+            if (projectedBalance >= targetAmount) {
+                return fund.getDate();
+            }
+        }
+
+        // Not enough planned funds to reach target
+        return null;
     }
 
     public SummaryResponse getSummary(User user) {
