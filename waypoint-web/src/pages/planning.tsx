@@ -814,7 +814,7 @@ export default function PlanningPage() {
                 <SelectTrigger>
                   <SelectValue placeholder={t('planning.selectDay')} />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent position="popper" className="[&>:nth-child(2)]:h-auto max-h-[min(260px,50vh,var(--radix-select-content-available-height,100vh))]">
                   {Array.from({ length: 31 }, (_, i) => i + 1).map(d => (
                     <SelectItem key={d} value={String(d)}>{d}</SelectItem>
                   ))}
