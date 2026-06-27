@@ -117,6 +117,7 @@ export interface Completion {
 }
 
 export interface GoalAnalytics {
+  totalDeposited: number
   walletBalance: number
   totalMilestoneCost: number
   progressPercent: number

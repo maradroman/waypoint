@@ -573,7 +573,7 @@ export default function PlanningPage() {
                 <div className="text-sm space-y-1">
                   {analytics.totalMilestoneCost > 0 && projectedBalance < analytics.totalMilestoneCost && (
                     <span className="text-muted-foreground">
-                      {t('planning.remaining')}: {formatMoney(analytics.totalMilestoneCost - projectedBalance)}
+                      {t('planning.remaining')}: {formatMoney(analytics.totalMilestoneCost - (analytics.totalDeposited + projectedBalance - (analytics?.walletBalance ?? 0)))}
                     </span>
                   )}
                   {analytics.potentialCompletionDate && (
@@ -838,7 +838,8 @@ export default function PlanningPage() {
                   const day = parseInt(repeatDay)
 
                   const today = new Date()
-                  let running = repeatCountExisting ? projectedBalance : (analytics.walletBalance ?? 0)
+                  const allocated = (analytics?.totalDeposited ?? 0) - (analytics?.walletBalance ?? 0)
+                  let running = repeatCountExisting ? (projectedBalance + allocated) : (analytics?.totalDeposited ?? 0)
                   let month = today.getMonth() + 1
                   let year = today.getFullYear()
                   let found: Date | null = null
@@ -893,7 +894,8 @@ export default function PlanningPage() {
                 const today = new Date()
                 let month = today.getMonth() + 1
                 let year = today.getFullYear()
-                let running = repeatCountExisting ? projectedBalance : (analytics.walletBalance ?? 0)
+                const allocated = (analytics?.totalDeposited ?? 0) - (analytics?.walletBalance ?? 0)
+                let running = repeatCountExisting ? (projectedBalance + allocated) : (analytics?.totalDeposited ?? 0)
 
                 const entries: { date: string; amount: number }[] = []
                 for (let i = 0; i < 1200 && running < analytics.totalMilestoneCost; i++) {

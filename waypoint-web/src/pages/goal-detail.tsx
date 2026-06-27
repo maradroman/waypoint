@@ -539,7 +539,7 @@ export default function GoalDetailPage() {
 
         <div className="space-y-2">
           <div className="flex items-center justify-between text-sm">
-            <span className="text-muted-foreground">{t('planning.remaining')}: {formatMoney((analytics?.totalMilestoneCost ?? 0) - (analytics?.walletBalance ?? 0))}</span>
+            <span className="text-muted-foreground">{t('planning.remaining')}: {formatMoney((analytics?.totalMilestoneCost ?? 0) - (analytics?.totalDeposited ?? 0))}</span>
             <span className="font-medium">
               <FlipValue value={analytics?.progressPercent ?? 0} />%
             </span>
