@@ -3,6 +3,7 @@ package io.github.maradroman.waypointapi.transfer.service;
 import io.github.maradroman.waypointapi.auth.model.User;
 import io.github.maradroman.waypointapi.common.exception.BadRequestException;
 import io.github.maradroman.waypointapi.common.exception.ResourceNotFoundException;
+import io.github.maradroman.waypointapi.deposit.model.Deposit;
 import io.github.maradroman.waypointapi.deposit.repository.DepositRepository;
 import io.github.maradroman.waypointapi.goal.model.Goal;
 import io.github.maradroman.waypointapi.goal.service.GoalService;
@@ -110,17 +111,17 @@ public class TransferService {
 
     private int computeWalletBalance(UUID goalId) {
         int totalDeposits = depositRepository.findByGoalId(goalId).stream()
-                .mapToInt(io.github.maradroman.waypointapi.deposit.model.Deposit::getAmount)
+                .mapToInt(Deposit::getAmount)
                 .sum();
         int totalTransfers = transferRepository.findByGoalId(goalId).stream()
-                .mapToInt(io.github.maradroman.waypointapi.transfer.model.Transfer::getAmount)
+                .mapToInt(Transfer::getAmount)
                 .sum();
         return totalDeposits - totalTransfers;
     }
 
     private int computeMilestoneBalance(UUID milestoneId) {
         return transferRepository.findByMilestoneIdOrderByTimestampDesc(milestoneId).stream()
-                .mapToInt(io.github.maradroman.waypointapi.transfer.model.Transfer::getAmount)
+                .mapToInt(Transfer::getAmount)
                 .sum();
     }
 
