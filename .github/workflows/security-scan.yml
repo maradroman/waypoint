@@ -44,10 +44,23 @@ jobs:
   gitleaks:
     name: Gitleaks
     runs-on: self-hosted
+    env:
+      GITLEAKS_VERSION: 8.24.3
     steps:
       - uses: actions/checkout@v4
 
       - name: Gitleaks
-        uses: gitleaks/gitleaks-action@v2
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITLEAKS_TMP: /tmp/gitleaks-${{ github.run_id }}-${{ github.job }}
+        run: |
+          mkdir -p "$GITLEAKS_TMP"
+          curl -sL "https://github.com/zricethezav/gitleaks/releases/download/v${GITLEAKS_VERSION}/gitleaks_${GITLEAKS_VERSION}_linux_x64.tar.gz" \
+            -o "$GITLEAKS_TMP/gitleaks.tar.gz"
+          tar -xzf "$GITLEAKS_TMP/gitleaks.tar.gz" -C "$GITLEAKS_TMP"
+          "$GITLEAKS_TMP/gitleaks" detect --source="$PWD" --report-format=sarif --report-path=gitleaks.sarif
+
+      - name: Upload Gitleaks results
+        uses: github/codeql-action/upload-sarif@v4
+        with:
+          sarif_file: gitleaks.sarif
+          category: gitleaks
