@@ -28,6 +28,12 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Cache Maven wrapper distribution
+        uses: actions/cache@v4
+        with:
+          path: ~/.m2/wrapper
+          key: maven-wrapper-${{ runner.os }}
+
       - name: Set up Java 21
         uses: actions/setup-java@v4
         with:
@@ -44,14 +50,8 @@ jobs:
       - name: Install diff-cover
         run: pip install diff-cover
 
-      - name: Build & Test & JaCoCo
-        run: ./waypoint-api/mvnw test jacoco:report -f waypoint-api/pom.xml
-
-      - name: PMD
-        run: ./waypoint-api/mvnw pmd:check pmd:cpd-check -f waypoint-api/pom.xml
-
-      - name: Spotless
-        run: ./waypoint-api/mvnw spotless:check -f waypoint-api/pom.xml
+      - name: Build, test, PMD & Spotless
+        run: ./waypoint-api/mvnw verify -f waypoint-api/pom.xml
 
       - name: Publish test results
         uses: dorny/test-reporter@v1
@@ -162,7 +162,8 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ~/.semgrep
-          key: semgrep-${{ runner.os }}
+          key: semgrep-${{ runner.os }}-${{ github.run_id }}
+          restore-keys: semgrep-${{ runner.os }}-
 
       - name: Semgrep
         uses: semgrep/semgrep-action@v1
@@ -231,14 +232,16 @@ jobs:
           severity: CRITICAL,HIGH
 
       - name: Upload Trivy results (API)
-        uses: github/codeql-action/upload-sarif@v3
+        uses: github/codeql-action/upload-sarif@v4
         with:
           sarif_file: trivy-api.sarif
+          category: trivy-api
 
       - name: Upload Trivy results (Web)
-        uses: github/codeql-action/upload-sarif@v3
+        uses: github/codeql-action/upload-sarif@v4
         with:
           sarif_file: trivy-web.sarif
+          category: trivy-web
 
   deploy:
     name: Deploy (production)

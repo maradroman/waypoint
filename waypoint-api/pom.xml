@@ -196,6 +196,13 @@
                     <failOnViolation>true</failOnViolation>
                     <printFailingErrors>true</printFailingErrors>
                 </configuration>
+                <executions>
+                    <execution>
+                        <id>pmd-check</id>
+                        <goals><goal>check</goal><goal>cpd-check</goal></goals>
+                        <phase>verify</phase>
+                    </execution>
+                </executions>
             </plugin>
 
             <plugin>
