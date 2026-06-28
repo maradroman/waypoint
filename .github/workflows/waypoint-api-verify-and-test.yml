@@ -136,9 +136,11 @@ jobs:
 
       - name: Check new code coverage
         if: github.event_name == 'pull_request'
+        env:
+          BASE_REF: ${{ github.base_ref }}
         run: |
           diff-cover waypoint-api/target/site/jacoco/jacoco.xml \
-            --compare-branch=origin/${{ github.base_ref }} \
+            --compare-branch=origin/"$BASE_REF" \
             --fail-under=80
 
   static-analysis:
