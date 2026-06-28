@@ -7,43 +7,6 @@ on:
         type: string
         required: true
         description: Deployment environment (production or development)
-    secrets:
-      POSTGRES_DB:
-        required: true
-      SPRING_DATASOURCE_USERNAME:
-        required: true
-      SPRING_DATASOURCE_PASSWORD:
-        required: true
-      JWT_SECRET:
-        required: true
-      MINIO_ROOT_USER:
-        required: true
-      MINIO_ROOT_PASSWORD:
-        required: true
-      APP_STORAGE_ACCESS_KEY:
-        required: true
-      APP_STORAGE_SECRET_KEY:
-        required: true
-      APP_STORAGE_BUCKET:
-        required: true
-      NEW_RELIC_LICENSE_KEY:
-        required: true
-      NEW_RELIC_APP_NAME:
-        required: true
-      VITE_NEW_RELIC_ACCOUNT_ID:
-        required: true
-      VITE_NEW_RELIC_APP_ID:
-        required: true
-      VITE_NEW_RELIC_LICENSE_KEY:
-        required: true
-      DOZZLE_USERNAME:
-        required: true
-      DOZZLE_PASSWORD:
-        required: true
-      TUNNEL_TOKEN:
-        required: true
-      CORS_ALLOWED_ORIGINS:
-        required: true
 
 jobs:
   deploy:
