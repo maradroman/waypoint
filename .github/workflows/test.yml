@@ -16,7 +16,7 @@ env:
 
 jobs:
   test:
-    name: Build → Test → PMD → Spotless
+    name: 🧪 Build → Test → PMD → Spotless
     runs-on: self-hosted
     steps:
       - uses: actions/checkout@v4

@@ -26,6 +26,7 @@ concurrency:
 
 jobs:
   deploy:
+    name: 🚀 Deploy Production
     if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
     uses: ./.github/workflows/deploy.yml
     with:
@@ -36,6 +37,7 @@ jobs:
     secrets: inherit
 
   deploy-dev:
+    name: 🚀 Deploy Development
     if: github.event_name != 'pull_request' && github.ref == 'refs/heads/develop'
     uses: ./.github/workflows/deploy.yml
     with:

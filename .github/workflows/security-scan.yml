@@ -9,7 +9,7 @@ on:
 
 jobs:
   semgrep:
-    name: Semgrep
+    name: 🔍 Semgrep
     runs-on: self-hosted
     steps:
       - uses: actions/checkout@v4
@@ -27,7 +27,7 @@ jobs:
           config: p/default
 
   codeql:
-    name: CodeQL
+    name: 👁️ CodeQL
     if: inputs.run-codeql
     runs-on: self-hosted
     steps:
@@ -47,7 +47,7 @@ jobs:
         uses: github/codeql-action/analyze@v4
 
   gitleaks:
-    name: Gitleaks
+    name: 🕵️ Gitleaks
     runs-on: self-hosted
     env:
       GITLEAKS_VERSION: 8.24.3

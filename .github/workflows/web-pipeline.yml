@@ -20,12 +20,14 @@ concurrency:
 
 jobs:
   security-scan:
+    name: 🔒 Security Scan
     uses: ./.github/workflows/security-scan.yml
     with:
       run-codeql: false
     secrets: inherit
 
   build-docker:
+    name: 🐳 Build Docker
     needs: security-scan
     if: github.event_name != 'pull_request' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop')
     uses: ./.github/workflows/build-docker.yml
@@ -34,6 +36,7 @@ jobs:
     secrets: inherit
 
   deploy:
+    name: 🚀 Deploy Production
     needs: build-docker
     if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
     uses: ./.github/workflows/deploy.yml
@@ -45,6 +48,7 @@ jobs:
     secrets: inherit
 
   deploy-dev:
+    name: 🚀 Deploy Development
     needs: build-docker
     if: github.event_name != 'pull_request' && github.ref == 'refs/heads/develop'
     uses: ./.github/workflows/deploy.yml

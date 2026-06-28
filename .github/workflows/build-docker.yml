@@ -10,7 +10,7 @@ on:
 
 jobs:
   build:
-    name: Build ${{ matrix.service }}
+    name: 🐳 Build ${{ matrix.service }}
     runs-on: self-hosted
     strategy:
       matrix:
