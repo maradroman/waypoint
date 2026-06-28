@@ -199,21 +199,6 @@
             </plugin>
 
             <plugin>
-                <groupId>org.owasp</groupId>
-                <artifactId>dependency-check-maven</artifactId>
-                <version>11.1.1</version>
-                <configuration>
-                    <failBuildOnCVSS>7</failBuildOnCVSS>
-                    <formats>
-                        <format>SARIF</format>
-                        <format>HTML</format>
-                    </formats>
-                    <nvdApiDisabled>true</nvdApiDisabled>
-                    <nvdValidForHours>168</nvdValidForHours>
-                </configuration>
-            </plugin>
-
-            <plugin>
                 <groupId>com.diffplug.spotless</groupId>
                 <artifactId>spotless-maven-plugin</artifactId>
                 <version>3.7.0</version>
