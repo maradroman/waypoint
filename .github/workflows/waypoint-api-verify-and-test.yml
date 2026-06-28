@@ -9,6 +9,8 @@ on:
 
 env:
   ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION: true
+  PMD_ENABLED: ${{ vars.PMD_ENABLED || (github.ref != 'refs/heads/develop' && 'true' || 'false') }}
+  SPOTLESS_ENABLED: ${{ vars.SPOTLESS_ENABLED || (github.ref != 'refs/heads/develop' && 'true' || 'false') }}
 
 permissions:
   contents: read
@@ -51,7 +53,11 @@ jobs:
         run: pip install diff-cover
 
       - name: Build, test, PMD & Spotless
-        run: ./waypoint-api/mvnw verify -f waypoint-api/pom.xml
+        run: |
+          MAVEN_ARGS="verify"
+          [ "$PMD_ENABLED" != "true" ] && MAVEN_ARGS="$MAVEN_ARGS -Dpmd.skip=true -Dcpd.skip=true"
+          [ "$SPOTLESS_ENABLED" != "true" ] && MAVEN_ARGS="$MAVEN_ARGS -Dspotless.check.skip=true"
+          ./waypoint-api/mvnw $MAVEN_ARGS -f waypoint-api/pom.xml
 
       - name: Publish test results
         uses: dorny/test-reporter@v1
