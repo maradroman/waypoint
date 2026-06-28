@@ -1,0 +1,46 @@
+name: Infra Pipeline
+
+on:
+  pull_request:
+    branches: [main, develop]
+    paths:
+      - 'compose.*'
+      - 'docker-compose.yml'
+      - 'scripts/**'
+      - '.github/**'
+  push:
+    branches: [main, develop]
+    paths:
+      - 'compose.*'
+      - 'docker-compose.yml'
+      - 'scripts/**'
+      - '.github/**'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: infra-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+    uses: ./.github/workflows/deploy.yml
+    with:
+      environment: production
+      build-api: false
+      build-web: false
+      restart-infra: true
+    secrets: inherit
+
+  deploy-dev:
+    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/develop'
+    uses: ./.github/workflows/deploy.yml
+    with:
+      environment: development
+      build-api: false
+      build-web: false
+      restart-infra: true
+    secrets: inherit

@@ -1,0 +1,65 @@
+name: API Pipeline
+
+on:
+  pull_request:
+    branches: [main, develop]
+    paths: ['waypoint-api/**']
+  push:
+    branches: [main, develop]
+    paths: ['waypoint-api/**']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pull-requests: write
+  security-events: write
+
+concurrency:
+  group: api-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    uses: ./.github/workflows/test.yml
+    with:
+      pmd-enabled: ${{ vars.PMD_ENABLED == '' && github.ref != 'refs/heads/develop' || vars.PMD_ENABLED == 'true' }}
+      spotless-enabled: ${{ vars.SPOTLESS_ENABLED == '' && github.ref != 'refs/heads/develop' || vars.SPOTLESS_ENABLED == 'true' }}
+    secrets: inherit
+
+  security-scan:
+    needs: test
+    if: always() && (needs.test.result == 'success' || needs.test.result == 'skipped')
+    uses: ./.github/workflows/security-scan.yml
+    with:
+      run-codeql: true
+    secrets: inherit
+
+  build-docker:
+    needs: security-scan
+    if: github.event_name != 'pull_request' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop')
+    uses: ./.github/workflows/build-docker.yml
+    with:
+      services_json: '["api"]'
+    secrets: inherit
+
+  deploy:
+    needs: build-docker
+    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+    uses: ./.github/workflows/deploy.yml
+    with:
+      environment: production
+      build-api: true
+      build-web: false
+      restart-infra: false
+    secrets: inherit
+
+  deploy-dev:
+    needs: build-docker
+    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/develop'
+    uses: ./.github/workflows/deploy.yml
+    with:
+      environment: development
+      build-api: true
+      build-web: false
+      restart-infra: false
+    secrets: inherit

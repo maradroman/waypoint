@@ -1,0 +1,56 @@
+name: Web Pipeline
+
+on:
+  pull_request:
+    branches: [main, develop]
+    paths: ['waypoint-web/**']
+  push:
+    branches: [main, develop]
+    paths: ['waypoint-web/**']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pull-requests: write
+  security-events: write
+
+concurrency:
+  group: web-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  security-scan:
+    uses: ./.github/workflows/security-scan.yml
+    with:
+      run-codeql: false
+    secrets: inherit
+
+  build-docker:
+    needs: security-scan
+    if: github.event_name != 'pull_request' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop')
+    uses: ./.github/workflows/build-docker.yml
+    with:
+      services_json: '["web"]'
+    secrets: inherit
+
+  deploy:
+    needs: build-docker
+    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+    uses: ./.github/workflows/deploy.yml
+    with:
+      environment: production
+      build-api: false
+      build-web: true
+      restart-infra: false
+    secrets: inherit
+
+  deploy-dev:
+    needs: build-docker
+    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/develop'
+    uses: ./.github/workflows/deploy.yml
+    with:
+      environment: development
+      build-api: false
+      build-web: true
+      restart-infra: false
+    secrets: inherit
