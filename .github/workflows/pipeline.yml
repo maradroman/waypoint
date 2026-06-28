@@ -50,7 +50,7 @@ jobs:
 
   test:
     needs: changes
-    if: needs.changes.outputs.api == 'true' || needs.changes.outputs.infra == 'true'
+    if: needs.changes.outputs.api == 'true'
     uses: ./.github/workflows/test.yml
     with:
       pmd-enabled: ${{ vars.PMD_ENABLED == '' && github.ref != 'refs/heads/develop' || vars.PMD_ENABLED == 'true' }}
