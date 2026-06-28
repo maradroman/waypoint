@@ -1,0 +1,13 @@
+services:
+  web:
+    build:
+      context: ./waypoint-web
+      args:
+        VITE_NEW_RELIC_ACCOUNT_ID: ${VITE_NEW_RELIC_ACCOUNT_ID:-}
+        VITE_NEW_RELIC_APP_ID: ${VITE_NEW_RELIC_APP_ID:-}
+        VITE_NEW_RELIC_LICENSE_KEY: ${VITE_NEW_RELIC_LICENSE_KEY:-}
+    restart: unless-stopped
+    ports:
+      - "${WEB_PORT:-8880}:8880"
+    depends_on:
+      - api
