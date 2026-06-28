@@ -10,6 +10,8 @@ jobs:
     strategy:
       matrix:
         service: [api, web]
+    env:
+      SERVICE: ${{ matrix.service }}
     steps:
       - uses: actions/checkout@v4
 
@@ -18,12 +20,21 @@ jobs:
 
       - name: Build Docker image
         run: |
-          docker buildx build \
-            --cache-from=type=gha \
-            --cache-to=type=gha,mode=max \
-            --load \
-            -t waypoint-${{ matrix.service }}:ci \
-            ./waypoint-${{ matrix.service }}
+          SUCCESS=false
+          for i in 1 2 3; do
+            docker buildx build \
+              --cache-from=type=gha,scope=waypoint-"$SERVICE" \
+              --cache-to=type=gha,mode=max,scope=waypoint-"$SERVICE" \
+              --load \
+              -t waypoint-"$SERVICE":ci \
+              ./waypoint-"$SERVICE" && { SUCCESS=true; break; }
+            echo "Attempt $i failed, retrying in 10s..."
+            sleep 10
+          done
+          if [ "$SUCCESS" != "true" ]; then
+            echo "All 3 build attempts failed"
+            exit 1
+          fi
 
       - name: Trivy Image Scan
         uses: aquasecurity/trivy-action@v0.36.0
