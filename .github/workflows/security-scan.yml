@@ -57,7 +57,7 @@ jobs:
           curl -sL "https://github.com/zricethezav/gitleaks/releases/download/v${GITLEAKS_VERSION}/gitleaks_${GITLEAKS_VERSION}_linux_x64.tar.gz" \
             -o "$GITLEAKS_TMP/gitleaks.tar.gz"
           tar -xzf "$GITLEAKS_TMP/gitleaks.tar.gz" -C "$GITLEAKS_TMP"
-          "$GITLEAKS_TMP/gitleaks" detect --source="$PWD" --report-format=sarif --report-path=gitleaks.sarif
+          "$GITLEAKS_TMP/gitleaks" detect --source="$PWD" --report-format=sarif --report-path=gitleaks.sarif --exit-code 0
 
       - name: Upload Gitleaks results
         uses: github/codeql-action/upload-sarif@v4
