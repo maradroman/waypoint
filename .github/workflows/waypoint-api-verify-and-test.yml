@@ -170,15 +170,15 @@ jobs:
           config: p/default
 
       - name: Initialize CodeQL
-        uses: github/codeql-action/init@v3
+        uses: github/codeql-action/init@v4
         with:
           languages: java
 
       - name: Autobuild
-        uses: github/codeql-action/autobuild@v3
+        uses: github/codeql-action/autobuild@v4
 
       - name: Perform CodeQL Analysis
-        uses: github/codeql-action/analyze@v3
+        uses: github/codeql-action/analyze@v4
 
       - name: Gitleaks
         uses: gitleaks/gitleaks-action@v2
@@ -215,7 +215,7 @@ jobs:
             ./waypoint-web
 
       - name: Trivy Image Scan (API)
-        uses: aquasecurity/trivy-action@v1
+        uses: aquasecurity/trivy-action@v0.36.0
         with:
           image-ref: waypoint-api:ci
           format: sarif
@@ -223,7 +223,7 @@ jobs:
           severity: CRITICAL,HIGH
 
       - name: Trivy Image Scan (Web)
-        uses: aquasecurity/trivy-action@v1
+        uses: aquasecurity/trivy-action@v0.36.0
         with:
           image-ref: waypoint-web:ci
           format: sarif
