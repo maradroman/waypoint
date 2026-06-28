@@ -21,7 +21,7 @@ concurrency:
 
 jobs:
   test:
-    name: Checkout → Build → Unit Tests → JaCoCo
+    name: Build → Test → PMD → Spotless
     runs-on: self-hosted
     steps:
       - uses: actions/checkout@v4
@@ -44,14 +44,14 @@ jobs:
       - name: Install diff-cover
         run: pip install diff-cover
 
-      - name: Build
-        run: ./waypoint-api/mvnw compile -f waypoint-api/pom.xml
+      - name: Build & Test & JaCoCo
+        run: ./waypoint-api/mvnw test jacoco:report -f waypoint-api/pom.xml
 
-      - name: Unit Tests
-        run: ./waypoint-api/mvnw test -f waypoint-api/pom.xml
+      - name: PMD
+        run: ./waypoint-api/mvnw pmd:check pmd:cpd-check -f waypoint-api/pom.xml
 
-      - name: JaCoCo Report
-        run: ./waypoint-api/mvnw jacoco:report -f waypoint-api/pom.xml
+      - name: Spotless
+        run: ./waypoint-api/mvnw spotless:check -f waypoint-api/pom.xml
 
       - name: Publish test results
         uses: dorny/test-reporter@v1
@@ -143,8 +143,8 @@ jobs:
             --compare-branch=origin/"$BASE_REF" \
             --fail-under=80
 
-  static-analysis:
-    name: PMD → Spotless
+  security-scan:
+    name: Semgrep → CodeQL → OWASP DC → Gitleaks
     needs: test
     runs-on: self-hosted
     steps:
@@ -158,26 +158,18 @@ jobs:
           cache: maven
           cache-dependency-path: waypoint-api/pom.xml
 
-      - name: PMD
-        run: ./waypoint-api/mvnw pmd:check pmd:cpd-check -f waypoint-api/pom.xml
-
-      - name: Spotless
-        run: ./waypoint-api/mvnw spotless:check -f waypoint-api/pom.xml
-
-  security-scan:
-    name: Semgrep → CodeQL → OWASP DC → Gitleaks
-    needs: static-analysis
-    runs-on: self-hosted
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Set up Java 21
-        uses: actions/setup-java@v4
+      - name: Cache OWASP DC database
+        uses: actions/cache@v4
         with:
-          java-version: 21
-          distribution: temurin
-          cache: maven
-          cache-dependency-path: waypoint-api/pom.xml
+          path: ~/.dependency-check
+          key: dependency-check-${{ hashFiles('waypoint-api/pom.xml') }}
+          restore-keys: dependency-check-
+
+      - name: Cache Semgrep rules
+        uses: actions/cache@v4
+        with:
+          path: ~/.semgrep
+          key: semgrep-${{ runner.os }}
 
       - name: Semgrep
         uses: semgrep/semgrep-action@v1
@@ -215,10 +207,22 @@ jobs:
         uses: docker/setup-buildx-action@v3
 
       - name: Build Docker API image
-        run: docker build -t waypoint-api:ci ./waypoint-api
+        run: |
+          docker buildx build \
+            --cache-from=type=gha \
+            --cache-to=type=gha,mode=max \
+            --load \
+            -t waypoint-api:ci \
+            ./waypoint-api
 
       - name: Build Docker Web image
-        run: docker build -t waypoint-web:ci ./waypoint-web
+        run: |
+          docker buildx build \
+            --cache-from=type=gha \
+            --cache-to=type=gha,mode=max \
+            --load \
+            -t waypoint-web:ci \
+            ./waypoint-web
 
       - name: Trivy Image Scan (API)
         uses: aquasecurity/trivy-action@v1
