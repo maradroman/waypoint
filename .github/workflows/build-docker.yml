@@ -2,6 +2,11 @@ name: Build Docker & Trivy Scan
 
 on:
   workflow_call:
+    inputs:
+      services_json:
+        type: string
+        required: true
+        description: JSON array of services to build (e.g. '["api","web"]')
 
 jobs:
   build:
@@ -9,7 +14,7 @@ jobs:
     runs-on: self-hosted
     strategy:
       matrix:
-        service: [api, web]
+        service: ${{ fromJSON(inputs.services_json) }}
     env:
       SERVICE: ${{ matrix.service }}
     steps:

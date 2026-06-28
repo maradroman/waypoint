@@ -7,6 +7,15 @@ on:
         type: string
         required: true
         description: Deployment environment (production or development)
+      build-api:
+        type: boolean
+        default: false
+      build-web:
+        type: boolean
+        default: false
+      restart-infra:
+        type: boolean
+        default: false
 
 jobs:
   deploy:
@@ -24,6 +33,9 @@ jobs:
           MINIO_PORT: ${{ inputs.environment == 'development' && '9002' || '' }}
           MINIO_CONSOLE_PORT: ${{ inputs.environment == 'development' && '9003' || '' }}
           DOZZLE_PORT: ${{ inputs.environment == 'development' && '8890' || '' }}
+          BUILD_API: ${{ inputs.build-api && 'true' || 'false' }}
+          BUILD_WEB: ${{ inputs.build-web && 'true' || 'false' }}
+          RESTART_INFRA: ${{ inputs.restart-infra && 'true' || 'false' }}
           POSTGRES_DB: ${{ secrets.POSTGRES_DB }}
           SPRING_DATASOURCE_USERNAME: ${{ secrets.SPRING_DATASOURCE_USERNAME }}
           SPRING_DATASOURCE_PASSWORD: ${{ secrets.SPRING_DATASOURCE_PASSWORD }}

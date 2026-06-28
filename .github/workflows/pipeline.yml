@@ -20,6 +20,33 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  changes:
+    runs-on: self-hosted
+    outputs:
+      api: ${{ steps.filter.outputs.api }}
+      web: ${{ steps.filter.outputs.web }}
+      infra: ${{ steps.filter.outputs.infra }}
+      services_json: ${{ steps.filter.outputs.api == 'true' && steps.filter.outputs.web == 'true' && '["api","web"]' || steps.filter.outputs.api == 'true' && '["api"]' || steps.filter.outputs.web == 'true' && '["web"]' || '[]' }}
+      has_buildable: ${{ steps.filter.outputs.api == 'true' || steps.filter.outputs.web == 'true' }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            api:
+              - 'waypoint-api/**'
+            web:
+              - 'waypoint-web/**'
+            infra:
+              - 'compose.*'
+              - 'docker-compose.yml'
+              - 'scripts/**'
+              - '.github/**'
+
   test:
     uses: ./.github/workflows/test.yml
     with:
@@ -33,23 +60,31 @@ jobs:
     secrets: inherit
 
   build-docker:
-    needs: security-scan
-    if: github.event_name != 'pull_request' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop')
+    needs: [changes, security-scan]
+    if: github.event_name != 'pull_request' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop') && needs.changes.outputs.has_buildable == 'true'
     uses: ./.github/workflows/build-docker.yml
+    with:
+      services_json: ${{ needs.changes.outputs.services_json }}
     secrets: inherit
 
   deploy:
-    needs: build-docker
+    needs: [changes, build-docker]
     if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
     uses: ./.github/workflows/deploy.yml
     with:
       environment: production
+      build-api: ${{ needs.changes.outputs.api == 'true' }}
+      build-web: ${{ needs.changes.outputs.web == 'true' }}
+      restart-infra: ${{ needs.changes.outputs.infra == 'true' }}
     secrets: inherit
 
   deploy-dev:
-    needs: build-docker
+    needs: [changes, build-docker]
     if: github.event_name != 'pull_request' && github.ref == 'refs/heads/develop'
     uses: ./.github/workflows/deploy.yml
     with:
       environment: development
+      build-api: ${{ needs.changes.outputs.api == 'true' }}
+      build-web: ${{ needs.changes.outputs.web == 'true' }}
+      restart-infra: ${{ needs.changes.outputs.infra == 'true' }}
     secrets: inherit
