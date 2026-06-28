@@ -187,8 +187,12 @@ jobs:
       - name: Perform CodeQL Analysis
         uses: github/codeql-action/analyze@v3
 
+      - name: Clear stale OWASP DC locks
+        run: rm -f ~/.dependency-check/data/11.0/odc.update.lock
+
       - name: OWASP Dependency Check
         run: ./waypoint-api/mvnw dependency-check:check -f waypoint-api/pom.xml
+        timeout-minutes: 10
 
       - name: Gitleaks
         uses: gitleaks/gitleaks-action@v2

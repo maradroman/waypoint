@@ -208,6 +208,8 @@
                         <format>SARIF</format>
                         <format>HTML</format>
                     </formats>
+                    <nvdApiDisabled>true</nvdApiDisabled>
+                    <nvdValidForHours>168</nvdValidForHours>
                 </configuration>
             </plugin>
 
