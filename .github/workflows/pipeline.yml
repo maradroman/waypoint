@@ -1,0 +1,57 @@
+name: Pipeline
+
+on:
+  pull_request:
+    branches: [main, develop]
+  push:
+    branches: [main, develop]
+  workflow_dispatch:
+
+env:
+  ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION: true
+  PMD_ENABLED: ${{ vars.PMD_ENABLED || (github.ref != 'refs/heads/develop' && 'true' || 'false') }}
+  SPOTLESS_ENABLED: ${{ vars.SPOTLESS_ENABLED || (github.ref != 'refs/heads/develop' && 'true' || 'false') }}
+
+permissions:
+  contents: read
+  pull-requests: write
+  security-events: write
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    uses: ./.github/workflows/test.yml
+    with:
+      pmd-enabled: ${{ env.PMD_ENABLED == 'true' }}
+      spotless-enabled: ${{ env.SPOTLESS_ENABLED == 'true' }}
+    secrets: inherit
+
+  security-scan:
+    needs: test
+    uses: ./.github/workflows/security-scan.yml
+    secrets: inherit
+
+  build-docker:
+    needs: security-scan
+    if: github.event_name != 'pull_request' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop')
+    uses: ./.github/workflows/build-docker.yml
+    secrets: inherit
+
+  deploy:
+    needs: build-docker
+    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+    uses: ./.github/workflows/deploy.yml
+    with:
+      environment: production
+    secrets: inherit
+
+  deploy-dev:
+    needs: build-docker
+    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/develop'
+    uses: ./.github/workflows/deploy.yml
+    with:
+      environment: development
+    secrets: inherit

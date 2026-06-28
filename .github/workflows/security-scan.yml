@@ -1,0 +1,53 @@
+name: Security Scan
+
+on:
+  workflow_call:
+
+jobs:
+  semgrep:
+    name: Semgrep
+    runs-on: self-hosted
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Cache Semgrep rules
+        uses: actions/cache@v4
+        with:
+          path: ~/.semgrep
+          key: semgrep-${{ runner.os }}-${{ github.run_id }}
+          restore-keys: semgrep-${{ runner.os }}-
+
+      - name: Semgrep
+        uses: semgrep/semgrep-action@v1
+        with:
+          config: p/default
+
+  codeql:
+    name: CodeQL
+    runs-on: self-hosted
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: ./.github/actions/setup-java
+
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v4
+        with:
+          languages: java
+
+      - name: Autobuild
+        uses: github/codeql-action/autobuild@v4
+
+      - name: Perform CodeQL Analysis
+        uses: github/codeql-action/analyze@v4
+
+  gitleaks:
+    name: Gitleaks
+    runs-on: self-hosted
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Gitleaks
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

@@ -1,0 +1,82 @@
+name: Deploy
+
+on:
+  workflow_call:
+    inputs:
+      environment:
+        type: string
+        required: true
+        description: Deployment environment (production or development)
+    secrets:
+      POSTGRES_DB:
+        required: true
+      SPRING_DATASOURCE_USERNAME:
+        required: true
+      SPRING_DATASOURCE_PASSWORD:
+        required: true
+      JWT_SECRET:
+        required: true
+      MINIO_ROOT_USER:
+        required: true
+      MINIO_ROOT_PASSWORD:
+        required: true
+      APP_STORAGE_ACCESS_KEY:
+        required: true
+      APP_STORAGE_SECRET_KEY:
+        required: true
+      APP_STORAGE_BUCKET:
+        required: true
+      NEW_RELIC_LICENSE_KEY:
+        required: true
+      NEW_RELIC_APP_NAME:
+        required: true
+      VITE_NEW_RELIC_ACCOUNT_ID:
+        required: true
+      VITE_NEW_RELIC_APP_ID:
+        required: true
+      VITE_NEW_RELIC_LICENSE_KEY:
+        required: true
+      DOZZLE_USERNAME:
+        required: true
+      DOZZLE_PASSWORD:
+        required: true
+      TUNNEL_TOKEN:
+        required: true
+      CORS_ALLOWED_ORIGINS:
+        required: true
+
+jobs:
+  deploy:
+    name: Deploy (${{ inputs.environment }})
+    runs-on: self-hosted
+    environment: ${{ inputs.environment }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Deploy
+        env:
+          COMPOSE_PROJECT_NAME: ${{ inputs.environment == 'development' && 'waypoint-dev' || '' }}
+          WEB_PORT: ${{ inputs.environment == 'development' && '8881' || '' }}
+          DB_PORT: ${{ inputs.environment == 'development' && '5433' || '' }}
+          MINIO_PORT: ${{ inputs.environment == 'development' && '9002' || '' }}
+          MINIO_CONSOLE_PORT: ${{ inputs.environment == 'development' && '9003' || '' }}
+          DOZZLE_PORT: ${{ inputs.environment == 'development' && '8890' || '' }}
+          POSTGRES_DB: ${{ secrets.POSTGRES_DB }}
+          SPRING_DATASOURCE_USERNAME: ${{ secrets.SPRING_DATASOURCE_USERNAME }}
+          SPRING_DATASOURCE_PASSWORD: ${{ secrets.SPRING_DATASOURCE_PASSWORD }}
+          JWT_SECRET: ${{ secrets.JWT_SECRET }}
+          MINIO_ROOT_USER: ${{ secrets.MINIO_ROOT_USER }}
+          MINIO_ROOT_PASSWORD: ${{ secrets.MINIO_ROOT_PASSWORD }}
+          APP_STORAGE_ACCESS_KEY: ${{ secrets.APP_STORAGE_ACCESS_KEY }}
+          APP_STORAGE_SECRET_KEY: ${{ secrets.APP_STORAGE_SECRET_KEY }}
+          APP_STORAGE_BUCKET: ${{ secrets.APP_STORAGE_BUCKET }}
+          NEW_RELIC_LICENSE_KEY: ${{ secrets.NEW_RELIC_LICENSE_KEY }}
+          NEW_RELIC_APP_NAME: ${{ secrets.NEW_RELIC_APP_NAME }}
+          VITE_NEW_RELIC_ACCOUNT_ID: ${{ secrets.VITE_NEW_RELIC_ACCOUNT_ID }}
+          VITE_NEW_RELIC_APP_ID: ${{ secrets.VITE_NEW_RELIC_APP_ID }}
+          VITE_NEW_RELIC_LICENSE_KEY: ${{ secrets.VITE_NEW_RELIC_LICENSE_KEY }}
+          DOZZLE_USERNAME: ${{ secrets.DOZZLE_USERNAME }}
+          DOZZLE_PASSWORD: ${{ secrets.DOZZLE_PASSWORD }}
+          TUNNEL_TOKEN: ${{ secrets.TUNNEL_TOKEN }}
+          CORS_ALLOWED_ORIGINS: ${{ secrets.CORS_ALLOWED_ORIGINS }}
+        run: ./scripts/deploy.sh

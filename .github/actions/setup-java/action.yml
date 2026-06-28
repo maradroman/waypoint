@@ -1,0 +1,19 @@
+name: Setup Java 21
+description: Cache Maven wrapper, set up JDK 21 with Maven dependency cache
+
+runs:
+  using: composite
+  steps:
+    - name: Cache Maven wrapper distribution
+      uses: actions/cache@v4
+      with:
+        path: ~/.m2/wrapper
+        key: maven-wrapper-${{ runner.os }}
+
+    - name: Set up Java 21
+      uses: actions/setup-java@v4
+      with:
+        java-version: 21
+        distribution: temurin
+        cache: maven
+        cache-dependency-path: waypoint-api/pom.xml

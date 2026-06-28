@@ -1,0 +1,131 @@
+name: Test
+
+on:
+  workflow_call:
+    inputs:
+      pmd-enabled:
+        type: boolean
+        required: true
+      spotless-enabled:
+        type: boolean
+        required: true
+
+env:
+  PMD_ENABLED: ${{ inputs.pmd-enabled && 'true' || 'false' }}
+  SPOTLESS_ENABLED: ${{ inputs.spotless-enabled && 'true' || 'false' }}
+
+jobs:
+  test:
+    name: Build → Test → PMD → Spotless
+    runs-on: self-hosted
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: ./.github/actions/setup-java
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+
+      - name: Install diff-cover
+        run: pip install diff-cover
+
+      - name: Build, test, PMD & Spotless
+        run: |
+          MAVEN_ARGS="-T 1C verify"
+          [ "$PMD_ENABLED" != "true" ] && MAVEN_ARGS="$MAVEN_ARGS -Dpmd.skip=true -Dcpd.skip=true"
+          [ "$SPOTLESS_ENABLED" != "true" ] && MAVEN_ARGS="$MAVEN_ARGS -Dspotless.check.skip=true"
+          ./waypoint-api/mvnw $MAVEN_ARGS -f waypoint-api/pom.xml
+
+      - name: Publish test results
+        uses: dorny/test-reporter@v1
+        if: success() || failure()
+        with:
+          name: Test Results
+          path: waypoint-api/target/surefire-reports/*.xml
+          reporter: java-junit
+          fail-on-error: true
+
+      - name: Extract failure summary
+        if: failure() && github.event_name == 'pull_request'
+        run: |
+          python3 -c "
+          import glob, xml.etree.ElementTree as ET, os
+          failures = []
+          report_dir = 'waypoint-api/target/surefire-reports'
+          if os.path.isdir(report_dir):
+              for f in glob.glob(report_dir + '/TEST-*.xml'):
+                  tree = ET.parse(f)
+                  root = tree.getroot()
+                  for tc in root.iter('testcase'):
+                      if tc.find('failure') is not None:
+                          cls = tc.get('classname', '')
+                          name = tc.get('name', '')
+                          failures.append(f'{cls}.{name}')
+          if failures:
+              with open('failure-summary.txt', 'w') as out:
+                  for f in failures:
+                      out.write(f + '\n')
+          "
+
+      - name: Comment PR on test failure
+        if: failure() && github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const { owner, repo } = context.repo;
+            const runId = context.runId;
+            const workflowUrl = `${context.serverUrl}/${owner}/${repo}/actions/runs/${runId}`;
+            let failures = [];
+            try {
+              const data = fs.readFileSync('failure-summary.txt', 'utf8');
+              failures = data.trim().split('\n').filter(Boolean);
+            } catch (e) {}
+            let body = `## ❌ Tests failed\n\n`;
+            if (failures.length > 0) {
+              body += `**${failures.length} test(s) failed:**\n`;
+              body += failures.map(f => `- \`${f}\``).join('\n');
+              body += '\n\n';
+            }
+            body += `[View full workflow run](${workflowUrl})`;
+            await github.rest.issues.createComment({
+              owner,
+              repo,
+              issue_number: context.issue.number,
+              body
+            });
+
+      - name: Print overall coverage
+        run: |
+          python3 -c "
+          import xml.etree.ElementTree as ET
+          tree = ET.parse('waypoint-api/target/site/jacoco/jacoco.xml')
+          root = tree.getroot()
+          for counter in root.iter('counter'):
+              ctype = counter.get('type')
+              covered = int(counter.get('covered'))
+              missed = int(counter.get('missed'))
+              total = covered + missed
+              pct = covered / total * 100 if total else 0
+              if ctype == 'INSTRUCTION':
+                  print(f'Overall instruction coverage: {pct:.2f}%')
+              elif ctype == 'BRANCH':
+                  print(f'Overall branch coverage: {pct:.2f}%')
+              elif ctype == 'LINE':
+                  print(f'Overall line coverage: {pct:.2f}%')
+              elif ctype == 'METHOD':
+                  print(f'Overall method coverage: {pct:.2f}%')
+          "
+
+      - name: Check new code coverage
+        if: github.event_name == 'pull_request'
+        env:
+          BASE_REF: ${{ github.base_ref }}
+        run: |
+          diff-cover waypoint-api/target/site/jacoco/jacoco.xml \
+            --compare-branch=origin/"$BASE_REF" \
+            --fail-under=80
