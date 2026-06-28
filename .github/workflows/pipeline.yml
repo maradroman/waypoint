@@ -9,8 +9,6 @@ on:
 
 env:
   ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION: true
-  PMD_ENABLED: ${{ vars.PMD_ENABLED || (github.ref != 'refs/heads/develop' && 'true' || 'false') }}
-  SPOTLESS_ENABLED: ${{ vars.SPOTLESS_ENABLED || (github.ref != 'refs/heads/develop' && 'true' || 'false') }}
 
 permissions:
   contents: read
@@ -25,8 +23,8 @@ jobs:
   test:
     uses: ./.github/workflows/test.yml
     with:
-      pmd-enabled: ${{ env.PMD_ENABLED == 'true' }}
-      spotless-enabled: ${{ env.SPOTLESS_ENABLED == 'true' }}
+      pmd-enabled: ${{ vars.PMD_ENABLED == '' && github.ref != 'refs/heads/develop' || vars.PMD_ENABLED == 'true' }}
+      spotless-enabled: ${{ vars.SPOTLESS_ENABLED == '' && github.ref != 'refs/heads/develop' || vars.SPOTLESS_ENABLED == 'true' }}
     secrets: inherit
 
   security-scan:
