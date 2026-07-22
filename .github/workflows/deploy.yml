@@ -33,6 +33,7 @@ jobs:
         id: deploy
         env:
           COMPOSE_PROJECT_NAME: ${{ inputs.environment == 'development' && 'waypoint-dev' || '' }}
+          API_PORT: ${{ inputs.environment == 'development' && '8080' || '8082' }}
           WEB_PORT: ${{ inputs.environment == 'development' && '8881' || '' }}
           DB_PORT: ${{ inputs.environment == 'development' && '5433' || '' }}
           MINIO_PORT: ${{ inputs.environment == 'development' && '9002' || '9010' }}
