@@ -61,8 +61,10 @@ public class TestDataConstant {
     // Planned Fund
     public static final UUID PLANNED_FUND_ID = UUID.fromString("00000000-0000-0000-0000-000000000055");
     public static final UUID PLANNED_FUND_ID_2 = UUID.fromString("00000000-0000-0000-0000-000000000056");
-    public static final java.time.LocalDate PLANNED_FUND_DATE = java.time.LocalDate.of(2026, 7, 15);
-    public static final java.time.LocalDate PLANNED_FUND_DATE_2 = java.time.LocalDate.of(2026, 8, 20);
+    public static final java.time.LocalDate PLANNED_FUND_DATE =
+            java.time.LocalDate.now().plusDays(5);
+    public static final java.time.LocalDate PLANNED_FUND_DATE_2 =
+            java.time.LocalDate.now().plusDays(30);
     public static final java.time.LocalDate PAST_DATE = java.time.LocalDate.of(2020, 1, 1);
     public static final int PLANNED_FUND_AMOUNT = 50000;
     public static final int PLANNED_FUND_AMOUNT_2 = 75000;
