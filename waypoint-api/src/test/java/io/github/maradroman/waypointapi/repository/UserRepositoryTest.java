@@ -1,17 +1,17 @@
 package io.github.maradroman.waypointapi.repository;
 
+import static io.github.maradroman.waypointapi.testdata.TestDataConstant.USER_DISPLAY_NAME;
+import static io.github.maradroman.waypointapi.testdata.TestDataConstant.USER_EMAIL;
+import static io.github.maradroman.waypointapi.testdata.TestDataConstant.USER_EMAIL_2;
+import static io.github.maradroman.waypointapi.testdata.TestDataConstant.USER_ID;
+import static org.assertj.core.api.Assertions.assertThat;
+
 import io.github.maradroman.waypointapi.auth.model.User;
 import io.github.maradroman.waypointapi.auth.repository.UserRepository;
 import io.github.maradroman.waypointapi.testdata.TestDataJpa;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-
-import static io.github.maradroman.waypointapi.testdata.TestDataConstant.USER_DISPLAY_NAME;
-import static io.github.maradroman.waypointapi.testdata.TestDataConstant.USER_EMAIL;
-import static io.github.maradroman.waypointapi.testdata.TestDataConstant.USER_EMAIL_2;
-import static io.github.maradroman.waypointapi.testdata.TestDataConstant.USER_ID;
-import static org.assertj.core.api.Assertions.assertThat;
 
 class UserRepositoryTest extends TestDataJpa {
 

@@ -11,13 +11,12 @@ import io.github.maradroman.waypointapi.auth.repository.RefreshTokenRepository;
 import io.github.maradroman.waypointapi.auth.repository.UserRepository;
 import io.github.maradroman.waypointapi.common.exception.BadRequestException;
 import io.github.maradroman.waypointapi.common.exception.DuplicateResourceException;
+import java.time.Instant;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.time.Instant;
 
 @Service
 @Transactional
@@ -45,7 +44,8 @@ public class AuthService {
     }
 
     public AuthResponse login(LoginRequest request) {
-        User user = userRepository.findByEmail(request.email())
+        User user = userRepository
+                .findByEmail(request.email())
                 .orElseThrow(() -> new BadCredentialsException("Invalid email or password"));
 
         if (!passwordEncoder.matches(request.password(), user.getPasswordHash())) {
@@ -56,7 +56,8 @@ public class AuthService {
     }
 
     public AuthResponse refresh(RefreshTokenRequest request) {
-        RefreshToken storedToken = refreshTokenRepository.findByToken(request.refreshToken())
+        RefreshToken storedToken = refreshTokenRepository
+                .findByToken(request.refreshToken())
                 .orElseThrow(() -> new BadRequestException("INVALID_REFRESH_TOKEN", "Invalid refresh token"));
 
         if (storedToken.isExpired()) {
@@ -124,7 +125,6 @@ public class AuthService {
                 user.getLocale(),
                 user.getCurrency(),
                 user.getTheme(),
-                user.getRole()
-        );
+                user.getRole());
     }
 }

@@ -2,16 +2,15 @@ package io.github.maradroman.waypointapi.bugreport.model;
 
 import io.github.maradroman.waypointapi.auth.model.User;
 import jakarta.persistence.*;
+import java.time.Instant;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.UUID;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.annotations.UpdateTimestamp;
 import org.hibernate.type.SqlTypes;
-
-import java.time.Instant;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.UUID;
 
 @Entity
 @Table(name = "bug_reports")

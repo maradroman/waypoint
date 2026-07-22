@@ -1,11 +1,9 @@
 package io.github.maradroman.waypointapi.common.storage;
 
+import java.io.InputStream;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
-
-import java.io.InputStream;
-import java.util.stream.Stream;
 
 @Configuration
 @Profile("test")
@@ -15,8 +13,7 @@ public class StorageTestConfig {
     public StorageService storageService() {
         return new StorageService() {
             @Override
-            public void store(String key, InputStream inputStream, long size, String contentType) {
-            }
+            public void store(String key, InputStream inputStream, long size, String contentType) {}
 
             @Override
             public String getPresignedDownloadUrl(String key) {
@@ -24,8 +21,7 @@ public class StorageTestConfig {
             }
 
             @Override
-            public void delete(String key) {
-            }
+            public void delete(String key) {}
         };
     }
 }

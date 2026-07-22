@@ -5,7 +5,5 @@ import jakarta.validation.constraints.Positive;
 
 @Schema(description = "Update deposit request")
 public record UpdateDepositRequest(
-        @Positive
-        @Schema(description = "New amount in cents", example = "150000")
-        Integer amount
-) {}
+        @Positive @Schema(description = "New amount in cents", example = "150000")
+        Integer amount) {}

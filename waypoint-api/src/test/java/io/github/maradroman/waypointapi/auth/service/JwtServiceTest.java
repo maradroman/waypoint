@@ -1,18 +1,17 @@
 package io.github.maradroman.waypointapi.auth.service;
 
-import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.security.Keys;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
-
-import java.nio.charset.StandardCharsets;
-import java.util.Date;
-
 import static io.github.maradroman.waypointapi.testdata.TestDataConstant.USER_ID;
 import static io.github.maradroman.waypointapi.testdata.TestDataConstant.USER_ROLE;
 import static io.github.maradroman.waypointapi.testdata.TestDataConstant.USER_ROLE_ADMIN;
 import static org.assertj.core.api.Assertions.assertThat;
+
+import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.security.Keys;
+import java.nio.charset.StandardCharsets;
+import java.util.Date;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
 
 class JwtServiceTest {
 
@@ -69,11 +68,11 @@ class JwtServiceTest {
     void validateAndExtractUserId_returnsNullForExpiredTokenTest() {
         var secretKey = Keys.hmacShaKeyFor(JWT_SECRET.getBytes(StandardCharsets.UTF_8));
         var expiredToken = Jwts.builder()
-            .subject(USER_ID.toString())
-            .issuedAt(new Date(System.currentTimeMillis() - 3600000))
-            .expiration(new Date(System.currentTimeMillis() - 1800000))
-            .signWith(secretKey)
-            .compact();
+                .subject(USER_ID.toString())
+                .issuedAt(new Date(System.currentTimeMillis() - 3600000))
+                .expiration(new Date(System.currentTimeMillis() - 1800000))
+                .signWith(secretKey)
+                .compact();
 
         var actualResult = jwtService.validateAndExtractUserId(expiredToken);
 

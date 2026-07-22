@@ -1,5 +1,18 @@
 package io.github.maradroman.waypointapi.analytics.service;
 
+import static io.github.maradroman.waypointapi.testdata.TestDataConstant.*;
+import static io.github.maradroman.waypointapi.testdata.TestDataDepositEntity.buildDeposit;
+import static io.github.maradroman.waypointapi.testdata.TestDataGoalEntity.buildGoal;
+import static io.github.maradroman.waypointapi.testdata.TestDataMilestoneEntity.buildCompletedMilestone;
+import static io.github.maradroman.waypointapi.testdata.TestDataMilestoneEntity.buildMilestone;
+import static io.github.maradroman.waypointapi.testdata.TestDataMilestoneEntity.buildMilestoneWithCost;
+import static io.github.maradroman.waypointapi.testdata.TestDataTransferEntity.buildTransfer;
+import static io.github.maradroman.waypointapi.testdata.TestDataUserEntity.buildUser;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.Mockito.lenient;
+import static org.mockito.Mockito.when;
+
 import io.github.maradroman.waypointapi.analytics.dto.GoalAnalyticsResponse;
 import io.github.maradroman.waypointapi.analytics.dto.SummaryResponse;
 import io.github.maradroman.waypointapi.auth.model.User;
@@ -7,10 +20,11 @@ import io.github.maradroman.waypointapi.common.exception.ResourceNotFoundExcepti
 import io.github.maradroman.waypointapi.deposit.repository.DepositRepository;
 import io.github.maradroman.waypointapi.goal.model.Goal;
 import io.github.maradroman.waypointapi.goal.repository.GoalRepository;
-import io.github.maradroman.waypointapi.milestone.model.Milestone;
 import io.github.maradroman.waypointapi.milestone.repository.MilestoneRepository;
 import io.github.maradroman.waypointapi.plannedfund.repository.PlannedFundRepository;
 import io.github.maradroman.waypointapi.transfer.repository.TransferRepository;
+import java.util.List;
+import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -20,32 +34,26 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import java.util.List;
-import java.util.Optional;
-
-import static io.github.maradroman.waypointapi.testdata.TestDataConstant.*;
-import static io.github.maradroman.waypointapi.testdata.TestDataDepositEntity.buildDeposit;
-import static io.github.maradroman.waypointapi.testdata.TestDataGoalEntity.buildGoal;
-import static io.github.maradroman.waypointapi.testdata.TestDataMilestoneEntity.buildMilestone;
-import static io.github.maradroman.waypointapi.testdata.TestDataMilestoneEntity.buildCompletedMilestone;
-import static io.github.maradroman.waypointapi.testdata.TestDataMilestoneEntity.buildMilestoneWithCost;
-import static io.github.maradroman.waypointapi.testdata.TestDataTransferEntity.buildTransfer;
-import static io.github.maradroman.waypointapi.testdata.TestDataUserEntity.buildUser;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.Mockito.lenient;
-import static org.mockito.Mockito.when;
-
 @ExtendWith(MockitoExtension.class)
 class AnalyticsServiceTest {
 
-    @Mock private GoalRepository goalRepository;
-    @Mock private MilestoneRepository milestoneRepository;
-    @Mock private DepositRepository depositRepository;
-    @Mock private TransferRepository transferRepository;
-    @Mock private PlannedFundRepository plannedFundRepository;
+    @Mock
+    private GoalRepository goalRepository;
 
-    @InjectMocks private AnalyticsService analyticsService;
+    @Mock
+    private MilestoneRepository milestoneRepository;
+
+    @Mock
+    private DepositRepository depositRepository;
+
+    @Mock
+    private TransferRepository transferRepository;
+
+    @Mock
+    private PlannedFundRepository plannedFundRepository;
+
+    @InjectMocks
+    private AnalyticsService analyticsService;
 
     private User user;
     private User otherUser;
@@ -57,8 +65,9 @@ class AnalyticsServiceTest {
         otherUser = buildUser(USER_ID_2);
         goal = buildGoal(user);
         // Mock plannedFundRepository to return empty list by default (lenient for tests that don't use it)
-        lenient().when(plannedFundRepository.findByGoalIdAndIsDeletedFalseAndDateGreaterThanEqualOrderByDateAsc(
-                org.mockito.ArgumentMatchers.any(), org.mockito.ArgumentMatchers.any()))
+        lenient()
+                .when(plannedFundRepository.findByGoalIdAndIsDeletedFalseAndDateGreaterThanEqualOrderByDateAsc(
+                        org.mockito.ArgumentMatchers.any(), org.mockito.ArgumentMatchers.any()))
                 .thenReturn(List.of());
     }
 
@@ -78,7 +87,8 @@ class AnalyticsServiceTest {
             when(goalRepository.findById(GOAL_ID)).thenReturn(Optional.of(goal));
             when(depositRepository.findByGoalId(GOAL_ID)).thenReturn(List.of(deposit1, deposit2));
             when(transferRepository.findByGoalId(GOAL_ID)).thenReturn(List.of(transfer1));
-            when(milestoneRepository.findByGoalIdOrderBySortOrderAsc(GOAL_ID)).thenReturn(List.of(milestone1, milestone2));
+            when(milestoneRepository.findByGoalIdOrderBySortOrderAsc(GOAL_ID))
+                    .thenReturn(List.of(milestone1, milestone2));
 
             var actualResult = analyticsService.getGoalAnalytics(user, GOAL_ID);
 
@@ -90,32 +100,30 @@ class AnalyticsServiceTest {
             var progressPercent = (int) ((long) totalMilestoneBalance * 100 / totalMilestoneCost);
 
             assertThat(actualResult)
-                .extracting(
-                    GoalAnalyticsResponse::goalId,
-                    GoalAnalyticsResponse::totalDeposited,
-                    GoalAnalyticsResponse::totalAllocated,
-                    GoalAnalyticsResponse::walletBalance,
-                    GoalAnalyticsResponse::totalMilestoneCost,
-                    GoalAnalyticsResponse::totalMilestoneBalance,
-                    GoalAnalyticsResponse::completedMilestones,
-                    GoalAnalyticsResponse::totalMilestones,
-                    GoalAnalyticsResponse::progressPercent,
-                    GoalAnalyticsResponse::activeMilestoneId,
-                    GoalAnalyticsResponse::activeMilestoneTitle
-                )
-                .containsExactly(
-                    GOAL_ID,
-                    totalDeposited,
-                    totalTransferred,
-                    walletBalance,
-                    totalMilestoneCost,
-                    totalMilestoneBalance,
-                    1,
-                    2,
-                    progressPercent,
-                    milestone1.getId(),
-                    milestone1.getTitle()
-                );
+                    .extracting(
+                            GoalAnalyticsResponse::goalId,
+                            GoalAnalyticsResponse::totalDeposited,
+                            GoalAnalyticsResponse::totalAllocated,
+                            GoalAnalyticsResponse::walletBalance,
+                            GoalAnalyticsResponse::totalMilestoneCost,
+                            GoalAnalyticsResponse::totalMilestoneBalance,
+                            GoalAnalyticsResponse::completedMilestones,
+                            GoalAnalyticsResponse::totalMilestones,
+                            GoalAnalyticsResponse::progressPercent,
+                            GoalAnalyticsResponse::activeMilestoneId,
+                            GoalAnalyticsResponse::activeMilestoneTitle)
+                    .containsExactly(
+                            GOAL_ID,
+                            totalDeposited,
+                            totalTransferred,
+                            walletBalance,
+                            totalMilestoneCost,
+                            totalMilestoneBalance,
+                            1,
+                            2,
+                            progressPercent,
+                            milestone1.getId(),
+                            milestone1.getTitle());
         }
 
         @Test
@@ -124,8 +132,8 @@ class AnalyticsServiceTest {
             when(goalRepository.findById(GOAL_ID)).thenReturn(Optional.empty());
 
             assertThatThrownBy(() -> analyticsService.getGoalAnalytics(user, GOAL_ID))
-                .isInstanceOf(ResourceNotFoundException.class)
-                .hasFieldOrPropertyWithValue("code", "GOAL_NOT_FOUND");
+                    .isInstanceOf(ResourceNotFoundException.class)
+                    .hasFieldOrPropertyWithValue("code", "GOAL_NOT_FOUND");
         }
 
         @Test
@@ -134,8 +142,8 @@ class AnalyticsServiceTest {
             when(goalRepository.findById(GOAL_ID)).thenReturn(Optional.of(goal));
 
             assertThatThrownBy(() -> analyticsService.getGoalAnalytics(otherUser, GOAL_ID))
-                .isInstanceOf(ResourceNotFoundException.class)
-                .hasFieldOrPropertyWithValue("code", "GOAL_NOT_FOUND");
+                    .isInstanceOf(ResourceNotFoundException.class)
+                    .hasFieldOrPropertyWithValue("code", "GOAL_NOT_FOUND");
         }
 
         @Test
@@ -149,16 +157,15 @@ class AnalyticsServiceTest {
             var actualResult = analyticsService.getGoalAnalytics(user, GOAL_ID);
 
             assertThat(actualResult)
-                .extracting(
-                    GoalAnalyticsResponse::totalMilestones,
-                    GoalAnalyticsResponse::completedMilestones,
-                    GoalAnalyticsResponse::totalMilestoneCost,
-                    GoalAnalyticsResponse::totalMilestoneBalance,
-                    GoalAnalyticsResponse::progressPercent,
-                    GoalAnalyticsResponse::activeMilestoneId,
-                    GoalAnalyticsResponse::activeMilestoneTitle
-                )
-                .containsExactly(0, 0, 0, 0, 0, null, null);
+                    .extracting(
+                            GoalAnalyticsResponse::totalMilestones,
+                            GoalAnalyticsResponse::completedMilestones,
+                            GoalAnalyticsResponse::totalMilestoneCost,
+                            GoalAnalyticsResponse::totalMilestoneBalance,
+                            GoalAnalyticsResponse::progressPercent,
+                            GoalAnalyticsResponse::activeMilestoneId,
+                            GoalAnalyticsResponse::activeMilestoneTitle)
+                    .containsExactly(0, 0, 0, 0, 0, null, null);
         }
 
         @Test
@@ -178,12 +185,11 @@ class AnalyticsServiceTest {
             var actualResult = analyticsService.getGoalAnalytics(user, GOAL_ID);
 
             assertThat(actualResult)
-                .extracting(
-                    GoalAnalyticsResponse::totalAllocated,
-                    GoalAnalyticsResponse::totalMilestoneBalance,
-                    GoalAnalyticsResponse::walletBalance
-                )
-                .containsExactly(200, 300, -200);
+                    .extracting(
+                            GoalAnalyticsResponse::totalAllocated,
+                            GoalAnalyticsResponse::totalMilestoneBalance,
+                            GoalAnalyticsResponse::walletBalance)
+                    .containsExactly(200, 300, -200);
         }
 
         @Test
@@ -201,8 +207,8 @@ class AnalyticsServiceTest {
             var actualResult = analyticsService.getGoalAnalytics(user, GOAL_ID);
 
             assertThat(actualResult)
-                .extracting(GoalAnalyticsResponse::progressPercent)
-                .isEqualTo(25);
+                    .extracting(GoalAnalyticsResponse::progressPercent)
+                    .isEqualTo(25);
         }
     }
 
@@ -233,8 +239,12 @@ class AnalyticsServiceTest {
             var totalTargets = MILESTONE_COST + MILESTONE_COST + MILESTONE_COST;
 
             assertThat(actualResult)
-                .extracting(SummaryResponse::totalSaved, SummaryResponse::totalTargets, SummaryResponse::activeGoals, SummaryResponse::completedMilestones)
-                .containsExactly(totalSaved, totalTargets, 2, 2);
+                    .extracting(
+                            SummaryResponse::totalSaved,
+                            SummaryResponse::totalTargets,
+                            SummaryResponse::activeGoals,
+                            SummaryResponse::completedMilestones)
+                    .containsExactly(totalSaved, totalTargets, 2, 2);
         }
 
         @Test
@@ -245,8 +255,12 @@ class AnalyticsServiceTest {
             var actualResult = analyticsService.getSummary(user);
 
             assertThat(actualResult)
-                .extracting(SummaryResponse::totalSaved, SummaryResponse::totalTargets, SummaryResponse::activeGoals, SummaryResponse::completedMilestones)
-                .containsExactly(0, 0, 0, 0);
+                    .extracting(
+                            SummaryResponse::totalSaved,
+                            SummaryResponse::totalTargets,
+                            SummaryResponse::activeGoals,
+                            SummaryResponse::completedMilestones)
+                    .containsExactly(0, 0, 0, 0);
         }
     }
 }

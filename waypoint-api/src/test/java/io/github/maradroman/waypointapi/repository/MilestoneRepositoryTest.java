@@ -1,14 +1,5 @@
 package io.github.maradroman.waypointapi.repository;
 
-import io.github.maradroman.waypointapi.milestone.model.Milestone;
-import io.github.maradroman.waypointapi.milestone.repository.MilestoneRepository;
-import io.github.maradroman.waypointapi.testdata.TestDataJpa;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-
-import java.util.UUID;
-
 import static io.github.maradroman.waypointapi.testdata.TestDataConstant.GOAL_ID;
 import static io.github.maradroman.waypointapi.testdata.TestDataConstant.GOAL_TITLE;
 import static io.github.maradroman.waypointapi.testdata.TestDataConstant.MILESTONE_COST;
@@ -19,6 +10,14 @@ import static io.github.maradroman.waypointapi.testdata.TestDataConstant.MILESTO
 import static io.github.maradroman.waypointapi.testdata.TestDataConstant.USER_ID;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.groups.Tuple.tuple;
+
+import io.github.maradroman.waypointapi.milestone.model.Milestone;
+import io.github.maradroman.waypointapi.milestone.repository.MilestoneRepository;
+import io.github.maradroman.waypointapi.testdata.TestDataJpa;
+import java.util.UUID;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
 
 class MilestoneRepositoryTest extends TestDataJpa {
 

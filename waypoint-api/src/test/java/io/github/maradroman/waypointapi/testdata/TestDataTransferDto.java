@@ -1,23 +1,29 @@
 package io.github.maradroman.waypointapi.testdata;
 
+import static io.github.maradroman.waypointapi.testdata.TestDataConstant.*;
+
 import io.github.maradroman.waypointapi.transfer.dto.AllocateRequest;
 import io.github.maradroman.waypointapi.transfer.dto.AllocateResponse;
 import io.github.maradroman.waypointapi.transfer.dto.TransferResponse;
 import io.github.maradroman.waypointapi.transfer.dto.UpdateTransferRequest;
 import io.github.maradroman.waypointapi.transfer.dto.WithdrawRequest;
-import lombok.experimental.UtilityClass;
-
 import java.time.Instant;
 import java.util.UUID;
-
-import static io.github.maradroman.waypointapi.testdata.TestDataConstant.*;
+import lombok.experimental.UtilityClass;
 
 @UtilityClass
 public class TestDataTransferDto {
 
     public static TransferResponse transferResponse() {
-        return new TransferResponse(TRANSFER_ID, GOAL_ID, MILESTONE_ID, TRANSFER_AMOUNT,
-                TRANSFER_TYPE_ALLOCATE, "", DEFAULT_TIMESTAMP, DEFAULT_TIMESTAMP);
+        return new TransferResponse(
+                TRANSFER_ID,
+                GOAL_ID,
+                MILESTONE_ID,
+                TRANSFER_AMOUNT,
+                TRANSFER_TYPE_ALLOCATE,
+                "",
+                DEFAULT_TIMESTAMP,
+                DEFAULT_TIMESTAMP);
     }
 
     public static TransferResponse transferResponse(UUID id, int amount, String type, Instant timestamp) {

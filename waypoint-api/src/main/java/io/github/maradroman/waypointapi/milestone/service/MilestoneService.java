@@ -12,15 +12,13 @@ import io.github.maradroman.waypointapi.milestone.model.Milestone;
 import io.github.maradroman.waypointapi.milestone.repository.MilestoneRepository;
 import io.github.maradroman.waypointapi.transfer.dto.TransferResponse;
 import io.github.maradroman.waypointapi.transfer.repository.TransferRepository;
-import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
-import java.time.Instant;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.stream.Collectors;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @Transactional
@@ -48,7 +46,7 @@ public class MilestoneService {
                 .title(request.title())
                 .cost(request.cost() != null ? request.cost() : 0)
                 .details(request.details() != null ? request.details() : "")
-                .enabled(request.enabled() != null ? request.enabled() : true)
+                .enabled(request.enabled() == null || request.enabled())
                 .build();
         milestone = milestoneRepository.save(milestone);
         return MilestoneResponse.from(milestone, 0);
@@ -69,7 +67,7 @@ public class MilestoneService {
             milestone.setEnabled(request.enabled());
         }
         milestone = milestoneRepository.save(milestone);
-        int balance = computeBalance(goalId, milestoneId);
+        int balance = computeBalance(milestoneId);
         return MilestoneResponse.from(milestone, balance);
     }
 
@@ -86,7 +84,7 @@ public class MilestoneService {
         milestone.setCompleted(false);
         milestone.setCompletedAt(null);
         milestone = milestoneRepository.save(milestone);
-        int balance = computeBalance(goalId, milestoneId);
+        int balance = computeBalance(milestoneId);
         return MilestoneResponse.from(milestone, balance);
     }
 
@@ -94,7 +92,7 @@ public class MilestoneService {
         Milestone milestone = findMilestoneForUser(user, goalId, milestoneId);
         milestone.setEnabled(!milestone.getEnabled());
         milestone = milestoneRepository.save(milestone);
-        int balance = computeBalance(goalId, milestoneId);
+        int balance = computeBalance(milestoneId);
         return MilestoneResponse.from(milestone, balance);
     }
 
@@ -105,10 +103,7 @@ public class MilestoneService {
         for (int i = 0; i < request.milestoneIds().size(); i++) {
             UUID id = request.milestoneIds().get(i);
             int order = i;
-            milestones.stream()
-                    .filter(m -> m.getId().equals(id))
-                    .findFirst()
-                    .ifPresent(m -> m.setSortOrder(order));
+            milestones.stream().filter(m -> m.getId().equals(id)).findFirst().ifPresent(m -> m.setSortOrder(order));
         }
         milestoneRepository.saveAll(milestones);
         return milestones.stream()
@@ -131,21 +126,21 @@ public class MilestoneService {
 
     public MilestoneResponse getMilestoneWithBalance(User user, UUID goalId, UUID milestoneId) {
         Milestone milestone = findMilestoneForUser(user, goalId, milestoneId);
-        int balance = computeBalance(goalId, milestoneId);
+        int balance = computeBalance(milestoneId);
         return MilestoneResponse.from(milestone, balance);
     }
 
     public List<TransferResponse> listMilestoneTransfers(User user, UUID goalId, UUID milestoneId) {
         findMilestoneForUser(user, goalId, milestoneId);
-        return transferRepository.findByMilestoneIdOrderByTimestampDesc(milestoneId)
-                .stream()
+        return transferRepository.findByMilestoneIdOrderByTimestampDesc(milestoneId).stream()
                 .map(TransferResponse::from)
                 .toList();
     }
 
     public Milestone findMilestoneForUser(User user, UUID goalId, UUID milestoneId) {
         Goal goal = goalService.findGoalForUser(user, goalId);
-        Milestone milestone = milestoneRepository.findById(milestoneId)
+        Milestone milestone = milestoneRepository
+                .findById(milestoneId)
                 .orElseThrow(() -> new ResourceNotFoundException("MILESTONE_NOT_FOUND", "Milestone not found"));
         if (!milestone.getGoal().getId().equals(goal.getId())) {
             throw new ResourceNotFoundException("MILESTONE_NOT_FOUND", "Milestone not found");
@@ -157,11 +152,10 @@ public class MilestoneService {
         return transferRepository.findByGoalId(goalId).stream()
                 .collect(Collectors.groupingBy(
                         t -> t.getMilestone().getId(),
-                        Collectors.summingInt(io.github.maradroman.waypointapi.transfer.model.Transfer::getAmount)
-                ));
+                        Collectors.summingInt(io.github.maradroman.waypointapi.transfer.model.Transfer::getAmount)));
     }
 
-    private int computeBalance(UUID goalId, UUID milestoneId) {
+    private int computeBalance(UUID milestoneId) {
         return transferRepository.findByMilestoneIdOrderByTimestampDesc(milestoneId).stream()
                 .mapToInt(io.github.maradroman.waypointapi.transfer.model.Transfer::getAmount)
                 .sum();

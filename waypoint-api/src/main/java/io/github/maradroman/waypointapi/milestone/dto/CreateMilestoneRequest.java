@@ -7,15 +7,14 @@ import jakarta.validation.constraints.Size;
 
 @Schema(description = "Create milestone request")
 public record CreateMilestoneRequest(
-        @NotBlank @Size(max = 120)
-        @Schema(description = "Milestone title", example = "Save $5,000")
+        @NotBlank @Size(max = 120) @Schema(description = "Milestone title", example = "Save $5,000")
         String title,
-        @PositiveOrZero
-        @Schema(description = "Target cost in cents", example = "500000")
+
+        @PositiveOrZero @Schema(description = "Target cost in cents", example = "500000")
         Integer cost,
-        @Size(max = 10000)
-        @Schema(description = "Optional details", example = "First milestone toward the car")
+
+        @Size(max = 10000) @Schema(description = "Optional details", example = "First milestone toward the car")
         String details,
+
         @Schema(description = "Whether milestone is enabled", example = "true")
-        Boolean enabled
-) {}
+        Boolean enabled) {}

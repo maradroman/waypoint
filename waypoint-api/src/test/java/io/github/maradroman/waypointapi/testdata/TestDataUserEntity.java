@@ -1,11 +1,10 @@
 package io.github.maradroman.waypointapi.testdata;
 
-import io.github.maradroman.waypointapi.auth.model.User;
-import lombok.experimental.UtilityClass;
-
-import java.util.UUID;
-
 import static io.github.maradroman.waypointapi.testdata.TestDataConstant.*;
+
+import io.github.maradroman.waypointapi.auth.model.User;
+import java.util.UUID;
+import lombok.experimental.UtilityClass;
 
 @UtilityClass
 public class TestDataUserEntity {

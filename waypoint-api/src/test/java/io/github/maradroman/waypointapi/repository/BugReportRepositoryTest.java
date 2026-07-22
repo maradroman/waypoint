@@ -1,16 +1,5 @@
 package io.github.maradroman.waypointapi.repository;
 
-import io.github.maradroman.waypointapi.bugreport.model.BugReport;
-import io.github.maradroman.waypointapi.bugreport.repository.BugReportRepository;
-import io.github.maradroman.waypointapi.testdata.TestDataJpa;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.transaction.annotation.Transactional;
-
-import java.time.Instant;
-import java.util.UUID;
-
 import static io.github.maradroman.waypointapi.testdata.TestDataConstant.BUG_REPORT_DESCRIPTION;
 import static io.github.maradroman.waypointapi.testdata.TestDataConstant.BUG_REPORT_DESCRIPTION_2;
 import static io.github.maradroman.waypointapi.testdata.TestDataConstant.BUG_REPORT_METADATA;
@@ -18,6 +7,16 @@ import static io.github.maradroman.waypointapi.testdata.TestDataConstant.USER_ID
 import static io.github.maradroman.waypointapi.testdata.TestDataConstant.USER_ID_2;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.tuple;
+
+import io.github.maradroman.waypointapi.bugreport.model.BugReport;
+import io.github.maradroman.waypointapi.bugreport.repository.BugReportRepository;
+import io.github.maradroman.waypointapi.testdata.TestDataJpa;
+import java.time.Instant;
+import java.util.UUID;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.transaction.annotation.Transactional;
 
 @Transactional
 class BugReportRepositoryTest extends TestDataJpa {
@@ -51,9 +50,7 @@ class BugReportRepositoryTest extends TestDataJpa {
 
         assertThat(actualResult).isPresent();
         var loaded = actualResult.get();
-        assertThat(loaded)
-                .extracting(BugReport::getDescription)
-                .isEqualTo(BUG_REPORT_DESCRIPTION);
+        assertThat(loaded).extracting(BugReport::getDescription).isEqualTo(BUG_REPORT_DESCRIPTION);
         assertThat(loaded.getUser().getId()).isEqualTo(USER_ID);
         assertThat(loaded.getMetadata()).containsEntry("url", BUG_REPORT_METADATA.get("url"));
     }
@@ -75,10 +72,14 @@ class BugReportRepositoryTest extends TestDataJpa {
         em.persist(older);
         em.persist(newer);
         em.flush();
-        jdbcTemplate.update("UPDATE bug_reports SET created_at = ? WHERE id = ?",
-                Instant.parse("2024-01-15T10:00:00Z"), older.getId());
-        jdbcTemplate.update("UPDATE bug_reports SET created_at = ? WHERE id = ?",
-                Instant.parse("2024-02-20T14:30:00Z"), newer.getId());
+        jdbcTemplate.update(
+                "UPDATE bug_reports SET created_at = ? WHERE id = ?",
+                Instant.parse("2024-01-15T10:00:00Z"),
+                older.getId());
+        jdbcTemplate.update(
+                "UPDATE bug_reports SET created_at = ? WHERE id = ?",
+                Instant.parse("2024-02-20T14:30:00Z"),
+                newer.getId());
         em.clear();
 
         var actualResult = bugReportRepository.findByUserIdOrderByCreatedAtDesc(USER_ID);
@@ -87,9 +88,7 @@ class BugReportRepositoryTest extends TestDataJpa {
                 .hasSize(2)
                 .extracting(BugReport::getId, BugReport::getDescription)
                 .containsExactly(
-                        tuple(newer.getId(), BUG_REPORT_DESCRIPTION_2),
-                        tuple(older.getId(), BUG_REPORT_DESCRIPTION)
-                );
+                        tuple(newer.getId(), BUG_REPORT_DESCRIPTION_2), tuple(older.getId(), BUG_REPORT_DESCRIPTION));
     }
 
     @Test

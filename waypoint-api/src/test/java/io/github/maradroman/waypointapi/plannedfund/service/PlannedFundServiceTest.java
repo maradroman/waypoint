@@ -1,21 +1,5 @@
 package io.github.maradroman.waypointapi.plannedfund.service;
 
-import io.github.maradroman.waypointapi.auth.model.User;
-import io.github.maradroman.waypointapi.goal.service.GoalService;
-import io.github.maradroman.waypointapi.plannedfund.dto.PlannedFundResponse;
-import io.github.maradroman.waypointapi.plannedfund.repository.PlannedFundRepository;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Nested;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
-
-import java.time.LocalDate;
-import java.util.List;
-import java.util.Optional;
-
 import static io.github.maradroman.waypointapi.testdata.TestDataConstant.*;
 import static io.github.maradroman.waypointapi.testdata.TestDataGoalEntity.buildGoal;
 import static io.github.maradroman.waypointapi.testdata.TestDataPlannedFundDto.upsertPlannedFundRequest;
@@ -26,6 +10,20 @@ import static org.assertj.core.api.Assertions.tuple;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+
+import io.github.maradroman.waypointapi.auth.model.User;
+import io.github.maradroman.waypointapi.goal.service.GoalService;
+import io.github.maradroman.waypointapi.plannedfund.dto.PlannedFundResponse;
+import io.github.maradroman.waypointapi.plannedfund.repository.PlannedFundRepository;
+import java.util.List;
+import java.util.Optional;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Nested;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 @ExtendWith(MockitoExtension.class)
 class PlannedFundServiceTest {
@@ -106,9 +104,7 @@ class PlannedFundServiceTest {
             var request = upsertPlannedFundRequest(PLANNED_FUND_DATE, PLANNED_FUND_AMOUNT_2);
             var actualResult = plannedFundService.upsertPlannedFund(user, goal.getId(), request);
 
-            assertThat(actualResult)
-                    .extracting(PlannedFundResponse::amount)
-                    .isEqualTo(PLANNED_FUND_AMOUNT_2);
+            assertThat(actualResult).extracting(PlannedFundResponse::amount).isEqualTo(PLANNED_FUND_AMOUNT_2);
         }
 
         @Test

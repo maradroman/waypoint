@@ -1,30 +1,8 @@
 package io.github.maradroman.waypointapi.bugreport.service;
 
-import io.github.maradroman.waypointapi.auth.model.User;
-import io.github.maradroman.waypointapi.bugreport.dto.BugReportAttachmentResponse;
-import io.github.maradroman.waypointapi.bugreport.dto.BugReportResponse;
-import io.github.maradroman.waypointapi.bugreport.dto.CreateBugReportRequest;
-import io.github.maradroman.waypointapi.bugreport.model.BugReport;
-import io.github.maradroman.waypointapi.bugreport.model.BugReportAttachment;
-import io.github.maradroman.waypointapi.bugreport.repository.BugReportAttachmentRepository;
-import io.github.maradroman.waypointapi.bugreport.repository.BugReportRepository;
-import io.github.maradroman.waypointapi.common.exception.BadRequestException;
-import io.github.maradroman.waypointapi.common.exception.ResourceNotFoundException;
-import io.github.maradroman.waypointapi.common.storage.StorageService;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Nested;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.mock.web.MockMultipartFile;
-import org.springframework.web.multipart.MultipartFile;
-
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-
+import static io.github.maradroman.waypointapi.testdata.TestDataBugReportDto.createBugReportRequest;
+import static io.github.maradroman.waypointapi.testdata.TestDataBugReportEntity.buildAttachment;
+import static io.github.maradroman.waypointapi.testdata.TestDataBugReportEntity.buildBugReport;
 import static io.github.maradroman.waypointapi.testdata.TestDataConstant.ATTACHMENT_FILENAME;
 import static io.github.maradroman.waypointapi.testdata.TestDataConstant.ATTACHMENT_ID;
 import static io.github.maradroman.waypointapi.testdata.TestDataConstant.BUG_REPORT_DESCRIPTION;
@@ -32,9 +10,6 @@ import static io.github.maradroman.waypointapi.testdata.TestDataConstant.BUG_REP
 import static io.github.maradroman.waypointapi.testdata.TestDataConstant.BUG_REPORT_ID_2;
 import static io.github.maradroman.waypointapi.testdata.TestDataConstant.BUG_REPORT_METADATA;
 import static io.github.maradroman.waypointapi.testdata.TestDataConstant.USER_ID_2;
-import static io.github.maradroman.waypointapi.testdata.TestDataBugReportDto.createBugReportRequest;
-import static io.github.maradroman.waypointapi.testdata.TestDataBugReportEntity.buildAttachment;
-import static io.github.maradroman.waypointapi.testdata.TestDataBugReportEntity.buildBugReport;
 import static io.github.maradroman.waypointapi.testdata.TestDataUserEntity.buildUser;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -46,6 +21,29 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+
+import io.github.maradroman.waypointapi.auth.model.User;
+import io.github.maradroman.waypointapi.bugreport.dto.BugReportAttachmentResponse;
+import io.github.maradroman.waypointapi.bugreport.dto.BugReportResponse;
+import io.github.maradroman.waypointapi.bugreport.dto.CreateBugReportRequest;
+import io.github.maradroman.waypointapi.bugreport.model.BugReport;
+import io.github.maradroman.waypointapi.bugreport.repository.BugReportAttachmentRepository;
+import io.github.maradroman.waypointapi.bugreport.repository.BugReportRepository;
+import io.github.maradroman.waypointapi.common.exception.BadRequestException;
+import io.github.maradroman.waypointapi.common.exception.ResourceNotFoundException;
+import io.github.maradroman.waypointapi.common.storage.StorageService;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Nested;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.mock.web.MockMultipartFile;
+import org.springframework.web.multipart.MultipartFile;
 
 @ExtendWith(MockitoExtension.class)
 class BugReportServiceTest {
@@ -112,8 +110,7 @@ class BugReportServiceTest {
                     .extracting(BugReportResponse::id, BugReportResponse::description)
                     .containsExactly(
                             tuple(report2.getId(), report2.getDescription()),
-                            tuple(report1.getId(), report1.getDescription())
-                    );
+                            tuple(report1.getId(), report1.getDescription()));
         }
 
         @Test
@@ -210,7 +207,7 @@ class BugReportServiceTest {
             when(attachmentRepository.findByBugReportId(bugReport.getId())).thenReturn(List.of());
             when(attachmentRepository.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
 
-            var file = new MockMultipartFile("files", "screenshot.png", "image/png", new byte[]{1, 2, 3});
+            var file = new MockMultipartFile("files", "screenshot.png", "image/png", new byte[] {1, 2, 3});
             var actualResult = bugReportService.addAttachments(user, bugReport.getId(), List.<MultipartFile>of(file));
 
             assertThat(actualResult).hasSize(1);
@@ -240,9 +237,8 @@ class BugReportServiceTest {
             when(attachmentRepository.findByBugReportId(bugReport.getId())).thenReturn(existing);
 
             List<MultipartFile> files = List.of(
-                    new MockMultipartFile("files", "a.png", "image/png", new byte[]{1}),
-                    new MockMultipartFile("files", "b.png", "image/png", new byte[]{1})
-            );
+                    new MockMultipartFile("files", "a.png", "image/png", new byte[] {1}),
+                    new MockMultipartFile("files", "b.png", "image/png", new byte[] {1}));
 
             assertThatThrownBy(() -> bugReportService.addAttachments(user, bugReport.getId(), files))
                     .isInstanceOf(BadRequestException.class)
@@ -255,8 +251,9 @@ class BugReportServiceTest {
             when(bugReportRepository.findById(bugReport.getId())).thenReturn(Optional.of(bugReport));
             when(attachmentRepository.findByBugReportId(bugReport.getId())).thenReturn(List.of());
 
-            var file = new MockMultipartFile("files", "doc.pdf", "application/pdf", new byte[]{1, 2});
-            assertThatThrownBy(() -> bugReportService.addAttachments(user, bugReport.getId(), List.<MultipartFile>of(file)))
+            var file = new MockMultipartFile("files", "doc.pdf", "application/pdf", new byte[] {1, 2});
+            assertThatThrownBy(() ->
+                            bugReportService.addAttachments(user, bugReport.getId(), List.<MultipartFile>of(file)))
                     .isInstanceOf(BadRequestException.class)
                     .hasFieldOrPropertyWithValue("code", "UNSUPPORTED_FILE_TYPE");
             verify(storageService, never()).store(anyString(), any(), anyLong(), anyString());
@@ -266,7 +263,7 @@ class BugReportServiceTest {
         void addAttachments_throwsWhenBugReportNotFoundTest() {
             when(bugReportRepository.findById(BUG_REPORT_ID)).thenReturn(Optional.empty());
 
-            var file = new MockMultipartFile("files", "screenshot.png", "image/png", new byte[]{1});
+            var file = new MockMultipartFile("files", "screenshot.png", "image/png", new byte[] {1});
             assertThatThrownBy(() -> bugReportService.addAttachments(user, BUG_REPORT_ID, List.<MultipartFile>of(file)))
                     .isInstanceOf(ResourceNotFoundException.class)
                     .hasFieldOrPropertyWithValue("code", "BUG_REPORT_NOT_FOUND");
@@ -277,8 +274,9 @@ class BugReportServiceTest {
             var bugReport = buildBugReport(otherUser);
             when(bugReportRepository.findById(bugReport.getId())).thenReturn(Optional.of(bugReport));
 
-            var file = new MockMultipartFile("files", "screenshot.png", "image/png", new byte[]{1});
-            assertThatThrownBy(() -> bugReportService.addAttachments(user, bugReport.getId(), List.<MultipartFile>of(file)))
+            var file = new MockMultipartFile("files", "screenshot.png", "image/png", new byte[] {1});
+            assertThatThrownBy(() ->
+                            bugReportService.addAttachments(user, bugReport.getId(), List.<MultipartFile>of(file)))
                     .isInstanceOf(ResourceNotFoundException.class)
                     .hasFieldOrPropertyWithValue("code", "BUG_REPORT_NOT_FOUND");
         }
@@ -351,7 +349,8 @@ class BugReportServiceTest {
             when(bugReportRepository.findById(bugReport.getId())).thenReturn(Optional.of(bugReport));
             when(attachmentRepository.findById(attachment.getId())).thenReturn(Optional.of(attachment));
 
-            assertThatThrownBy(() -> bugReportService.getAttachmentDownloadUrl(user, bugReport.getId(), attachment.getId()))
+            assertThatThrownBy(() ->
+                            bugReportService.getAttachmentDownloadUrl(user, bugReport.getId(), attachment.getId()))
                     .isInstanceOf(ResourceNotFoundException.class)
                     .hasFieldOrPropertyWithValue("code", "ATTACHMENT_NOT_FOUND");
         }

@@ -12,5 +12,4 @@ public class WaypointApiApplication {
 
         SpringApplication.run(WaypointApiApplication.class, args);
     }
-
 }

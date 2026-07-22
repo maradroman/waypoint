@@ -2,12 +2,11 @@ package io.github.maradroman.waypointapi.milestone.model;
 
 import io.github.maradroman.waypointapi.goal.model.Goal;
 import jakarta.persistence.*;
+import java.time.Instant;
+import java.util.UUID;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
-
-import java.time.Instant;
-import java.util.UUID;
 
 @Entity
 @Table(name = "milestones")

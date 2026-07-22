@@ -1,12 +1,11 @@
 package io.github.maradroman.waypointapi.testdata;
 
+import static io.github.maradroman.waypointapi.testdata.TestDataConstant.*;
+
 import io.github.maradroman.waypointapi.auth.model.RefreshToken;
 import io.github.maradroman.waypointapi.auth.model.User;
-import lombok.experimental.UtilityClass;
-
 import java.time.Instant;
-
-import static io.github.maradroman.waypointapi.testdata.TestDataConstant.*;
+import lombok.experimental.UtilityClass;
 
 @UtilityClass
 public class TestDataRefreshTokenEntity {

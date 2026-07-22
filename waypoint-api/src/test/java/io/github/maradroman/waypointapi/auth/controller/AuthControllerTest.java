@@ -1,28 +1,5 @@
 package io.github.maradroman.waypointapi.auth.controller;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
-import io.github.maradroman.waypointapi.auth.model.User;
-import io.github.maradroman.waypointapi.auth.service.AuthService;
-import io.github.maradroman.waypointapi.auth.service.JwtService;
-import io.github.maradroman.waypointapi.common.security.CurrentUserResolver;
-import io.github.maradroman.waypointapi.testdata.TestDataUserEntity;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
-import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
-import org.springframework.boot.test.context.TestConfiguration;
-import org.springframework.http.MediaType;
-import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.context.bean.override.mockito.MockitoBean;
-import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.web.method.support.HandlerMethodArgumentResolver;
-import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
-
-import java.util.List;
-
 import static io.github.maradroman.waypointapi.testdata.TestDataAuthDto.*;
 import static io.github.maradroman.waypointapi.testdata.TestDataConstant.USER_DISPLAY_NAME;
 import static io.github.maradroman.waypointapi.testdata.TestDataConstant.USER_EMAIL;
@@ -36,6 +13,28 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import io.github.maradroman.waypointapi.auth.model.User;
+import io.github.maradroman.waypointapi.auth.service.AuthService;
+import io.github.maradroman.waypointapi.auth.service.JwtService;
+import io.github.maradroman.waypointapi.common.security.CurrentUserResolver;
+import io.github.maradroman.waypointapi.testdata.TestDataUserEntity;
+import java.util.List;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.TestConfiguration;
+import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
+import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
+import org.springframework.http.MediaType;
+import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.web.method.support.HandlerMethodArgumentResolver;
+import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 @WebMvcTest(AuthController.class)
 @ActiveProfiles("test")
@@ -60,7 +59,8 @@ class AuthControllerTest {
     void setUp() {
         User mockUser = TestDataUserEntity.buildUser();
         lenient().when(currentUserResolver.supportsParameter(any())).thenReturn(true);
-        lenient().when(currentUserResolver.resolveArgument(any(), any(), any(), any()))
+        lenient()
+                .when(currentUserResolver.resolveArgument(any(), any(), any(), any()))
                 .thenReturn(mockUser);
     }
 
@@ -73,7 +73,8 @@ class AuthControllerTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(registerRequest())));
 
-        actualResult.andExpect(status().isCreated())
+        actualResult
+                .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.data").exists())
                 .andExpect(jsonPath("$.data.accessToken").value("access-token"))
                 .andExpect(jsonPath("$.data.refreshToken").value("refresh-token"))
@@ -94,7 +95,8 @@ class AuthControllerTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(loginRequest())));
 
-        actualResult.andExpect(status().isOk())
+        actualResult
+                .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data").exists())
                 .andExpect(jsonPath("$.data.accessToken").value("access-token"))
                 .andExpect(jsonPath("$.data.refreshToken").value("refresh-token"))
@@ -113,7 +115,8 @@ class AuthControllerTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(refreshTokenRequest())));
 
-        actualResult.andExpect(status().isOk())
+        actualResult
+                .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data").exists())
                 .andExpect(jsonPath("$.data.accessToken").value("access-token"))
                 .andExpect(jsonPath("$.data.refreshToken").value("refresh-token"))
@@ -136,7 +139,8 @@ class AuthControllerTest {
 
         var actualResult = mockMvc.perform(get("/auth/me"));
 
-        actualResult.andExpect(status().isOk())
+        actualResult
+                .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data").exists())
                 .andExpect(jsonPath("$.data.id").value(USER_ID.toString()))
                 .andExpect(jsonPath("$.data.email").value(USER_EMAIL))
@@ -154,7 +158,8 @@ class AuthControllerTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(updateProfileRequest("Alice Updated"))));
 
-        actualResult.andExpect(status().isOk())
+        actualResult
+                .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data").exists())
                 .andExpect(jsonPath("$.data.id").value(USER_ID.toString()))
                 .andExpect(jsonPath("$.data.displayName").value(USER_DISPLAY_NAME))

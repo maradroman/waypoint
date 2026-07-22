@@ -1,12 +1,5 @@
 package io.github.maradroman.waypointapi.repository;
 
-import io.github.maradroman.waypointapi.deposit.model.Deposit;
-import io.github.maradroman.waypointapi.deposit.repository.DepositRepository;
-import io.github.maradroman.waypointapi.testdata.TestDataJpa;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-
 import static io.github.maradroman.waypointapi.testdata.TestDataConstant.DEFAULT_TIMESTAMP;
 import static io.github.maradroman.waypointapi.testdata.TestDataConstant.DEFAULT_TIMESTAMP_2;
 import static io.github.maradroman.waypointapi.testdata.TestDataConstant.DEPOSIT_AMOUNT;
@@ -19,6 +12,13 @@ import static io.github.maradroman.waypointapi.testdata.TestDataConstant.GOAL_TI
 import static io.github.maradroman.waypointapi.testdata.TestDataConstant.USER_ID;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.groups.Tuple.tuple;
+
+import io.github.maradroman.waypointapi.deposit.model.Deposit;
+import io.github.maradroman.waypointapi.deposit.repository.DepositRepository;
+import io.github.maradroman.waypointapi.testdata.TestDataJpa;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
 
 class DepositRepositoryTest extends TestDataJpa {
 

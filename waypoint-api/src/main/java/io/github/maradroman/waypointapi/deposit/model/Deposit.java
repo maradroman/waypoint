@@ -2,11 +2,10 @@ package io.github.maradroman.waypointapi.deposit.model;
 
 import io.github.maradroman.waypointapi.goal.model.Goal;
 import jakarta.persistence.*;
-import lombok.*;
-import org.hibernate.annotations.CreationTimestamp;
-
 import java.time.Instant;
 import java.util.UUID;
+import lombok.*;
+import org.hibernate.annotations.CreationTimestamp;
 
 @Entity
 @Table(name = "deposits")

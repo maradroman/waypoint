@@ -1,11 +1,10 @@
 package io.github.maradroman.waypointapi.config;
 
+import javax.sql.DataSource;
 import org.flywaydb.core.Flyway;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
-
-import javax.sql.DataSource;
 
 @Configuration
 @Profile("!test")

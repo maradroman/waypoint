@@ -1,0 +1,71 @@
+name: Security Scan
+
+on:
+  workflow_call:
+    inputs:
+      run-codeql:
+        type: boolean
+        default: true
+
+jobs:
+  semgrep:
+    name: 🔍 Semgrep
+    runs-on: self-hosted
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: 💾 Cache Semgrep rules
+        uses: actions/cache@v4
+        with:
+          path: ~/.semgrep
+          key: semgrep-${{ runner.os }}-${{ github.run_id }}
+          restore-keys: semgrep-${{ runner.os }}-
+
+      - name: 🔍 Semgrep
+        uses: semgrep/semgrep-action@v1
+        with:
+          config: p/default
+
+  codeql:
+    name: 👁️ CodeQL
+    if: inputs.run-codeql
+    runs-on: self-hosted
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: ./.github/actions/setup-java
+
+      - name: 👁️ Initialize CodeQL
+        uses: github/codeql-action/init@v4
+        with:
+          languages: java
+
+      - name: 🔨 Autobuild
+        uses: github/codeql-action/autobuild@v4
+
+      - name: 📊 Perform CodeQL Analysis
+        uses: github/codeql-action/analyze@v4
+
+  gitleaks:
+    name: 🕵️ Gitleaks
+    runs-on: self-hosted
+    env:
+      GITLEAKS_VERSION: 8.24.3
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: 🕵️ Gitleaks
+        env:
+          GITLEAKS_TMP: /tmp/gitleaks-${{ github.run_id }}-${{ github.job }}
+        run: |
+          mkdir -p "$GITLEAKS_TMP"
+          curl -sL "https://github.com/zricethezav/gitleaks/releases/download/v${GITLEAKS_VERSION}/gitleaks_${GITLEAKS_VERSION}_linux_x64.tar.gz" \
+            -o "$GITLEAKS_TMP/gitleaks.tar.gz"
+          tar -xzf "$GITLEAKS_TMP/gitleaks.tar.gz" -C "$GITLEAKS_TMP"
+          "$GITLEAKS_TMP/gitleaks" detect --source="$PWD" --report-format=sarif --report-path=gitleaks.sarif --exit-code 0
+
+      - name: 📤 Upload Gitleaks results
+        uses: github/codeql-action/upload-sarif@v4
+        with:
+          sarif_file: gitleaks.sarif
+          category: gitleaks

@@ -1,18 +1,17 @@
 package io.github.maradroman.waypointapi.repository;
 
+import static io.github.maradroman.waypointapi.testdata.TestDataConstant.*;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.groups.Tuple.tuple;
+
 import io.github.maradroman.waypointapi.plannedfund.model.PlannedFund;
 import io.github.maradroman.waypointapi.plannedfund.repository.PlannedFundRepository;
 import io.github.maradroman.waypointapi.testdata.TestDataJpa;
+import java.time.LocalDate;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.time.LocalDate;
-
-import static io.github.maradroman.waypointapi.testdata.TestDataConstant.*;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.groups.Tuple.tuple;
 
 class PlannedFundRepositoryTest extends TestDataJpa {
 
@@ -20,7 +19,8 @@ class PlannedFundRepositoryTest extends TestDataJpa {
     private PlannedFundRepository plannedFundRepository;
 
     @Test
-    @DisplayName("findByGoalIdAndIsDeletedFalseAndDateGreaterThanEqualOrderByDateAsc returns only non-deleted future funds")
+    @DisplayName(
+            "findByGoalIdAndIsDeletedFalseAndDateGreaterThanEqualOrderByDateAsc returns only non-deleted future funds")
     void findByGoalIdAndIsDeletedFalseAndDateGreaterThanEqualOrderByDateAsc_returnsOnlyNonDeletedFutureFundsTest() {
         persistUser(USER_ID);
         persistGoal(GOAL_ID, USER_ID, GOAL_TITLE, 0);
@@ -67,9 +67,7 @@ class PlannedFundRepositoryTest extends TestDataJpa {
                 .hasSize(2)
                 .extracting(PlannedFund::getId, PlannedFund::getDate)
                 .containsExactly(
-                        tuple(PLANNED_FUND_ID, PLANNED_FUND_DATE),
-                        tuple(PLANNED_FUND_ID_2, PLANNED_FUND_DATE_2)
-                );
+                        tuple(PLANNED_FUND_ID, PLANNED_FUND_DATE), tuple(PLANNED_FUND_ID_2, PLANNED_FUND_DATE_2));
     }
 
     @Test
@@ -129,10 +127,7 @@ class PlannedFundRepositoryTest extends TestDataJpa {
 
         assertThat(deletedCount).isEqualTo(1);
         var remainingFunds = plannedFundRepository.findAll();
-        assertThat(remainingFunds)
-                .hasSize(1)
-                .extracting(PlannedFund::getId)
-                .containsExactly(PLANNED_FUND_ID_2);
+        assertThat(remainingFunds).hasSize(1).extracting(PlannedFund::getId).containsExactly(PLANNED_FUND_ID_2);
     }
 
     @Test

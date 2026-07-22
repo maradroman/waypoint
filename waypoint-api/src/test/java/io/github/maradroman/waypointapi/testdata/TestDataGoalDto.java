@@ -1,22 +1,28 @@
 package io.github.maradroman.waypointapi.testdata;
 
+import static io.github.maradroman.waypointapi.testdata.TestDataConstant.*;
+
 import io.github.maradroman.waypointapi.goal.dto.CreateGoalRequest;
 import io.github.maradroman.waypointapi.goal.dto.GoalResponse;
 import io.github.maradroman.waypointapi.goal.dto.ReorderGoalsRequest;
 import io.github.maradroman.waypointapi.goal.dto.UpdateGoalRequest;
-import lombok.experimental.UtilityClass;
-
 import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
-
-import static io.github.maradroman.waypointapi.testdata.TestDataConstant.*;
+import lombok.experimental.UtilityClass;
 
 @UtilityClass
 public class TestDataGoalDto {
 
     public static GoalResponse goalResponse() {
-        return new GoalResponse(GOAL_ID, GOAL_TITLE, GOAL_DESCRIPTION, GOAL_ICON, GOAL_SORT_ORDER, DEFAULT_TIMESTAMP, DEFAULT_TIMESTAMP);
+        return new GoalResponse(
+                GOAL_ID,
+                GOAL_TITLE,
+                GOAL_DESCRIPTION,
+                GOAL_ICON,
+                GOAL_SORT_ORDER,
+                DEFAULT_TIMESTAMP,
+                DEFAULT_TIMESTAMP);
     }
 
     public static GoalResponse goalResponse(UUID id, String title, Instant createdAt) {

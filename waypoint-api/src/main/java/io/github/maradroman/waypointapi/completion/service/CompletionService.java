@@ -11,13 +11,12 @@ import io.github.maradroman.waypointapi.milestone.model.Milestone;
 import io.github.maradroman.waypointapi.milestone.service.MilestoneService;
 import io.github.maradroman.waypointapi.transfer.model.Transfer;
 import io.github.maradroman.waypointapi.transfer.repository.TransferRepository;
-import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
 import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @Transactional
@@ -32,15 +31,15 @@ public class CompletionService {
     @Transactional(readOnly = true)
     public List<CompletionResponse> listCompletions(User user, UUID goalId) {
         goalService.findGoalForUser(user, goalId);
-        return completionRepository.findByGoalIdOrderByTimestampDesc(goalId)
-                .stream()
+        return completionRepository.findByGoalIdOrderByTimestampDesc(goalId).stream()
                 .map(CompletionResponse::from)
                 .toList();
     }
 
     public void deleteCompletion(User user, UUID goalId, UUID completionId) {
         Goal goal = goalService.findGoalForUser(user, goalId);
-        Completion completion = completionRepository.findById(completionId)
+        Completion completion = completionRepository
+                .findById(completionId)
                 .orElseThrow(() -> new ResourceNotFoundException("COMPLETION_NOT_FOUND", "Completion not found"));
         if (!completion.getGoal().getId().equals(goal.getId())) {
             throw new ResourceNotFoundException("COMPLETION_NOT_FOUND", "Completion not found");

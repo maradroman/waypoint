@@ -1,6 +1,8 @@
 package io.github.maradroman.waypointapi.common.exception;
 
 import io.github.maradroman.waypointapi.common.util.ErrorEnvelope;
+import java.util.Map;
+import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -10,9 +12,6 @@ import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
-
-import java.util.Map;
-import java.util.stream.Collectors;
 
 @RestControllerAdvice
 @Slf4j
@@ -32,8 +31,7 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(DuplicateResourceException.class)
     public ResponseEntity<ErrorEnvelope> handleDuplicate(DuplicateResourceException ex) {
-        return ResponseEntity.status(HttpStatus.CONFLICT)
-                .body(ErrorEnvelope.of(ex.getCode(), ex.getMessage(), null));
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(ErrorEnvelope.of(ex.getCode(), ex.getMessage(), null));
     }
 
     @ExceptionHandler(BadCredentialsException.class)
@@ -56,8 +54,7 @@ public class GlobalExceptionHandler {
                         fieldError -> fieldError.getDefaultMessage() != null
                                 ? fieldError.getDefaultMessage()
                                 : "Invalid value",
-                        (a, b) -> b
-                ));
+                        (a, b) -> b));
         return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                 .body(ErrorEnvelope.of("VALIDATION_ERROR", "Request validation failed", errors));
     }

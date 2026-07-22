@@ -1,14 +1,13 @@
 package io.github.maradroman.waypointapi.testdata;
 
+import static io.github.maradroman.waypointapi.testdata.TestDataConstant.*;
+
 import io.github.maradroman.waypointapi.completion.model.Completion;
 import io.github.maradroman.waypointapi.goal.model.Goal;
 import io.github.maradroman.waypointapi.milestone.model.Milestone;
-import lombok.experimental.UtilityClass;
-
 import java.time.Instant;
 import java.util.UUID;
-
-import static io.github.maradroman.waypointapi.testdata.TestDataConstant.*;
+import lombok.experimental.UtilityClass;
 
 @UtilityClass
 public class TestDataCompletionEntity {

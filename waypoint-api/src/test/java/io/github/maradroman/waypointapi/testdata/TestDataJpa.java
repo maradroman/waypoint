@@ -1,5 +1,7 @@
 package io.github.maradroman.waypointapi.testdata;
 
+import static io.github.maradroman.waypointapi.testdata.TestDataConstant.*;
+
 import io.github.maradroman.waypointapi.auth.model.User;
 import io.github.maradroman.waypointapi.completion.model.Completion;
 import io.github.maradroman.waypointapi.deposit.model.Deposit;
@@ -9,17 +11,14 @@ import io.github.maradroman.waypointapi.plannedfund.model.PlannedFund;
 import io.github.maradroman.waypointapi.transfer.model.Transfer;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
+import java.time.Instant;
+import java.time.LocalDate;
+import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.context.ActiveProfiles;
-
-import java.time.Instant;
-import java.time.LocalDate;
-import java.util.UUID;
-
-import static io.github.maradroman.waypointapi.testdata.TestDataConstant.*;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.NONE)
 @ActiveProfiles("test")
@@ -47,10 +46,21 @@ public abstract class TestDataJpa {
 
     protected User persistUser(UUID id, String email) {
         var now = Instant.now();
-        jdbcTemplate.update("""
+        jdbcTemplate.update(
+                """
                 INSERT INTO users (id, email, password_hash, display_name, locale, currency, theme, role, created_at, updated_at)
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-                """, id, email, USER_PASSWORD_HASH, USER_DISPLAY_NAME, USER_LOCALE, USER_CURRENCY, USER_THEME, USER_ROLE, now, now);
+                """,
+                id,
+                email,
+                USER_PASSWORD_HASH,
+                USER_DISPLAY_NAME,
+                USER_LOCALE,
+                USER_CURRENCY,
+                USER_THEME,
+                USER_ROLE,
+                now,
+                now);
         return em.find(User.class, id);
     }
 
@@ -85,7 +95,8 @@ public abstract class TestDataJpa {
         return em.find(Deposit.class, id);
     }
 
-    protected Transfer persistTransfer(UUID id, UUID goalId, UUID milestoneId, int amount, String type, Instant timestamp) {
+    protected Transfer persistTransfer(
+            UUID id, UUID goalId, UUID milestoneId, int amount, String type, Instant timestamp) {
         var now = Instant.now();
         jdbcTemplate.update("""
                 INSERT INTO transfers (id, goal_id, milestone_id, amount, type, comment, timestamp, created_at)
