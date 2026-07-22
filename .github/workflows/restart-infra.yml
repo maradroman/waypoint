@@ -41,8 +41,8 @@ jobs:
           COMPOSE_PROJECT_NAME: ${{ inputs.environment == 'development' && 'waypoint-dev' || '' }}
           WEB_PORT: ${{ inputs.environment == 'development' && '8881' || '' }}
           DB_PORT: ${{ inputs.environment == 'development' && '5433' || '' }}
-          MINIO_PORT: ${{ secrets.MINIO_PORT }}
-          MINIO_CONSOLE_PORT: ${{ secrets.MINIO_CONSOLE_PORT }}
+          MINIO_PORT: ${{ inputs.environment == 'development' && '9002' || '9010' }}
+          MINIO_CONSOLE_PORT: ${{ inputs.environment == 'development' && '9003' || '9011' }}
           DOZZLE_PORT: ${{ inputs.environment == 'development' && '8890' || '' }}
           POSTGRES_DB: ${{ secrets.POSTGRES_DB }}
           SPRING_DATASOURCE_USERNAME: ${{ secrets.SPRING_DATASOURCE_USERNAME }}
