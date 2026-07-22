@@ -1,0 +1,95 @@
+name: Restart Infrastructure
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        type: choice
+        required: true
+        description: Target environment
+        options:
+          - production
+          - development
+      prune-networks:
+        type: boolean
+        default: true
+        description: Prune Docker networks before restarting (fixes DNS resolution issues)
+
+concurrency:
+  group: restart-${{ inputs.environment }}
+  cancel-in-progress: false
+
+jobs:
+  restart:
+    name: 🔄 Restart Infrastructure (${{ inputs.environment }})
+    runs-on: self-hosted
+    environment: ${{ inputs.environment }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: 🔄 Stop services
+        env:
+          COMPOSE_PROJECT_NAME: ${{ inputs.environment == 'development' && 'waypoint-dev' || '' }}
+        run: docker compose down --remove-orphans
+
+      - name: 🧹 Prune Docker networks
+        if: inputs.prune-networks
+        run: docker network prune -f
+
+      - name: 🚀 Start services
+        env:
+          COMPOSE_PROJECT_NAME: ${{ inputs.environment == 'development' && 'waypoint-dev' || '' }}
+          WEB_PORT: ${{ inputs.environment == 'development' && '8881' || '' }}
+          DB_PORT: ${{ inputs.environment == 'development' && '5433' || '' }}
+          MINIO_PORT: ${{ inputs.environment == 'development' && '9002' || '' }}
+          MINIO_CONSOLE_PORT: ${{ inputs.environment == 'development' && '9003' || '' }}
+          DOZZLE_PORT: ${{ inputs.environment == 'development' && '8890' || '' }}
+          POSTGRES_DB: ${{ secrets.POSTGRES_DB }}
+          SPRING_DATASOURCE_USERNAME: ${{ secrets.SPRING_DATASOURCE_USERNAME }}
+          SPRING_DATASOURCE_PASSWORD: ${{ secrets.SPRING_DATASOURCE_PASSWORD }}
+          JWT_SECRET: ${{ secrets.JWT_SECRET }}
+          MINIO_ROOT_USER: ${{ secrets.MINIO_ROOT_USER }}
+          MINIO_ROOT_PASSWORD: ${{ secrets.MINIO_ROOT_PASSWORD }}
+          APP_STORAGE_ACCESS_KEY: ${{ secrets.APP_STORAGE_ACCESS_KEY }}
+          APP_STORAGE_SECRET_KEY: ${{ secrets.APP_STORAGE_SECRET_KEY }}
+          APP_STORAGE_BUCKET: ${{ secrets.APP_STORAGE_BUCKET }}
+          NEW_RELIC_LICENSE_KEY: ${{ secrets.NEW_RELIC_LICENSE_KEY }}
+          NEW_RELIC_APP_NAME: ${{ secrets.NEW_RELIC_APP_NAME }}
+          VITE_NEW_RELIC_ACCOUNT_ID: ${{ secrets.VITE_NEW_RELIC_ACCOUNT_ID }}
+          VITE_NEW_RELIC_APP_ID: ${{ secrets.VITE_NEW_RELIC_APP_ID }}
+          VITE_NEW_RELIC_LICENSE_KEY: ${{ secrets.VITE_NEW_RELIC_LICENSE_KEY }}
+          DOZZLE_USERNAME: ${{ secrets.DOZZLE_USERNAME }}
+          DOZZLE_PASSWORD: ${{ secrets.DOZZLE_PASSWORD }}
+          TUNNEL_TOKEN: ${{ secrets.TUNNEL_TOKEN }}
+          CORS_ALLOWED_ORIGINS: ${{ secrets.CORS_ALLOWED_ORIGINS }}
+        run: docker compose up -d
+
+      - name: 🏥 Health check
+        env:
+          COMPOSE_PROJECT_NAME: ${{ inputs.environment == 'development' && 'waypoint-dev' || '' }}
+        run: |
+          echo "Waiting for services to become healthy..."
+          docker compose ps
+          sleep 15
+          docker compose ps
+
+      - name: 🔔 Send Discord notification
+        if: always()
+        env:
+          DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
+          STATUS: ${{ job.status }}
+          ENVIRONMENT: ${{ inputs.environment }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          if [ -z "$DISCORD_WEBHOOK" ]; then
+            echo "DISCORD_WEBHOOK not set, skipping notification"
+            exit 0
+          fi
+          if [ "$STATUS" = "success" ]; then
+            ICON="✅"
+          else
+            ICON="❌"
+          fi
+          curl -s -H "Content-Type: application/json" \
+            -d "{\"content\":\"${ICON} Restart infrastructure **${ENVIRONMENT}** ${STATUS}\n${RUN_URL}\"}" \
+            "$DISCORD_WEBHOOK"
